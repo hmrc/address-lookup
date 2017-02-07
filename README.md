@@ -1,11 +1,18 @@
+Address-Lookup
+==================
 
-# address-lookup
+This repo consists of a REST micro-service concerned with postal and BFPO address details within the UK.
 
-[![Build Status](https://travis-ci.org/hmrc/address-lookup.svg?branch=master)](https://travis-ci.org/hmrc/address-lookup) [ ![Download](https://api.bintray.com/packages/hmrc/releases/address-lookup/images/download.svg) ](https://bintray.com/hmrc/releases/address-lookup/_latestVersion)
+Please [**browse the docs**](https://github.com/hmrc/addresses/tree/master/docs/address-lookup) for more info, or dive straight into 
 
-This is a placeholder README.md for a new repository
+  * [~~API v1~~](https://github.com/hmrc/addresses/blob/master/docs/address-lookup/v1/address-lookup-api.md)
+  * [**API v2**](https://github.com/hmrc/addresses/blob/master/docs/address-lookup/v2/address-lookup-api.md)
 
-### License
+Main dependency: Play 2.5.
 
-This code is open source software licensed under the [Apache 2.0 License]("http://www.apache.org/licenses/LICENSE-2.0.html").
-    
+Local demo mode:
+```
+sbt
+run 9022
+```
+

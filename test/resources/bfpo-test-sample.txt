@@ -1,0 +1,41 @@
+STATIC BRITISH FORCES POST OFFICES
+
+BFPO No,Post Code,OpName,Location,Country
+2,BF1 3AA,,Washington,USA
+4,BF1 3AD,,Kathmandu,Nepal
+
+ISOLATED DETACHMENTS (ISODETS) BFPO 105 (POST CODE BF1 OAX)
+
+BFPO No,Post Code,OpName,Box No,Location
+105,BF1 0AX,,Box 589,British Alpine Centre (Bavaria)
+105,BF1 0AX,,Box 2003,NATO School Oberammergau
+
+HM SHIPS
+
+BFPO NO,Post CodeOpName,,HM SHIP
+204,BF1 4AF,,HMS Albion
+205,BF1 4AG,,HMS Ambush
+999,BF1 9ZZ,,HMS Test
+999,BF1 9ZZ,,HMS Test2
+
+NAVAL PARTIES
+
+BFPO No,Post Code,OpName,Naval Party,Location
+485,BF1 4TG,,NP 1002,Diego Garcia (BIOT)
+488,BF1 4TL,,NP 1011 - Mine Warfare Centre (MWC)/Autec,Portsmouth,UK / Miami
+495,BF1 4TU,,NP 1005,Den Helder,Holland
+496,BF1 4TW,Op ATALANTA,Djibouti
+497,BF1 4TX,Op ATALANTA,Attached to Foreign Ships
+c/o 2,BF1 3AA,,HMS Saker,Washington,USA
+
+OPERATIONS
+
+BFPO No,Post Code,Operation Name
+501,BF1 5AB,Op ELGAN
+550,BF1 5DP,Op SHADER
+
+EXERCISES
+
+BFPO No,Post Code,OpName,Exercise Name,Outside Dates
+510,BF1 5AP,,Ex CLOCKWORK,05 Nov – 31 Mar
+521,BF1 5BB,,Ex CETUS,02 Jan – 13 Mar

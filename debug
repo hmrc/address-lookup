@@ -1,0 +1,18 @@
+#!/bin/bash -e
+
+SBT_BOOT_DIR=$HOME/.sbt/boot/
+
+SBT_DIR=~/.sbt-jars
+SBT_ARTIFACT=sbt-0.13.5-launch.jar
+SBT_FILE=${SBT_DIR}/${SBT_ARTIFACT}
+
+if [ ! -d "$SBT_BOOT_DIR" ]; then
+  mkdir -p $SBT_BOOT_DIR
+fi
+
+java -Dfile.encoding=UTF8 -Xmx1024M -XX:+CMSClassUnloadingEnabled -XX:+UseCompressedOops -XX:MaxPermSize=768M \
+        $SBT_EXTRA_PARAMS \
+        -Xdebug -Xrunjdwp:transport=dt_socket,server=y,address=9999 \
+        -Dbuild.time="$(date)" \
+        -Dsbt.boot.directory=$SBT_BOOT_DIR \
+        -jar $SBT_FILE "$@"

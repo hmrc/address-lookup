@@ -1,0 +1,35 @@
+# We need the /address-lookup prefix because the Nginx reverse proxy passes requests through to us
+# with that prefix. Some of the entry points need to be both with and without the prefix.
+
+# Generic health reporting https://github.com/hmrc/play-health
+->            /                                 health.Routes
+
+# Kenshoo metrics https://github.com/kenshoo/metrics-play
+GET           /admin/metrics                    com.kenshoo.play.metrics.MetricsController.metrics
+
+# Note that these resources take up to four query parameters: postcode, filter, fuzzy, uprn
+# and the tests are more explicit as a result.
+GET           /gb/addresses                     osgb.AddressSearchController.searchV1()
+GET           /uk/addresses                     osgb.AddressSearchController.searchV1()
+GET           /v1/gb/addresses                  osgb.AddressSearchController.searchV1()
+GET           /v1/uk/addresses                  osgb.AddressSearchController.searchV1()
+GET           /v2/gb/addresses                  osgb.AddressSearchController.searchV2()
+GET           /v2/uk/addresses                  osgb.AddressSearchController.searchV2()
+
+# original style - now deprecated
+GET           /v1/gb/addresses.json             osgb.AddressSearchController.searchV1()
+GET           /v1/uk/addresses.json             osgb.AddressSearchController.searchV1()
+
+# ----- OSGB AddressBase lookup-by-ID search service -----
+GET           /gb/addresses/:id                 osgb.AddressLookupController.findByIdV1(id)
+GET           /uk/addresses/:id                 osgb.AddressLookupController.findByIdV1(id)
+GET           /v2/gb/addresses/:id              osgb.AddressLookupController.findByIdV2(id)
+GET           /v2/uk/addresses/:id              osgb.AddressLookupController.findByIdV2(id)
+
+# ----- British Forces Postal Office lookup service -----
+### This route is now obsolete ###
+GET           /bfpo/addresses                   bfpo.BFPOLookupController.findByPostCode()
+
+# ----- Ping -----
+HEAD          /ping                             controllers.PingController.ping()
+GET           /ping                             controllers.PingController.ping()
