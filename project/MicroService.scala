@@ -5,6 +5,8 @@ import sbt._
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin._
 import play.sbt.PlayScala
 import uk.gov.hmrc.SbtAutoBuildPlugin
+import uk.gov.hmrc.versioning.SbtGitVersioning
+import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin
 
 trait MicroService {
 
@@ -71,6 +73,7 @@ trait MicroService {
     .settings(evictionWarningOptions in update :=
       EvictionWarningOptions.default.withWarnTransitiveEvictions(false)
         .withWarnDirectEvictions(false).withWarnScalaVersionEviction(false))
+    .enablePlugins(SbtDistributablesPlugin, SbtAutoBuildPlugin, SbtGitVersioning)
 }
 
 private object TestPhases {
