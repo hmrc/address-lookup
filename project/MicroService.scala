@@ -83,7 +83,6 @@ private object TestPhases {
 private object Repositories {
 
   import uk.gov.hmrc._
-  import NexusPublishing._
   import PublishingSettings._
 
   lazy val playPublishingSettings: Seq[sbt.Setting[_]] = sbtrelease.ReleasePlugin.releaseSettings ++ Seq(
@@ -94,6 +93,5 @@ private object Repositories {
     publishArtifact in(Compile, packageSrc) := true
 
   ) ++
-    publishAllArtefacts ++
-    nexusPublishingSettings
+    publishAllArtefacts 
 }
