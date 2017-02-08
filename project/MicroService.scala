@@ -93,5 +93,5 @@ private object Repositories {
     publishArtifact in(Compile, packageSrc) := true
 
   ) ++
-    publishAllArtefacts 
+    publishAllArtefacts
 }

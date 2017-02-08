@@ -19,4 +19,4 @@ addSbtPlugin("uk.gov.hmrc" % "sbt-distributables" % "1.0.0")
 
 addSbtPlugin("net.virtual-void" % "sbt-dependency-graph" % "0.8.2")
 
-addSbtPlugin("uk.gov.hmrc" % "sbt-auto-build" % "0.10.0")
+addSbtPlugin("uk.gov.hmrc" % "sbt-auto-build" % "1.4.0")

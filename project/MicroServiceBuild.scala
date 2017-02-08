@@ -25,14 +25,14 @@ private object AppDependencies {
 
   val compile = Seq(
     ws,
-    "uk.gov.hmrc" %% "microservice-bootstrap" % "5.8.0",
+    "uk.gov.hmrc" %% "microservice-bootstrap" % "5.9.0",
     "uk.gov.hmrc" %% "play-authorisation" % "4.2.0",
     "uk.gov.hmrc" %% "play-health" % "2.0.0",
     "uk.gov.hmrc" %% "play-url-binders" % "2.0.0",
-    "uk.gov.hmrc" %% "play-config" % "3.0.0",
+    "uk.gov.hmrc" %% "play-config" % "3.1.0",
     "uk.gov.hmrc" %% "logback-json-logger" % "3.1.0",
     "uk.gov.hmrc" %% "domain" % "4.0.0",
-    "uk.gov.hmrc" %% "logging" % "0.2.0" withSources(),
+    "uk.gov.hmrc" %% "logging" % "0.4.0" withSources(),
     "uk.gov.hmrc" %% "address-reputation-store" % "2.22.0" withSources(),
     "uk.gov.hmrc" %% "play-random-json-filter" % "0.3.0",
     "com.univocity" % "univocity-parsers" % "1.5.6",
