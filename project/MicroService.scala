@@ -13,7 +13,7 @@ trait MicroService {
   import uk.gov.hmrc.ShellPrompt
 
   val appName: String
-  val appVersion: String
+//  val appVersion: String
 
   lazy val appDependencies: Seq[ModuleID] = Seq.empty
   lazy val plugins: Seq[Plugins] = Seq(PlayScala)
@@ -23,7 +23,7 @@ trait MicroService {
     .enablePlugins(SbtAutoBuildPlugin)
     .enablePlugins(plugins: _*)
     .settings(playSettings: _*)
-    .settings(version := appVersion)
+//    .settings(version := appVersion)
     .settings(scalaSettings: _*)
     .settings(scalaVersion := "2.11.8")
     .settings(scalacOptions ++= Seq("-Xlint:-missing-interpolator"))
@@ -31,7 +31,7 @@ trait MicroService {
     .settings(defaultSettings(): _*)
     .settings(
       targetJvm := "jvm-1.8",
-      shellPrompt := ShellPrompt(appVersion),
+//      shellPrompt := ShellPrompt(appVersion),
       libraryDependencies ++= appDependencies,
       parallelExecution in Test := false,
       fork in Test := false,

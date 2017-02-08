@@ -24,7 +24,6 @@ object Provenance {
       val text =
         s"""{
         |  "appName":     "${MicroServiceBuild.appName}",
-        |  "version":     "${MicroServiceBuild.appVersion}",
         |  "buildTag":    "$tag",
         |  "buildNumber": "$number",
         |  "buildId":     "$id",
