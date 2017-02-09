@@ -17,13 +17,29 @@
 package config
 
 import com.fasterxml.jackson.core.`type`.TypeReference
+import play.api.libs.json.{JsObject, JsString, Json}
+import uk.gov.hmrc.BuildInfo
 import uk.gov.hmrc.util.JacksonMapper
 
 import scala.io.Source
 
 object Provenance {
+
+  implicit class JsObjectEnhancer(jsObject: JsObject) {
+    def update(args: (String, Json.JsValueWrapper)*): JsObject = {
+      jsObject ++ Json.obj(args: _*)
+    }
+  }
+
   private val stream = getClass.getResourceAsStream("/provenance.json")
-  val versionInfo: String = Source.fromInputStream(stream).mkString
+  val versionInfo: String = {
+    val x = Source.fromInputStream(stream).mkString
+    val y:JsObject = Json.parse(x).as[JsObject]
+
+    val  z = y.update("version" -> JsString(BuildInfo.version))
+
+    Json.prettyPrint(z)
+  }
   stream.close()
 
   private val tr = new TypeReference[Map[String, String]] {}

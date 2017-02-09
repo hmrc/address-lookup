@@ -32,9 +32,9 @@ class PingSuite @Inject() (val wsClient: WSClient, val appEndpoint: String)(impl
       get("/ping").status mustBe Status.OK
     }
 
-//    "give version information in the response body" in {
-//      (get("/ping").json \ "version").as[String] must not be empty
-//    }
+    "give version information in the response body" in {
+      (get("/ping").json \ "version").as[String] must not be empty
+    }
 
     "give headers that disable caching of the response" in {
       // TODO should include 'must-revalidate'

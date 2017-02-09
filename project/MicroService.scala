@@ -15,7 +15,8 @@ trait MicroService {
   import uk.gov.hmrc.ShellPrompt
 
   val appName: String
-//  val appVersion: String
+  val appVersion: String
+
 
   lazy val appDependencies: Seq[ModuleID] = Seq.empty
   lazy val plugins: Seq[Plugins] = Seq(PlayScala)
@@ -33,7 +34,7 @@ trait MicroService {
     .settings(defaultSettings(): _*)
     .settings(
       targetJvm := "jvm-1.8",
-//      shellPrompt := ShellPrompt(appVersion),
+      shellPrompt := ShellPrompt(appVersion),
       libraryDependencies ++= appDependencies,
       parallelExecution in Test := false,
       fork in Test := false,
