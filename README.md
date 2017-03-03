@@ -16,6 +16,10 @@ sbt
 run 9022
 ```
 
+### Associated Repos
+
+* [hmrc/addresses](https://github.com/hmrc/addresses) - documentation
+* [hmrc/address-reputation-ingester](https://github.com/hmrc/address-reputation-ingester) - automated ingestion
 
 
 ### License
