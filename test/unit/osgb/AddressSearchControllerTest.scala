@@ -80,7 +80,7 @@ class AddressSearchControllerTest extends WordSpec with ScalaFutures with Mockit
   val addressAr2 = AddressRecord("GB100006", Some(100006L), Address(List("Test Station", "Test Road"), Some("ATown"), Some("Testland"), "FX11 7LA", Some(England), UK), en, lc2935, Some(addressLoc2.toSeq), InUse, Approved, AllVehicles)
 
   class ResponseStub(a: List[AddressRecord]) extends ResponseProcessor(ReferenceData.empty) {
-    override def convertAddressList(dbAddresses: Seq[DbAddress]): List[AddressRecord] = a
+    override def convertAddressList(dbAddresses: Seq[DbAddress], withMetadata: Boolean): List[AddressRecord] = a
   }
 
   class Context {

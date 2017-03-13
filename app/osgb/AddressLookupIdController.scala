@@ -20,14 +20,14 @@ import javax.inject.Inject
 
 import osgb.outmodel.Marshall
 import osgb.services.{AddressSearcher, ResponseProcessor}
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.JsValue
 import play.api.mvc.{Action, AnyContent, Request, Result}
 import uk.gov.hmrc.address.v2.AddressRecord
 import uk.gov.hmrc.logging.SimpleLogger
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class AddressLookupController @Inject() (addressSearch: AddressSearcher, responseProcessor: ResponseProcessor, logger: SimpleLogger, ec: ExecutionContext) extends AddressController(logger) {
+class AddressLookupIdController @Inject()(addressSearch: AddressSearcher, responseProcessor: ResponseProcessor, logger: SimpleLogger, ec: ExecutionContext) extends AddressController(logger) {
   implicit private val xec = ec
 
   def findByIdV1(id: String): Action[AnyContent] = Action.async {
@@ -47,7 +47,7 @@ class AddressLookupController @Inject() (addressSearch: AddressSearcher, respons
         val list = a.toList
         logEvent("LOOKUP", "origin" -> origin, "id" -> id, "matches" -> list.size.toString)
         if (a.isDefined) {
-          val a2 = responseProcessor.convertAddressList(list)
+          val a2 = responseProcessor.convertAddressList(list, false)
           Ok(marshall(a2.head))
         }
         else {

@@ -23,21 +23,16 @@ import uk.gov.hmrc.address.v2.{AddressRecord, AddressRecordConverter}
 
 class ResponseProcessor @Inject() (referenceData: ReferenceData) {
 
-  private def filterList(dbAddresses: Seq[DbAddress], filterStr: Option[String]): Seq[DbAddress] = {
-    if (filterStr.isDefined) dbAddresses.filter(_.linesContainIgnoreCase(filterStr.get.trim))
-    else dbAddresses
-  }
-
-  private def convertAddress(dbAddress: DbAddress): AddressRecord = {
+  private def convertAddress(dbAddress: DbAddress, withMetadata: Boolean): AddressRecord = {
     val refItem = referenceData.get(dbAddress.localCustodianCode)
-    AddressRecordConverter.convert(dbAddress, refItem, false).truncatedAddress()
+    AddressRecordConverter.convert(dbAddress, refItem, withMetadata)
   }
 
-  def convertAddressList(dbAddresses: Seq[DbAddress]): List[AddressRecord] = {
+  def convertAddressList(dbAddresses: Seq[DbAddress], withMetadata: Boolean): List[AddressRecord] = {
     val sorted = dbAddresses.sortWith {
       (a, b) => DbAddressOrderingByLines.compare(a, b) < 0
     }
-    sorted.map(convertAddress).toList
+    sorted.map(a => convertAddress(a, withMetadata).truncatedAddress()).toList
   }
 
   // simple algorithm measured to be 30% slower

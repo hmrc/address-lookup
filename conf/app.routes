@@ -21,10 +21,10 @@ GET           /v1/gb/addresses.json             osgb.AddressSearchController.sea
 GET           /v1/uk/addresses.json             osgb.AddressSearchController.searchV1()
 
 # ----- OSGB AddressBase lookup-by-ID search service -----
-GET           /gb/addresses/:id                 osgb.AddressLookupController.findByIdV1(id)
-GET           /uk/addresses/:id                 osgb.AddressLookupController.findByIdV1(id)
-GET           /v2/gb/addresses/:id              osgb.AddressLookupController.findByIdV2(id)
-GET           /v2/uk/addresses/:id              osgb.AddressLookupController.findByIdV2(id)
+GET           /gb/addresses/:id                 osgb.AddressLookupIdController.findByIdV1(id)
+GET           /uk/addresses/:id                 osgb.AddressLookupIdController.findByIdV1(id)
+GET           /v2/gb/addresses/:id              osgb.AddressLookupIdController.findByIdV2(id)
+GET           /v2/uk/addresses/:id              osgb.AddressLookupIdController.findByIdV2(id)
 
 # ----- British Forces Postal Office lookup service -----
 ### This route is now obsolete ###

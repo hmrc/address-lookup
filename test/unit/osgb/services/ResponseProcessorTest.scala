@@ -91,17 +91,17 @@ class ResponseProcessorTest extends FunSuite {
   val refData = ReferenceData.load("sample_local_custodian_table.csv", "sample_local_custodian_ceremonial_counties.csv")
 
 
-  ignore(
+  test(
     """given a single DbAddress,
-       filterAndConvertAddressList will convert the data correctly
+       convertAddressList will convert the data correctly
        and apply the local custodian from the reference data
-       and include the metadata (TODO)
+       and include the metadata
     """) {
     val rp = new ResponseProcessor(refData)
-    for (de <- List(dbGB1 -> expGB1X, dbGB2 -> expGB2X, dbGB10 -> expGB10X, dbGB11 -> expGB11X, dbGBZ -> expGBZX, dbNI1 -> expNI1X, dbNI2 -> expNI2X)) {
+    for (de <- List(dbGB1 -> expGB1M, dbGB2 -> expGB2M, dbGB10 -> expGB10M, dbGB11 -> expGB11M, dbGBZ -> expGBZM, dbNI1 -> expNI1M, dbNI2 -> expNI2M)) {
       val in = List(de._1)
       val exp = List(de._2)
-      val adr = rp.convertAddressList(in)
+      val adr = rp.convertAddressList(in, true)
       assert(adr === exp)
     }
   }
@@ -112,7 +112,7 @@ class ResponseProcessorTest extends FunSuite {
        and apply the local custodian from the reference data
     """) {
     val rp = new ResponseProcessor(refData)
-    val adr = rp.convertAddressList(List(dbGB1, dbGB2, dbGB10, dbGB11, dbGBZ, dbNI1, dbNI2))
+    val adr = rp.convertAddressList(List(dbGB1, dbGB2, dbGB10, dbGB11, dbGBZ, dbNI1, dbNI2), false)
     assert(adr.toSet === Set(expGB1X, expGB2X, expGB10X, expGB11X, expGBZX, expNI1X, expNI2X))
   }
 
@@ -121,8 +121,8 @@ class ResponseProcessorTest extends FunSuite {
        convertAddressList will sort the data correctly - 1
     """) {
     val rp = new ResponseProcessor(refData)
-    val adr1 = rp.convertAddressList(List(dbGB1, dbGB2, dbGB3, dbGBZ))
-    val adr2 = rp.convertAddressList(List(dbGBZ, dbGB3, dbGB2, dbGB1))
+    val adr1 = rp.convertAddressList(List(dbGB1, dbGB2, dbGB3, dbGBZ), false)
+    val adr2 = rp.convertAddressList(List(dbGBZ, dbGB3, dbGB2, dbGB1), false)
     assert(adr1 === List(expGB1X, expGB2X, expGB3X, expGBZX))
     assert(adr2 === List(expGB1X, expGB2X, expGB3X, expGBZX))
   }
@@ -157,16 +157,16 @@ class ResponseProcessorTest extends FunSuite {
     val shuffled = addresses.toSet.toList
     val reversed = addresses.toList.reverse
 
-    val actual1 = rp.convertAddressList(shuffled)
-    val actual2 = rp.convertAddressList(reversed)
+    val actual1 = rp.convertAddressList(shuffled, false)
+    val actual2 = rp.convertAddressList(reversed, false)
 
     assert(actual1 === expected.toList)
     assert(actual2 === expected.toList)
 
     val start = System.currentTimeMillis
     for (i <- 1 to 200) {
-      rp.convertAddressList(shuffled)
-      rp.convertAddressList(reversed)
+      rp.convertAddressList(shuffled, false)
+      rp.convertAddressList(reversed, false)
     }
     val took = System.currentTimeMillis - start
     println("took " + took + "ms")

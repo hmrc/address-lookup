@@ -35,7 +35,7 @@ import scala.concurrent.Future
 import util.Utils._
 
 @RunWith(classOf[JUnitRunner])
-class AddressLookupControllerTest extends WordSpec with ScalaFutures with MockitoSugar {
+class AddressLookupIdControllerTest extends WordSpec with ScalaFutures with MockitoSugar {
 
   implicit val ec = scala.concurrent.ExecutionContext.Implicits.global
 
@@ -58,7 +58,7 @@ class AddressLookupControllerTest extends WordSpec with ScalaFutures with Mockit
 
 
   class ResponseStub(a: List[AddressRecord]) extends ResponseProcessor(ReferenceData.empty) {
-    override def convertAddressList(dbAddresses: Seq[DbAddress]): List[AddressRecord] = a
+    override def convertAddressList(dbAddresses: Seq[DbAddress], withMetadata: Boolean): List[AddressRecord] = a
   }
 
   class Context {
@@ -74,7 +74,7 @@ class AddressLookupControllerTest extends WordSpec with ScalaFutures with Mockit
        and not log any error
       """ in new Context {
         val logger = new StubLogger
-        val addressLookupController = new AddressLookupController(searcher, new ResponseStub(Nil), logger, ec)
+        val addressLookupController = new AddressLookupIdController(searcher, new ResponseStub(Nil), logger, ec)
         val request = FakeRequest("GET", "http://localhost:9000/v2/uk/addresses/123456")
 
         val e = intercept[Upstream4xxResponse] {
@@ -94,7 +94,7 @@ class AddressLookupControllerTest extends WordSpec with ScalaFutures with Mockit
       """ in new Context {
         when(searcher.findID("GB123456")) thenReturn Future(Some(addr1Db))
         val logger = new StubLogger
-        val addressLookupController = new AddressLookupController(searcher, new ResponseStub(List(addr1Ar)), logger, ec)
+        val addressLookupController = new AddressLookupIdController(searcher, new ResponseStub(List(addr1Ar)), logger, ec)
         val request = FakeRequest("GET", "http://localhost:9000/v2/uk/addresses/GB123456").withHeadersOrigin
 
         val result = await(addressLookupController.findByIdRequest(request, "GB123456", Marshall.marshallV2Address))
@@ -109,7 +109,7 @@ class AddressLookupControllerTest extends WordSpec with ScalaFutures with Mockit
       """ in new Context {
         when(searcher.findID("GB1010101010")) thenReturn Future(None)
         val logger = new StubLogger
-        val addressLookupController = new AddressLookupController(searcher, new ResponseStub(Nil), logger, ec)
+        val addressLookupController = new AddressLookupIdController(searcher, new ResponseStub(Nil), logger, ec)
         val request = FakeRequest("GET", "http://localhost:9000/v2/uk/addresses/GB1010101010").withHeadersOrigin
 
         val result = await(addressLookupController.findByIdRequest(request, "GB1010101010", Marshall.marshallV2Address))
