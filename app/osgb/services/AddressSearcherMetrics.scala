@@ -33,8 +33,10 @@ class AddressSearcherMetrics(peer: AddressSearcher, registry: MetricRegistry, ec
   private val findIdTimer: Timer = registry.timer(name(prefix, "findId"))
   private val findUprnTimer: Timer = registry.timer(name(prefix, "findUprn"))
   private val findPostcodeTimer: Timer = registry.timer(name(prefix, "findPostcode"))
+  private val findPostcodeFilterTimer: Timer = registry.timer(name(prefix, "findPostcodeFilter"))
   private val findOutcodeTimer: Timer = registry.timer(name(prefix, "findOutcode"))
   private val searchFuzzyTimer: Timer = registry.timer(name(prefix, "searchFuzzy"))
+  private val searchFuzzyFilterTimer: Timer = registry.timer(name(prefix, "searchFuzzyFilter"))
 
   private def timerStop(t: Context, r: List[DbAddress]) = {
     t.stop()
@@ -56,7 +58,7 @@ class AddressSearcherMetrics(peer: AddressSearcher, registry: MetricRegistry, ec
   }
 
   override def findPostcode(postcode: Postcode, filterStr: Option[String]): Future[List[DbAddress]] = {
-    val context = findPostcodeTimer.time()
+    val context = if (filterStr.isDefined) findPostcodeFilterTimer.time() else findPostcodeTimer.time()
     peer.findPostcode(postcode, filterStr) map (timerStop(context, _))
   }
 
@@ -66,7 +68,7 @@ class AddressSearcherMetrics(peer: AddressSearcher, registry: MetricRegistry, ec
   }
 
   override def searchFuzzy(sp: SearchParameters): Future[List[DbAddress]] = {
-    val context = searchFuzzyTimer.time()
+    val context = if (sp.filter.isDefined) searchFuzzyFilterTimer.time() else searchFuzzyTimer.time()
     peer.searchFuzzy(sp) map (timerStop(context, _))
   }
 }

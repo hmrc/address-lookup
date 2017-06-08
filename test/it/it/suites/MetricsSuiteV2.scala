@@ -52,12 +52,28 @@ class MetricsSuiteV2 @Inject() (val wsClient: WSClient, val appEndpoint: String,
         assert((response.json \ "timers" \ s"$className.findPostcode" \ "count").as[Int] > 0)
       }
 
+      "give a timer for the findPostcodeFilter search case" in {
+        assert(get("/v2/gb/addresses?postcode=SE1+9PY&filter=10").status === OK)
+
+        val response = get("/admin/metrics")
+        assert(response.status === OK, dump(response))
+        assert((response.json \ "timers" \ s"$className.findPostcodeFilter" \ "count").as[Int] > 0)
+      }
+
       "give a timer for the searchFuzzy search case" in {
         assert(get("/v2/gb/addresses?fuzzy=FX1+9PY").status === OK)
 
         val response = get("/admin/metrics")
         assert(response.status === OK, dump(response))
         assert((response.json \ "timers" \ s"$className.searchFuzzy" \ "count").as[Int] > 0)
+      }
+
+      "give a timer for the searchFuzzyFilter search case" in {
+        assert(get("/v2/gb/addresses?fuzzy=SE1+9PY&filter=2").status === OK)
+
+        val response = get("/admin/metrics")
+        assert(response.status === OK, dump(response))
+        assert((response.json \ "timers" \ s"$className.searchFuzzyFilter" \ "count").as[Int] > 0)
       }
     }
   }
