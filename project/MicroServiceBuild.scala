@@ -19,20 +19,20 @@ private object AppDependencies {
   import play.sbt.PlayImport._
   import play.core.PlayVersion
 
-  private val hmrcTestVersion = "2.2.0"
+  private val hmrcTestVersion = "2.3.0"
   private val scalaTestVersion = "2.2.6"
   private val pegdownVersion = "1.6.0"
   private val jacksonVersion = "2.7.4"
 
   val compile = Seq(
     ws,
-    "uk.gov.hmrc" %% "microservice-bootstrap" % "5.9.0",
-    "uk.gov.hmrc" %% "play-authorisation" % "4.2.0",
-    "uk.gov.hmrc" %% "play-health" % "2.0.0",
-    "uk.gov.hmrc" %% "play-url-binders" % "2.0.0",
-    "uk.gov.hmrc" %% "play-config" % "3.1.0",
+    "uk.gov.hmrc" %% "microservice-bootstrap" % "5.15.0",
+    "uk.gov.hmrc" %% "play-authorisation" % "4.3.0",
+    "uk.gov.hmrc" %% "play-health" % "2.1.0",
+    "uk.gov.hmrc" %% "play-url-binders" % "2.1.0",
+    "uk.gov.hmrc" %% "play-config" % "4.3.0",
     "uk.gov.hmrc" %% "logback-json-logger" % "3.1.0",
-    "uk.gov.hmrc" %% "domain" % "4.0.0",
+    "uk.gov.hmrc" %% "domain" % "4.1.0",
     "uk.gov.hmrc" %% "logging" % "0.4.0" withSources(),
     "uk.gov.hmrc" %% "address-reputation-store" % "2.22.0" withSources(),
     "uk.gov.hmrc" %% "play-random-json-filter" % "0.3.0",
