@@ -23,11 +23,11 @@ import uk.gov.hmrc.address.uk.Postcode
 
 object CSV {
   def convertCsvLine(line: Array[String]): DbAddress = {
-    if (line.length < 6)
+    if (line.length < 6) {
       throw new RuntimeException("Short input line: " + line.mkString)
-    else if (line.length > 8)
+    } else if (line.length > 9) {
       throw new RuntimeException("Excessive input line: " + line.mkString)
-    else {
+    } else {
       val uprn = trim(line(0))
       val line1 = normaliseAddressLine(removeTrailingCommaAndTrim(line(1)))
       val line2 = normaliseAddressLine(removeTrailingCommaAndTrim(line(2)))
@@ -37,7 +37,8 @@ object CSV {
       val postcode = Postcode.normalisePostcode(trim(line(5)))
       val subdivision = if (line.length > 6) blankToOption(trim(line(6))) else None
       val lcc = if (line.length > 7) blankToOption(trim(line(7))).map(_.toInt) else None
-      DbAddress(prefixedId(uprn), lines, blankToOption(line4), postcode, subdivision, Some("UK"), lcc, Some("en"), None, None, None, None, None)
+      val poBox = if (line.length > 8) blankToOption(trim(line(8))) else None
+      DbAddress(prefixedId(uprn), lines, blankToOption(line4), postcode, subdivision, Some("UK"), lcc, Some("en"), None, None, None, None, None, poBox)
     }
   }
 

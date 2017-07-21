@@ -1,6 +1,3 @@
-import play.sbt.PlayImport._
-import play.sbt.PlayImport.PlayKeys._
-import play.core.PlayVersion
 import sbt.Keys._
 import sbt._
 
@@ -8,9 +5,8 @@ object MicroServiceBuild extends Build with MicroService {
   import scala.util.Properties.envOrElse
 
   val appName = "address-lookup"
-  val appVersionKey = appName.toUpperCase.replace('-', '_') + "_VERSION"
-//  val appVersion = envOrElse(appVersionKey, "999-SNAPSHOT")
-  val appVersion = envOrElse(version.toString, "999-SNAPSHOT")
+  val appVersionKey: String = appName.toUpperCase.replace('-', '_') + "_VERSION"
+  val appVersion: String = envOrElse(version.toString, "999-SNAPSHOT")
 
   override lazy val appDependencies: Seq[ModuleID] = AppDependencies()
 }
@@ -34,7 +30,7 @@ private object AppDependencies {
     "uk.gov.hmrc" %% "logback-json-logger" % "3.1.0",
     "uk.gov.hmrc" %% "domain" % "4.1.0",
     "uk.gov.hmrc" %% "logging" % "0.4.0" withSources(),
-    "uk.gov.hmrc" %% "address-reputation-store" % "2.22.0" withSources(),
+    "uk.gov.hmrc" %% "address-reputation-store" % "2.25.0" withSources(),
     "uk.gov.hmrc" %% "play-random-json-filter" % "0.3.0",
     "com.univocity" % "univocity-parsers" % "1.5.6",
     "com.fasterxml.jackson.core" % "jackson-core" % jacksonVersion,

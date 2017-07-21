@@ -93,6 +93,10 @@ object FixturesV2 {
     Some("Llanfairpwllgwyngyllgogerychwyrndrobwllllantysiliogogogoch"), Some("Avalon"), "FX2 2TB", Some(Wales), UK),
     en, lc915, Some(aHouseLocation2.toSeq), InUse, Approved, AllVehicles)
 
+  val id5 = "GB55555"
+  val db_fx17_1tb = DbAddress(id5, List("An address with a PO Box"),
+    None, "FX17 1TB", Some("GB-WLS"), Some("UK"),
+    Some(666), Some("en"), Some(2), Some(1), Some(8), None, Some(aHouseLocation2.toString), Some("PO Box 1234"))
 
   val fx11pgText:String =
     """

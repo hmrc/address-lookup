@@ -30,6 +30,11 @@ GET           /v2/uk/addresses/:id              osgb.AddressLookupIdController.f
 ### This route is now obsolete ###
 GET           /bfpo/addresses                   bfpo.BFPOLookupController.findByPostCode()
 
+# ----- Postcodes endppint -----
+GET           /v1/gb/postcodes/:pc                    osgb.PostcodesController.lookup(pc)
+GET           /v1/gb/postcodes                        osgb.PostcodesController.missing
+GET           /v1/uk/postcodes/:pc                    osgb.PostcodesController.lookup(pc)
+GET           /v1/uk/postcodes                        osgb.PostcodesController.missing
 # ----- Ping -----
 HEAD          /ping                             controllers.PingController.ping()
 GET           /ping                             controllers.PingController.ping()

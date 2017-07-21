@@ -28,7 +28,7 @@ import play.api.libs.ws.{WSClient, WSResponse}
 import play.api.test.Helpers._
 import uk.gov.hmrc.address.v1.AddressRecord
 
-class PostcodeLookupSuiteV1 @Inject() (val wsClient: WSClient, val appEndpoint: String, largePostcodeExampleSize: Int)(implicit val app: Application)
+class PostcodeLookupSuiteV1 @Inject()(val wsClient: WSClient, val appEndpoint: String, largePostcodeExampleSize: Int)(implicit val app: Application)
   extends WordSpec with MustMatchers with AppServerTestApi {
 
   import FixturesV1._
@@ -75,7 +75,7 @@ class PostcodeLookupSuiteV1 @Inject() (val wsClient: WSClient, val appEndpoint: 
         address1.line1 mustBe "An address with a very long first l"
         address1.line2 mustBe "Second line of address is just as l"
         address1.line3 mustBe "Third line is not the longest but i"
-        address1.town.get mustBe fx1_2tb.address.town.get.substring(0, 35)
+        address1.town.get mustBe fx2_2tb.address.town.get.substring(0, 35)
       }
 
       "give an array for at least one item for a known postcode without a county" in {

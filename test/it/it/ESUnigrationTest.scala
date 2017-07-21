@@ -40,10 +40,11 @@ class ESUnigrationTest extends WordSpec with AppServerWithES with SequentialNest
     super.beforeAppServerStarts()
 
     // these three samples are simple
+    esOutput(db_fx17_1tb)
     esOutput(db_fx9_9py)
     esOutput(db_fx1_6jn_a)
     esOutput(db_fx1_6jn_b)
-    esOutput(db_fx1_2tb)
+    esOutput(db_fx2_2tb)
 
     // this sample set is larger and comes from a file
     for (strings <- CsvParser.split(fx11pgText)) {
@@ -95,7 +96,8 @@ class ESUnigrationTest extends WordSpec with AppServerWithES with SequentialNest
         new FuzzySearchSuiteV2(wsClient, appEndpoint)(app),
         new MetricsSuiteV1(wsClient, appEndpoint, "AddressESSearcher")(app),
         new MetricsSuiteV2(wsClient, appEndpoint, "AddressESSearcher")(app),
-        new PingSuite(wsClient, appEndpoint)(app)
+        new PingSuite(wsClient, appEndpoint)(app),
+        new PostcodesSuiteV1(wsClient, appEndpoint)(app)
       )
       s.runNestedSuites(args)
     }

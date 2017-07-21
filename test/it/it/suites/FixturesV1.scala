@@ -16,24 +16,29 @@
 
 package it.suites
 
+import uk.gov.hmrc.address.osgb.DbAddress
+import uk.gov.hmrc.address.v1.AddressRecord
+
 // Please keep FixturesV1 and FixturesV2 as similar as possible.
 
 object FixturesV1 {
 
-  val db_fx9_9py = FixturesV2.db_fx9_9py
-  val fx9_9py = FixturesV2.fx9_9py_terse.asV1
+  val db_fx9_9py: DbAddress = FixturesV2.db_fx9_9py
+  val fx9_9py: AddressRecord = FixturesV2.fx9_9py_terse.asV1
 
   // This sample is a length-2 postcode
-  val db_fx1_6jn_a = FixturesV2.db_fx1_6jn_a
-  val db_fx1_6jn_b = FixturesV2.db_fx1_6jn_b
+  val db_fx1_6jn_a: DbAddress = FixturesV2.db_fx1_6jn_a
+  val db_fx1_6jn_b: DbAddress = FixturesV2.db_fx1_6jn_b
 
-  val fx1_6jn_a = FixturesV2.fx1_6jn_a_terse.asV1
-  val fx1_6jn_b = FixturesV2.fx1_6jn_b_terse.asV1
+  val fx1_6jn_a: AddressRecord = FixturesV2.fx1_6jn_a_terse.asV1
+  val fx1_6jn_b: AddressRecord = FixturesV2.fx1_6jn_b_terse.asV1
 
   // address with very long lines
-  val db_fx1_2tb = FixturesV2.db_fx2_2tb
+  val db_fx2_2tb: DbAddress = FixturesV2.db_fx2_2tb
 
-  val fx1_2tb = FixturesV2.fx2_2tb.asV1
+  val db_fx17_1tb: DbAddress = FixturesV2.db_fx17_1tb
+
+  val fx2_2tb: AddressRecord = FixturesV2.fx2_2tb.asV1
 
   val fx11pgText: String = FixturesV2.fx11pgText
 }
