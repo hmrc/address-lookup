@@ -24,7 +24,7 @@ import osgb.services.AddressESSearcher
 import play.api.libs.concurrent.Execution.Implicits._
 import uk.co.bigbeeconsultants.util.DiagnosticTimer
 import uk.gov.hmrc.address.osgb.DbAddress
-import uk.gov.hmrc.address.services.es.{ESAdmin, ESAdminImpl, ElasticNetClientSettings, ElasticsearchHelper}
+import uk.gov.hmrc.address.services.es._
 import uk.gov.hmrc.logging.Stdout
 
 import scala.concurrent.duration.{Duration, FiniteDuration}
@@ -71,15 +71,17 @@ object IndexComparisonTool {
 
     } else {
       val isCluster = false // actually we don't care in this case
-      val esClients = ElasticsearchHelper.buildNetClients(ElasticNetClientSettings(uri, isCluster, clusterName, Map()), Stdout)
-      val admin = new ESAdminImpl(esClients, Stdout, scala.concurrent.ExecutionContext.Implicits.global)
-      new IndexComparisonTool(admin, a(0), a(1), a(2), skip, n).go()
+      val netSettings = ElasticNetClientSettings(uri, isCluster, clusterName, Map())
+      val esClients = ElasticsearchHelper.buildNetClients(netSettings, Stdout)
+      val settings = ElasticSettings(netClient = Some(netSettings))
+      val admin = new ESAdminImpl(esClients, Stdout, scala.concurrent.ExecutionContext.Implicits.global, settings)
+      new IndexComparisonTool(admin, a(0), a(1), a(2), skip, n, settings).go()
     }
   }
 }
 
 
-class IndexComparisonTool(esAdmin: ESAdmin, index1: String, index2: String, origin: String, skipStr: String, nStr: String) {
+class IndexComparisonTool(esAdmin: ESAdmin, index1: String, index2: String, origin: String, skipStr: String, nStr: String, settings: ElasticSettings) {
 
   private val skip = parseNumber(skipStr)
   private val n = parseNumber(nStr)
@@ -98,8 +100,8 @@ class IndexComparisonTool(esAdmin: ESAdmin, index1: String, index2: String, orig
   //-------------------------------------------------------
 
   private val esClient = esAdmin.clients.head
-  private val searcher1 = new AddressESSearcher(esClient, index1, "GB", defaultContext)
-  private val searcher2 = new AddressESSearcher(esClient, index2, "GB", defaultContext)
+  private val searcher1 = new AddressESSearcher(esClient, index1, "GB", defaultContext, settings, Stdout)
+  private val searcher2 = new AddressESSearcher(esClient, index2, "GB", defaultContext, settings, Stdout)
 
   //-------------------------------------------------------
 

@@ -41,11 +41,11 @@ object ElasticsearchSketch {
     val numShards = Map.empty[String, Int]
 
     val settings = ElasticSettings(false, None, false, connectionString, isCluster, clusterName, numShards)
-    val clients = ElasticsearchHelper.buildClients(settings, new LoggerFacade(Logger.logger))
-    val esImpl = new ESAdminImpl(clients, logger, ec)
+    val clients = ElasticsearchHelper.buildClients(settings, logger)
+    val esImpl = new ESAdminImpl(clients, logger, ec, settings)
     val indexMetadata: IndexMetadata = new IndexMetadata(esImpl, isCluster, numShards, logger, ec)
 
-    val searcher = new AddressESSearcher(indexMetadata.clients.head, indexName, "GB", ec)
+    val searcher = new AddressESSearcher(indexMetadata.clients.head, indexName, "GB", ec, settings, logger)
 
     idSample("GB123456", searcher)
     uprnSample("123456", searcher)

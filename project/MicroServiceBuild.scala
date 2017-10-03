@@ -30,7 +30,7 @@ private object AppDependencies {
     "uk.gov.hmrc" %% "logback-json-logger" % "3.1.0",
     "uk.gov.hmrc" %% "domain" % "4.1.0",
     "uk.gov.hmrc" %% "logging" % "0.4.0" withSources(),
-    "uk.gov.hmrc" %% "address-reputation-store" % "2.25.0" withSources(),
+    "uk.gov.hmrc" %% "address-reputation-store" % "2.28.0" withSources(),
     "uk.gov.hmrc" %% "play-random-json-filter" % "0.3.0",
     "com.univocity" % "univocity-parsers" % "1.5.6",
     "com.fasterxml.jackson.core" % "jackson-core" % jacksonVersion,
