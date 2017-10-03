@@ -20,17 +20,25 @@ import com.sksamuel.elastic4s._
 import org.elasticsearch.index.query.MatchQueryBuilder
 import osgb.SearchParameters
 import uk.gov.hmrc.address.osgb.DbAddress
+import uk.gov.hmrc.address.services.es.{ElasticClientWrapper, ElasticSettings}
 import uk.gov.hmrc.address.uk.{Outcode, Postcode}
+import uk.gov.hmrc.logging.SimpleLogger
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class AddressESSearcher(client: ElasticClient, index: String, idPrefix: String, ec: ExecutionContext)
+class AddressESSearcher(client: ElasticClient,
+                        index: String,
+                        idPrefix: String,
+                        ec: ExecutionContext,
+                        settings: ElasticSettings,
+                        logger: SimpleLogger)
   extends AddressSearcher with ElasticDsl {
 
   import AddressESSearcher._
 
   private implicit val xec = ec
   private val target = index -> ariDocumentName
+  private val wrapped = new ElasticClientWrapper(List(client), settings, logger)
 
   def findUprn(uprn: String): Future[List[DbAddress]] = doFindID(idPrefix + uprn)
 
@@ -42,10 +50,13 @@ class AddressESSearcher(client: ElasticClient, index: String, idPrefix: String, 
     }
 
   private def doFindID(id: String): Future[List[DbAddress]] = {
-    val searchResponse = client.execute {
-      search in target query matchQuery("id", id)
+    wrapped.withReinitialization(0, 3) {
+      val c = wrapped.clients.head
+      val searchResponse = c.execute {
+        search in target query matchQuery("id", id)
+      }
+      searchResponse map convertSearchResponse
     }
-    searchResponse map convertSearchResponse
   }
 
   //-----------------------------------------------------------------------------------------------
@@ -163,10 +174,13 @@ class AddressESSearcher(client: ElasticClient, index: String, idPrefix: String, 
   }
 
   private def doSearch(searchQuery: SearchDefinition, max: Int): Future[SearchOutcome] = {
-    val searchResponse = client.execute {
-      searchQuery size max
+    wrapped.withReinitialization(0, 3) {
+      val c = wrapped.clients.head
+      val searchResponse = c.execute {
+        searchQuery size max
+      }
+      searchResponse map (r => SearchOutcome(r.totalHits.toInt, r.hits))
     }
-    searchResponse map (r => SearchOutcome(r.totalHits.toInt, r.hits))
   }
 
   //-----------------------------------------------------------------------------------------------

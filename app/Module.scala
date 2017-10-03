@@ -30,6 +30,11 @@ import scala.concurrent.ExecutionContext
 
 class Module(environment: Environment,
              configuration: Configuration) extends AbstractModule {
+
+  private lazy val numShards = configuration.getConfig("elastic.shards").map(
+    _.entrySet.foldLeft(Map.empty[String, Int])((m, a) => m + (a._1 -> a._2.unwrapped().asInstanceOf[Int]))
+  ).getOrElse(Map.empty[String, Int])
+
   def configure(): Unit = {
     bind(classOf[CannedData]).to(classOf[CannedDataImpl]).asEagerSingleton()
   }
@@ -38,28 +43,28 @@ class Module(environment: Environment,
   def provideLogger: SimpleLogger = new LoggerFacade(play.api.Logger.logger)
 
   @Provides @Singleton
-  def provideIndexMetadata(configHelper: ConfigHelper, logger: SimpleLogger, ec: ExecutionContext): IndexMetadata = {
+  def provideElasticSettings(configHelper: ConfigHelper): ElasticSettings = {
     val localMode = configHelper.getConfigString("elastic.localMode").exists(_.toBoolean)
     val homeDir = configHelper.getConfigString("elastic.homeDir")
     val preDelete = configHelper.getConfigString("elastic.preDelete").exists(_.toBoolean)
     val clusterName = configHelper.mustGetConfigString("elastic.clusterName")
     val connectionString = configHelper.mustGetConfigString("elastic.uri")
     val isCluster = configHelper.getConfigString("elastic.isCluster").exists(_.toBoolean)
-    val numShards = configuration.getConfig("elastic.shards").map(
-      _.entrySet.foldLeft(Map.empty[String, Int])((m, a) => m + (a._1 -> a._2.unwrapped().asInstanceOf[Int]))
-    ).getOrElse(Map.empty[String, Int])
-
-    val settings = ElasticSettings(localMode, homeDir, preDelete, connectionString, isCluster, clusterName, numShards)
-    val clients = ElasticsearchHelper.buildClients(settings, new LoggerFacade(play.api.Logger.logger))
-    val esImpl = new ESAdminImpl(clients, logger, ec)
-    new IndexMetadata(esImpl, isCluster, numShards, logger, ec)
+    ElasticSettings(localMode, homeDir, preDelete, connectionString, isCluster, clusterName, numShards)
   }
 
   @Provides @Singleton
-  def provideAddressSearcher(indexMetadata: IndexMetadata, metrics: Metrics, configHelper: ConfigHelper): AddressSearcher = {
+  def provideIndexMetadata(configHelper: ConfigHelper, logger: SimpleLogger, ec: ExecutionContext, settings: ElasticSettings): IndexMetadata = {
+    val clients = ElasticsearchHelper.buildClients(settings, new LoggerFacade(play.api.Logger.logger))
+    val esImpl = new ESAdminImpl(clients, logger, ec, settings)
+    new IndexMetadata(esImpl, settings.isCluster, numShards, logger, ec)
+  }
+
+  @Provides @Singleton
+  def provideAddressSearcher(indexMetadata: IndexMetadata, metrics: Metrics, configHelper: ConfigHelper, settings: ElasticSettings, logger: SimpleLogger): AddressSearcher = {
     val indexName: String = configHelper.getConfigString("elastic.indexName").getOrElse(IndexMetadata.ariAliasName)
 
-    def elasticSearcher: AddressSearcher = new AddressESSearcher(indexMetadata.clients.head, indexName, "GB", defaultContext)
+    def elasticSearcher: AddressSearcher = new AddressESSearcher(indexMetadata.clients.head, indexName, "GB", defaultContext, settings, logger)
 
     new AddressSearcherMetrics(elasticSearcher, metrics.defaultRegistry, defaultContext)
   }
