@@ -29,10 +29,10 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.address.osgb.DbAddress
 import uk.gov.hmrc.address.v2._
 import uk.gov.hmrc.logging.StubLogger
-import uk.gov.hmrc.play.http.Upstream4xxResponse
 
 import scala.concurrent.Future
 import util.Utils._
+import uk.gov.hmrc.http.Upstream4xxResponse
 
 @RunWith(classOf[JUnitRunner])
 class AddressLookupIdControllerTest extends WordSpec with ScalaFutures with MockitoSugar {

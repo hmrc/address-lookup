@@ -23,8 +23,8 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.junit.JUnitRunner
 import play.api.test.FakeRequest
 import uk.gov.hmrc.logging.StubLogger
-import uk.gov.hmrc.play.http.Upstream4xxResponse
 import play.api.http.Status._
+import uk.gov.hmrc.http.Upstream4xxResponse
 
 @RunWith(classOf[JUnitRunner])
 class BFPOLookupControllerTest extends FunSuite with ScalaFutures {
