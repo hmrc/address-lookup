@@ -4,7 +4,6 @@ import sbt.Tests.{Group, SubProcess}
 import sbt._
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin._
 import play.sbt.PlayScala
-import uk.gov.hmrc.SbtAutoBuildPlugin
 import uk.gov.hmrc.versioning.SbtGitVersioning
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin
 
@@ -26,9 +25,8 @@ trait MicroService {
     .enablePlugins(SbtAutoBuildPlugin)
     .enablePlugins(plugins: _*)
     .settings(playSettings: _*)
-//    .settings(version := appVersion)
     .settings(scalaSettings: _*)
-    .settings(scalaVersion := "2.11.8")
+    .settings(scalaVersion := "2.11.11")
     .settings(scalacOptions ++= Seq("-Xlint:-missing-interpolator"))
     .settings(publishingSettings: _*)
     .settings(defaultSettings(): _*)
