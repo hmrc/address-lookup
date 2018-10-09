@@ -10,7 +10,7 @@ object Provenance {
 
   def run(command: String): String = (command !!).trim
 
-  def makeProvenanceSources(base: File): Seq[File] = {
+  def makeProvenanceSources(appVersion:String, base: File): Seq[File] = {
     val tag = envOrElse("BUILD_TAG", "DEVELOPER")
     val number = envOrElse("BUILD_NUMBER", "")
     val id = envOrElse("BUILD_ID", "")
@@ -24,7 +24,7 @@ object Provenance {
       val text =
         s"""{
         |  "appName":     "${MicroServiceBuild.appName}",
-        |  "version":     "${MicroServiceBuild.appVersion}",
+        |  "version":     "${appVersion}",
         |  "buildTag":    "$tag",
         |  "buildNumber": "$number",
         |  "buildId":     "$id",
@@ -40,7 +40,7 @@ object Provenance {
 
   def provenanceTask = Def.task {
     val base = (resourceManaged in Sources).value
-    makeProvenanceSources(base / "resources")
+    makeProvenanceSources(version.value, base / "resources")
   }
 
   def setting: Setting[_] = resourceGenerators in Compile += provenanceTask.taskValue

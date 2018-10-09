@@ -6,6 +6,9 @@ import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin._
 import play.sbt.PlayScala
 import uk.gov.hmrc.versioning.SbtGitVersioning
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin
+import uk.gov.hmrc.versioning.SbtGitVersioning.autoImport.majorVersion
+import uk.gov.hmrc.SbtAutoBuildPlugin
+import uk.gov.hmrc.SbtArtifactory
 
 trait MicroService {
 
@@ -14,7 +17,6 @@ trait MicroService {
   import uk.gov.hmrc.ShellPrompt
 
   val appName: String
-  val appVersion: String
 
 
   lazy val appDependencies: Seq[ModuleID] = Seq.empty
@@ -22,8 +24,9 @@ trait MicroService {
   lazy val playSettings: Seq[Setting[_]] = Seq.empty
 
   lazy val microservice: Project = Project(appName, file("."))
-    .enablePlugins(SbtAutoBuildPlugin)
+    .enablePlugins(play.sbt.PlayScala, SbtAutoBuildPlugin, SbtGitVersioning, SbtDistributablesPlugin, SbtArtifactory)
     .enablePlugins(plugins: _*)
+    .settings(majorVersion := 4)
     .settings(playSettings: _*)
     .settings(scalaSettings: _*)
     .settings(scalaVersion := "2.11.11")
@@ -32,14 +35,12 @@ trait MicroService {
     .settings(defaultSettings(): _*)
     .settings(
       targetJvm := "jvm-1.8",
-      shellPrompt := ShellPrompt(appVersion),
       libraryDependencies ++= appDependencies,
       parallelExecution in Test := false,
       fork in Test := false,
       retrieveManaged := true
     )
     .settings(Provenance.setting)
-    .settings(Repositories.playPublishingSettings: _*)
 
     .configs(Test)
     .settings(
@@ -80,20 +81,4 @@ private object TestPhases {
     tests map {
       test => Group(test.name, Seq(test), SubProcess(ForkOptions(runJVMOptions = Seq("-Dtest.name=" + test.name))))
     }
-}
-
-private object Repositories {
-
-  import uk.gov.hmrc._
-  import PublishingSettings._
-
-  lazy val playPublishingSettings: Seq[sbt.Setting[_]] = sbtrelease.ReleasePlugin.releaseSettings ++ Seq(
-
-    credentials += SbtCredentials,
-
-    publishArtifact in(Compile, packageDoc) := false,
-    publishArtifact in(Compile, packageSrc) := true
-
-  ) ++
-    publishAllArtefacts
 }

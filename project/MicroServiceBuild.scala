@@ -5,8 +5,6 @@ object MicroServiceBuild extends Build with MicroService {
   import scala.util.Properties.envOrElse
 
   val appName = "address-lookup"
-  val appVersionKey: String = appName.toUpperCase.replace('-', '_') + "_VERSION"
-  val appVersion: String = envOrElse(version.toString, "999-SNAPSHOT")
 
   override lazy val appDependencies: Seq[ModuleID] = AppDependencies()
 }
