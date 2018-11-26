@@ -30,7 +30,7 @@ object Provenance {
         |  "buildId":     "$id",
         |  "jobUrl":      "$url",
         |  "gitCommit":   "$commit",
-        |  "gitBranch":   "$remote/$branch",
+        |  "gitBranch":   "origin/$branch",
         |  "timestamp":   "$time"
         |}""".stripMargin
       IO.write(file, text)
