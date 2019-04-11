@@ -16,6 +16,7 @@
 
 package config
 
+import akka.actor.ActorSystem
 import com.typesafe.config.Config
 import play.api.{Configuration, Play}
 import play.api.Mode.Mode
@@ -36,6 +37,7 @@ trait Hooks extends HttpHooks with HttpAuditing {
 trait WSHttp extends HttpGet with WSGet with HttpPut with WSPut with HttpPost with WSPost with HttpDelete with WSDelete with Hooks with AppName {
   override protected def configuration: Option[Config] = Some(Play.current.configuration.underlying)
   override protected def appNameConfiguration: Configuration = Play.current.configuration
+  override protected def actorSystem: ActorSystem = Play.current.actorSystem
 }
 
 object WSHttp extends WSHttp

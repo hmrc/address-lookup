@@ -13,14 +13,14 @@ private object AppDependencies {
   import play.sbt.PlayImport._
   import play.core.PlayVersion
 
-  private val hmrcTestVersion = "3.3.0"
+  private val hmrcTestVersion = "3.5.0-play-25"
   private val scalaTestVersion = "2.2.6"
   private val pegdownVersion = "1.6.0"
   private val jacksonVersion = "2.8.9"
 
   val compile = Seq(
     ws,
-    "uk.gov.hmrc" %% "microservice-bootstrap" % "9.1.0",
+    "uk.gov.hmrc" %% "microservice-bootstrap" % "10.4.0",
     "uk.gov.hmrc" %% "play-ui" % "7.27.0-play-25",
     "uk.gov.hmrc" %% "domain" % "5.0.0",
     "uk.gov.hmrc" %% "logging" % "0.6.0" withSources(),
