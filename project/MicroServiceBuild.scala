@@ -1,9 +1,6 @@
-import sbt.Keys._
 import sbt._
 
 object MicroServiceBuild extends Build with MicroService {
-  import scala.util.Properties.envOrElse
-
   val appName = "address-lookup"
 
   override lazy val appDependencies: Seq[ModuleID] = AppDependencies()
@@ -31,7 +28,8 @@ private object AppDependencies {
     "com.fasterxml.jackson.core" % "jackson-databind" % jacksonVersion,
     "com.fasterxml.jackson.core" % "jackson-annotations" % jacksonVersion,
     "com.fasterxml.jackson.module" %% "jackson-module-scala" % jacksonVersion,
-    "com.sksamuel.elastic4s" %% "elastic4s-core" % "2.4.0"
+    "com.sksamuel.elastic4s" %% "elastic4s-core" % "2.4.0",
+    "com.github.tototoshi" %% "scala-csv" % "1.3.6"
   )
 
   trait TestDependencies {
@@ -40,7 +38,7 @@ private object AppDependencies {
   }
 
   object Test {
-    def apply() = new TestDependencies {
+    def apply(): Seq[ModuleID] = new TestDependencies {
       override lazy val test = Seq(
         "uk.gov.hmrc" %% "hmrctest" % hmrcTestVersion % scope,
         "org.scalatest" %% "scalatest" % scalaTestVersion % scope,
@@ -56,7 +54,7 @@ private object AppDependencies {
   }
 
   object IntegrationTest {
-    def apply() = new TestDependencies {
+    def apply(): Seq[ModuleID] = new TestDependencies {
 
       override lazy val scope: String = "it"
 
@@ -74,6 +72,6 @@ private object AppDependencies {
     }.test
   }
 
-  def apply() = compile ++ Test() ++ IntegrationTest()
+  def apply(): Seq[ModuleID] = compile ++ Test() ++ IntegrationTest()
 }
 

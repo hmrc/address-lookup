@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 HM Revenue & Customs
+ * Copyright 2020 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,24 +16,23 @@
 
 package osgb.services
 
-import java.io.{BufferedReader, InputStreamReader}
-import java.nio.charset.StandardCharsets
 import java.util.NoSuchElementException
 import java.util.zip.GZIPInputStream
 
+import com.github.tototoshi.csv.CSVReader
 import config._
 import uk.gov.hmrc.address.services.Capitalisation
 import uk.gov.hmrc.address.v2.ReferenceItem
 
 import scala.collection.mutable.ListBuffer
-
+import scala.io.{Codec, Source}
 
 case class ReferenceData(mappings: Map[Int, ReferenceItem]) {
-  def get(k: Int) = mappings.get(k)
+  def get(k: Int): Option[ReferenceItem] = mappings.get(k)
 
-  def get(k: Option[Int]) = if (k.isEmpty) None else mappings.get(k.get)
+  def get(k: Option[Int]): Option[ReferenceItem] =
+    if (k.isEmpty) None else mappings.get(k.get)
 }
-
 
 object ReferenceData {
   val empty = new ReferenceData(Map())
@@ -54,46 +53,54 @@ object ReferenceData {
       new ReferenceData(joined)
 
     } catch {
-      case e: NoSuchElementException => throw new RuntimeException("Error in reference data files. Check the codes match!", e)
+      case e: NoSuchElementException =>
+        throw new RuntimeException(
+          "Error in reference data files. Check the codes match!",
+          e)
     }
   }
 
-  def loadResource(resource: String, keyIndex: Int, valueIndex: Int): Map[Int, String] = {
+  def loadResource(resource: String,
+                   keyIndex: Int,
+                   valueIndex: Int): Map[Int, String] = {
     val start = System.currentTimeMillis()
+
     val is = getClass.getClassLoader.getResourceAsStream(resource)
     if (is == null) {
       throw new IllegalArgumentException(resource + ": no such resource")
     }
-    val giz = if (resource.endsWith(".gz")) new GZIPInputStream(is) else is
-    val reader = new BufferedReader(new InputStreamReader(giz, StandardCharsets.UTF_8))
-    val b = new ListBuffer[(Int, String)]
+
+    val gis = if (resource.endsWith(".gz")) new GZIPInputStream(is) else is
+
+    val outputBuffer = new ListBuffer[(Int, String)]
+
+    implicit val codec = Codec.UTF8
+    val reader = CSVReader.open(Source.fromInputStream(gis))
+
     try {
-      var line = reader.readLine()
-      while (line != null) {
-        val cells = line.qsplit(',')
+      for (cells <- reader) {
         if (cells.length > keyIndex && cells.length > valueIndex) {
           val k = cells(keyIndex)
           val v = cells(valueIndex)
           if (Character.isDigit(k(0)) && v.nonEmpty) {
             val ki = k.toInt
-            b += ki -> capitalise(v)
+            outputBuffer += ki -> capitalise(v)
           } // else ignore non-numeric codes
         }
-        line = reader.readLine()
       }
     } finally {
       reader.close()
     }
+
     val time = System.currentTimeMillis() - start
     println(s"Loading $resource took ${time}ms")
-    b.toMap
+
+    outputBuffer.toMap
   }
 
-  private def capitalise(v: String) = {
+  private def capitalise(v: String): String = {
     val c = Capitalisation.normaliseAddressLine(v)
     // the place-name normaliser doesn't know about Unitary Authorities
-    if (v.endsWith(" UA")) c.substring(0, c.length - 2) + "UA"
-    else c
+    if (v.endsWith(" UA")) c.substring(0, c.length - 2) + "UA" else c
   }
-
 }

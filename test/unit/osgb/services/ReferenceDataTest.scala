@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 HM Revenue & Customs
+ * Copyright 2020 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,5 +32,6 @@ class ReferenceDataTest extends FunSuite {
     assert(refData.get(340) === Some(ReferenceItem(340, "West Berkshire", Some("Berkshire"))))
     assert(refData.get(6925) === Some(ReferenceItem(6925, "Merthyr Tydfil UA", Some("Mid Glamorgan"))))
     assert(refData.get(7655) === Some(ReferenceItem(7655, "Ordnance Survey", None)))
+    assert(refData.get(9055) === Some(ReferenceItem(9055, "Scottish Borders", Some("Roxburgh, Ettrick and Lauderdale"))))
   }
 }
