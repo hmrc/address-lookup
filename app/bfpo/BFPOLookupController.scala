@@ -22,7 +22,7 @@ import play.api.libs.json.Json
 import play.api.mvc.{Action, Headers, Request, Result}
 import uk.gov.hmrc.address.uk.Postcode
 import uk.gov.hmrc.logging.SimpleLogger
-import uk.gov.hmrc.play.microservice.controller.BaseController
+import uk.gov.hmrc.play.bootstrap.controller.BaseController
 import uk.gov.hmrc.http.Upstream4xxResponse
 
 class BFPOLookupController @Inject() (bfpoData: List[BFPO], logger: SimpleLogger) extends BaseController {

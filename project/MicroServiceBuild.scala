@@ -17,12 +17,10 @@ private object AppDependencies {
 
   val compile = Seq(
     ws,
-    "uk.gov.hmrc" %% "microservice-bootstrap" % "10.4.0",
-    "uk.gov.hmrc" %% "play-ui" % "7.27.0-play-25",
-    "uk.gov.hmrc" %% "domain" % "5.0.0",
-    "uk.gov.hmrc" %% "logging" % "0.6.0" withSources(),
-    "uk.gov.hmrc" %% "address-reputation-store" % "2.37.0" withSources(),
-    "uk.gov.hmrc" %% "play-random-json-filter" % "0.5.0" withSources(),
+    "uk.gov.hmrc" %% "bootstrap-play-25" % "5.4.0",
+    "uk.gov.hmrc" %% "domain" % "5.10.0-play-25",
+    "uk.gov.hmrc" %% "logging" % "0.7.0" withSources(),
+    "uk.gov.hmrc" %% "address-reputation-store" % "2.40.0" withSources(),
     "com.univocity" % "univocity-parsers" % "1.5.6",
     "com.fasterxml.jackson.core" % "jackson-core" % jacksonVersion,
     "com.fasterxml.jackson.core" % "jackson-databind" % jacksonVersion,

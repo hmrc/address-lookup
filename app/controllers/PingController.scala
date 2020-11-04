@@ -19,7 +19,7 @@ package controllers
 import config.Provenance
 import play.api.http.MimeTypes
 import play.api.mvc.Action
-import uk.gov.hmrc.play.microservice.controller.BaseController
+import uk.gov.hmrc.play.bootstrap.controller.BaseController
 
 
 class PingController extends BaseController {
