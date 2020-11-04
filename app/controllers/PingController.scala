@@ -17,12 +17,13 @@
 package controllers
 
 import config.Provenance
+import javax.inject.Inject
 import play.api.http.MimeTypes
-import play.api.mvc.Action
-import uk.gov.hmrc.play.bootstrap.controller.BaseController
+import play.api.mvc.{Action, ControllerComponents}
+import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 
-class PingController extends BaseController {
+class PingController @Inject()(cc: ControllerComponents) extends BackendController(cc) {
 
   def ping() = Action { request =>
     Ok(Provenance.versionInfo).as(MimeTypes.JSON)

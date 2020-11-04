@@ -18,7 +18,7 @@ package osgb.outmodel
 
 import org.junit.runner.RunWith
 import org.scalatest.WordSpec
-import org.scalatest.junit.JUnitRunner
+import org.scalatestplus.junit.JUnitRunner
 import osgb.outmodel.v1.AddressReadable._
 import osgb.outmodel.v1.AddressWriteable._
 import play.api.libs.json.{JsError, JsSuccess, Json}

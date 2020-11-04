@@ -20,19 +20,19 @@ import org.junit.runner.RunWith
 import org.mockito.Mockito._
 import org.scalatest.WordSpec
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.mock.MockitoSugar
+import org.scalatestplus.junit.JUnitRunner
+import org.scalatestplus.mockito.MockitoSugar
 import osgb.outmodel.Marshall
 import osgb.services.{AddressESSearcher, ReferenceData, ResponseProcessor}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.address.osgb.DbAddress
 import uk.gov.hmrc.address.v2._
+import uk.gov.hmrc.http.UpstreamErrorResponse
 import uk.gov.hmrc.logging.StubLogger
+import util.Utils._
 
 import scala.concurrent.Future
-import util.Utils._
-import uk.gov.hmrc.http.Upstream4xxResponse
 
 @RunWith(classOf[JUnitRunner])
 class AddressLookupIdControllerTest extends WordSpec with ScalaFutures with MockitoSugar {
@@ -56,6 +56,7 @@ class AddressLookupIdControllerTest extends WordSpec with ScalaFutures with Mock
     Some("GB-ENG"), Some("UK"), Some(4510), Some("en"), Some(2), Some(1), None, None, Some(addr1Loc.toString))
   val addr1Ar = AddressRecord("GB123456", Some(123456L), Address(List("10 Test Court", "A Street", "Tester"), Some("Testtown upon Tyne"), shire, "FX1 1AA", Some(England), UK), en, lc4510, Some(addr1Loc.toSeq), InUse, Approved, AllVehicles)
 
+  val cc = play.api.test.Helpers.stubControllerComponents()
 
   class ResponseStub(a: List[AddressRecord]) extends ResponseProcessor(ReferenceData.empty) {
     override def convertAddressList(dbAddresses: Seq[DbAddress], withMetadata: Boolean): List[AddressRecord] = a
@@ -74,10 +75,10 @@ class AddressLookupIdControllerTest extends WordSpec with ScalaFutures with Mock
        and not log any error
       """ in new Context {
         val logger = new StubLogger
-        val addressLookupController = new AddressLookupIdController(searcher, new ResponseStub(Nil), logger, ec)
+        val addressLookupController = new AddressLookupIdController(searcher, new ResponseStub(Nil), logger, ec, cc)
         val request = FakeRequest("GET", "http://localhost:9000/v2/uk/addresses/123456")
 
-        val e = intercept[Upstream4xxResponse] {
+        val e = intercept[UpstreamErrorResponse] {
           addressLookupController.findByIdRequest(request, "123456", Marshall.marshallV2Address)
         }
         assert(e.reportAs === 400)
@@ -94,7 +95,7 @@ class AddressLookupIdControllerTest extends WordSpec with ScalaFutures with Mock
       """ in new Context {
         when(searcher.findID("GB123456")) thenReturn Future(Some(addr1Db))
         val logger = new StubLogger
-        val addressLookupController = new AddressLookupIdController(searcher, new ResponseStub(List(addr1Ar)), logger, ec)
+        val addressLookupController = new AddressLookupIdController(searcher, new ResponseStub(List(addr1Ar)), logger, ec, cc)
         val request = FakeRequest("GET", "http://localhost:9000/v2/uk/addresses/GB123456").withHeadersOrigin
 
         val result = await(addressLookupController.findByIdRequest(request, "GB123456", Marshall.marshallV2Address))
@@ -109,7 +110,7 @@ class AddressLookupIdControllerTest extends WordSpec with ScalaFutures with Mock
       """ in new Context {
         when(searcher.findID("GB1010101010")) thenReturn Future(None)
         val logger = new StubLogger
-        val addressLookupController = new AddressLookupIdController(searcher, new ResponseStub(Nil), logger, ec)
+        val addressLookupController = new AddressLookupIdController(searcher, new ResponseStub(Nil), logger, ec, cc)
         val request = FakeRequest("GET", "http://localhost:9000/v2/uk/addresses/GB1010101010").withHeadersOrigin
 
         val result = await(addressLookupController.findByIdRequest(request, "GB1010101010", Marshall.marshallV2Address))

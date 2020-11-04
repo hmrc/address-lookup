@@ -21,14 +21,14 @@ import java.util.concurrent.atomic.AtomicInteger
 import java.util.zip.{GZIPInputStream, GZIPOutputStream}
 
 import osgb.services.AddressESSearcher
-import play.api.libs.concurrent.Execution.Implicits._
 import uk.co.bigbeeconsultants.util.DiagnosticTimer
 import uk.gov.hmrc.address.osgb.DbAddress
 import uk.gov.hmrc.address.services.es._
 import uk.gov.hmrc.logging.Stdout
 
 import scala.concurrent.duration.{Duration, FiniteDuration}
-import scala.concurrent.{Await, Future}
+import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.io.{BufferedSource, Source}
 
 object IndexComparisonTool {
@@ -100,8 +100,8 @@ class IndexComparisonTool(esAdmin: ESAdmin, index1: String, index2: String, orig
   //-------------------------------------------------------
 
   private val esClient = esAdmin.clients.head
-  private val searcher1 = new AddressESSearcher(esClient, index1, "GB", defaultContext, settings, Stdout)
-  private val searcher2 = new AddressESSearcher(esClient, index2, "GB", defaultContext, settings, Stdout)
+  private val searcher1 = new AddressESSearcher(esClient, index1, "GB", implicitly[ExecutionContext], settings, Stdout)
+  private val searcher2 = new AddressESSearcher(esClient, index2, "GB", implicitly[ExecutionContext], settings, Stdout)
 
   //-------------------------------------------------------
 

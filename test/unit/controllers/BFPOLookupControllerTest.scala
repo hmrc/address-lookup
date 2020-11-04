@@ -20,11 +20,11 @@ import bfpo.{BFPOFileParser, BFPOLookupController}
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.junit.JUnitRunner
-import play.api.test.FakeRequest
-import uk.gov.hmrc.logging.StubLogger
+import org.scalatestplus.junit.JUnitRunner
 import play.api.http.Status._
-import uk.gov.hmrc.http.Upstream4xxResponse
+import play.api.test.FakeRequest
+import uk.gov.hmrc.http.UpstreamErrorResponse
+import uk.gov.hmrc.logging.StubLogger
 
 @RunWith(classOf[JUnitRunner])
 class BFPOLookupControllerTest extends FunSuite with ScalaFutures {
@@ -36,11 +36,13 @@ class BFPOLookupControllerTest extends FunSuite with ScalaFutures {
        it should give a 'bad request' response via the appropriate exception
        and not log any error
     """) {
+
+    val cc = play.api.test.Helpers.stubControllerComponents()
     val logger = new StubLogger
-    val bfpoLookupController = new BFPOLookupController(bfpoList, logger)
+    val bfpoLookupController = new BFPOLookupController(bfpoList, logger, cc)
     val request = FakeRequest("GET", "http://localhost:9000/bfpo/addresses?SOMETHING=FX304HG")
 
-    val e = intercept[Upstream4xxResponse] {
+    val e = intercept[UpstreamErrorResponse] {
       bfpoLookupController.postcodeRequest(request)
     }
     assert(e.reportAs === BAD_REQUEST)
@@ -53,7 +55,8 @@ class BFPOLookupControllerTest extends FunSuite with ScalaFutures {
        and log the error
     """) {
     val logger = new StubLogger
-    val bfpoLookupController = new BFPOLookupController(bfpoList, logger)
+    val cc = play.api.test.Helpers.stubControllerComponents()
+    val bfpoLookupController = new BFPOLookupController(bfpoList, logger, cc)
     val request = FakeRequest("GET", "http://localhost:9000/bfpo/addresses?SOMETHING=FX304HG").withHeaders("User-Agent" -> "xyz")
 
     val result = bfpoLookupController.postcodeRequest(request)
@@ -68,7 +71,8 @@ class BFPOLookupControllerTest extends FunSuite with ScalaFutures {
        and log the error
     """) {
     val logger = new StubLogger
-    val bfpoLookupController = new BFPOLookupController(bfpoList, logger)
+    val cc = play.api.test.Helpers.stubControllerComponents()
+    val bfpoLookupController = new BFPOLookupController(bfpoList, logger, cc)
     val request = FakeRequest("GET", "http://localhost:9000/bfpo/addresses?filter=FX304HG").withHeaders("User-Agent" -> "xyz")
 
     val result = bfpoLookupController.postcodeRequest(request)
@@ -84,7 +88,8 @@ class BFPOLookupControllerTest extends FunSuite with ScalaFutures {
        and log the lookup including the size of the list
     """) {
     val logger = new StubLogger
-    val bfpoLookupController = new BFPOLookupController(bfpoList, logger)
+    val cc = play.api.test.Helpers.stubControllerComponents()
+    val bfpoLookupController = new BFPOLookupController(bfpoList, logger, cc)
     val request = FakeRequest("GET", "http://localhost:9000/bfpo/addresses?postcode=bf19ZZ").withHeaders("User-Agent" -> "xyz")
 
     val result = bfpoLookupController.postcodeRequest(request)
@@ -99,7 +104,8 @@ class BFPOLookupControllerTest extends FunSuite with ScalaFutures {
        and log the lookup including the size of the list
     """) {
     val logger = new StubLogger
-    val bfpoLookupController = new BFPOLookupController(bfpoList, logger)
+    val cc = play.api.test.Helpers.stubControllerComponents()
+    val bfpoLookupController = new BFPOLookupController(bfpoList, logger, cc)
     val request = FakeRequest("GET", "http://localhost:9000/bfpo/addresses?postcode=BF19ZZ&filter=999").withHeaders("User-Agent" -> "xyz")
 
     val result = bfpoLookupController.postcodeRequest(request)

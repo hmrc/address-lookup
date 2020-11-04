@@ -45,28 +45,28 @@ trait AppServerTestApi extends Assertions with Status {
 
   def newRequest(method: String, path: String, body: String): WSRequest = {
     val wsBody = InMemoryBody(ByteString(body.trim))
-    newRequest(method, path).withHeaders("Content-Type" -> "application/json").withBody(wsBody)
+    newRequest(method, path).withHttpHeaders("Content-Type" -> "application/json").withBody(wsBody)
   }
 
   //-----------------------------------------------------------------------------------------------
 
   def request(method: String, path: String, hdrs: (String, String)*): WSResponse =
-    await(newRequest(method, path).withHeaders(hdrs:_*).execute())
+    await(newRequest(method, path).withHttpHeaders(hdrs:_*).execute())
 
   def request(method: String, path: String, body: String, hdrs: (String, String)*): WSResponse =
-    await(newRequest(method, path, body).withHeaders(hdrs:_*).execute())
+    await(newRequest(method, path, body).withHttpHeaders(hdrs:_*).execute())
 
   def get(path: String): WSResponse =
-    await(newRequest("GET", path).withHeaders("User-Agent" -> "xyz").execute())
+    await(newRequest("GET", path).withHttpHeaders("User-Agent" -> "xyz").execute())
 
   def delete(path: String): WSResponse =
-    await(newRequest("DELETE", path).withHeaders("User-Agent" -> "xyz").execute())
+    await(newRequest("DELETE", path).withHttpHeaders("User-Agent" -> "xyz").execute())
 
   def post(path: String, body: String, ct: String = "application/json"): WSResponse =
-    await(newRequest("POST", path, body).withHeaders("Content-Type" -> ct, "User-Agent" -> "xyz").execute())
+    await(newRequest("POST", path, body).withHttpHeaders("Content-Type" -> ct, "User-Agent" -> "xyz").execute())
 
   def put(path: String, body: String, ct: String = "application/json"): WSResponse =
-    await(newRequest("PUT", path, body).withHeaders("Content-Type" -> ct, "User-Agent" -> "xyz").execute())
+    await(newRequest("PUT", path, body).withHttpHeaders("Content-Type" -> ct, "User-Agent" -> "xyz").execute())
 
   //-----------------------------------------------------------------------------------------------
 

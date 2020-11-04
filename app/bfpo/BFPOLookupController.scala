@@ -16,16 +16,17 @@
 
 package bfpo
 
-import javax.inject.Inject
 import bfpo.outmodel.{BFPO, BFPOReadWrite}
+import javax.inject.Inject
 import play.api.libs.json.Json
-import play.api.mvc.{Action, Headers, Request, Result}
+import play.api.mvc.{ControllerComponents, Headers, Request, Result}
 import uk.gov.hmrc.address.uk.Postcode
+import uk.gov.hmrc.http.UpstreamErrorResponse
 import uk.gov.hmrc.logging.SimpleLogger
-import uk.gov.hmrc.play.bootstrap.controller.BaseController
-import uk.gov.hmrc.http.Upstream4xxResponse
+import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
-class BFPOLookupController @Inject() (bfpoData: List[BFPO], logger: SimpleLogger) extends BaseController {
+class BFPOLookupController @Inject()(bfpoData: List[BFPO], logger: SimpleLogger, cc: ControllerComponents)
+  extends BackendController(cc) {
 
   import BFPOReadWrite._
 
@@ -44,8 +45,12 @@ class BFPOLookupController @Inject() (bfpoData: List[BFPO], logger: SimpleLogger
 
     def filteredResponse(matches: List[BFPO], filter: Option[String], term: (String, String)): Result = {
       val filtered =
-        if (filter.isEmpty) matches
-        else matches.filter(_.anyLineContains(filter.get))
+        if (filter.isEmpty) {
+          matches
+        }
+        else {
+          matches.filter(_.anyLineContains(filter.get))
+        }
       logEvent("LOOKUP", origin, term, "matches" -> filtered.size.toString)
       Ok(Json.toJson(filtered))
     }
@@ -80,11 +85,11 @@ class BFPOLookupController @Inject() (bfpoData: List[BFPO], logger: SimpleLogger
 
   private def getOriginHeaderIfSatisfactory(headers: Headers): String = {
     val userAgent = headers.get("User-Agent").getOrElse {
-      throw Upstream4xxResponse("User-Agent header is required", 400, 400, Map())
+      throw UpstreamErrorResponse("User-Agent header is required", 400, 400, Map())
     }
     if (userAgent.indexOf('/') >= 0) {
       // reject User-Agent set by default by frameworks, browsers etc
-      throw Upstream4xxResponse(s"User-Agent header rejected: $userAgent", 400, 400, Map())
+      throw UpstreamErrorResponse(s"User-Agent header rejected: $userAgent", 400, 400, Map())
     }
     userAgent
   }

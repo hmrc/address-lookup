@@ -17,25 +17,27 @@
 package osgb
 
 import com.typesafe.config.ConfigFactory
-import play.api.mvc.{Headers, Result}
+import play.api.mvc.{ControllerComponents, Headers, Result}
 import uk.gov.hmrc.logging.SimpleLogger
-import uk.gov.hmrc.play.bootstrap.controller.BaseController
-import uk.gov.hmrc.http.Upstream4xxResponse
+import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
+import uk.gov.hmrc.http.UpstreamErrorResponse
 
-abstract class AddressController(logger: SimpleLogger) extends BaseController {
+abstract class AddressController(logger: SimpleLogger, cc: ControllerComponents) extends BackendController(cc) {
 
   lazy private val headerOrigin:String =  ConfigFactory.load().getString("header.x-origin")
 
   protected final def getOriginHeaderIfSatisfactory(headers: Headers): String = {
     val hmrcOrigin = headers.get(headerOrigin)
-    if (hmrcOrigin.isDefined) hmrcOrigin.get
+    if (hmrcOrigin.isDefined) {
+      hmrcOrigin.get
+    }
     else {
       val userAgent = headers.get("User-Agent").getOrElse {
-        throw new Upstream4xxResponse(s"User-Agent or $headerOrigin header is required", 400, 400, Map())
+        throw UpstreamErrorResponse(s"User-Agent or $headerOrigin header is required", 400, 400, Map())
       }
       if (userAgent.indexOf('/') >= 0) {
         // reject User-Agent set by default by frameworks, browsers etc
-        throw new Upstream4xxResponse(s"User-Agent or $headerOrigin header rejected: $userAgent", 400, 400, Map())
+        throw UpstreamErrorResponse(s"User-Agent or $headerOrigin header rejected: $userAgent", 400, 400, Map())
       }
       userAgent
     }

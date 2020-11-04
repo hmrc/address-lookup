@@ -17,11 +17,11 @@
 package osgb
 
 import java.net.URLDecoder
-import javax.inject.Inject
 
+import javax.inject.Inject
 import osgb.services.{AddressSearcher, ResponseProcessor}
 import play.api.libs.json._
-import play.api.mvc.{Action, AnyContent, Request, Result}
+import play.api.mvc.{Action, AnyContent, ControllerComponents, Request, Result}
 import uk.gov.hmrc.address.uk.Postcode
 import uk.gov.hmrc.logging.SimpleLogger
 
@@ -34,7 +34,9 @@ object PostcodeResponseReadWrite {
   implicit val writes: OWrites[PostcodeResponse] = Json.writes[PostcodeResponse]
 }
 
-class PostcodesController @Inject()(addressSearch: AddressSearcher, responseProcessor: ResponseProcessor, logger: SimpleLogger, ec: ExecutionContext) extends AddressController(logger) {
+class PostcodesController @Inject()(addressSearch: AddressSearcher, responseProcessor: ResponseProcessor,
+                                    logger: SimpleLogger, ec: ExecutionContext, cc: ControllerComponents)
+  extends AddressController(logger, cc) {
 
   import PostcodeResponseReadWrite._
 

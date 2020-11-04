@@ -17,17 +17,19 @@
 package osgb
 
 import javax.inject.Inject
-
 import osgb.outmodel.Marshall
 import osgb.services.{AddressSearcher, ResponseProcessor}
 import play.api.libs.json.JsValue
-import play.api.mvc.{Action, AnyContent, Request, Result}
+import play.api.mvc.{Action, AnyContent, ControllerComponents, Request, Result}
 import uk.gov.hmrc.address.v2.AddressRecord
 import uk.gov.hmrc.logging.SimpleLogger
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class AddressLookupIdController @Inject()(addressSearch: AddressSearcher, responseProcessor: ResponseProcessor, logger: SimpleLogger, ec: ExecutionContext) extends AddressController(logger) {
+class AddressLookupIdController @Inject()(addressSearch: AddressSearcher, responseProcessor: ResponseProcessor,
+                                          logger: SimpleLogger, ec: ExecutionContext, cc: ControllerComponents)
+  extends AddressController(logger, cc) {
+
   implicit private val xec = ec
 
   def findByIdV1(id: String): Action[AnyContent] = Action.async {

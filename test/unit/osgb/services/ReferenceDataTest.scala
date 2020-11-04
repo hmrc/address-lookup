@@ -18,7 +18,7 @@ package osgb.services
 
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
+import org.scalatestplus.junit.JUnitRunner
 import uk.gov.hmrc.address.v2.ReferenceItem
 
 @RunWith(classOf[JUnitRunner])

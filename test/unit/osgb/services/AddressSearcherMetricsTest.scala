@@ -18,7 +18,7 @@ package osgb.services
 
 import com.codahale.metrics.MetricRegistry
 import org.scalatest.FunSuite
-import org.scalatest.mock.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import org.mockito.Mockito._
 import org.mockito.Matchers._
 import play.api.test.Helpers._
