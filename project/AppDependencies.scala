@@ -1,12 +1,7 @@
-import sbt._
 
-object MicroServiceBuild extends Build with MicroService {
-  val appName = "address-lookup"
+import sbt.{ModuleID, _}
 
-  override lazy val appDependencies: Seq[ModuleID] = AppDependencies()
-}
-
-private object AppDependencies {
+object AppDependencies {
   import play.sbt.PlayImport._
   import play.core.PlayVersion
 
