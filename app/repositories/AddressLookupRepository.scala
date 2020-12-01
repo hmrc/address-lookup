@@ -17,17 +17,16 @@
 package repositories
 
 import cats.effect.IO
+import doobie.Transactor
+import doobie.implicits._
+import javax.inject.Inject
 import osgb.SearchParameters
 import osgb.services.AddressSearcher
 import uk.gov.hmrc.address.osgb.DbAddress
 import uk.gov.hmrc.address.uk.{Outcode, Postcode}
 
-import doobie.implicits._
-import doobie.Transactor
-
-import javax.inject.Inject
-import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 class AddressLookupRepository @Inject()(transactor: Transactor[IO]) extends AddressSearcher {
   override def findID(id: String): Future[Option[DbAddress]] = ???
@@ -35,10 +34,24 @@ class AddressLookupRepository @Inject()(transactor: Transactor[IO]) extends Addr
   override def findUprn(uprn: String): Future[List[DbAddress]] = ???
 
   override def findPostcode(postcode: Postcode, filter: Option[String]): Future[List[DbAddress]] = {
-    val query = sql"SELECT postcode FROM address_lookup where postcode = $postcode".query[String]
+    val query = sql"SELECT postcode FROM address_lookup where postcode = $postcode".query[SqlDbAddress]
 
-    query.to[List].transact(transactor).unsafeToFuture().map{
-      l => l.map(pc => DbAddress("1", List.empty, None, postcode = pc, None, None, None, None, None, None,None, None, None))
+    query.to[List].transact(transactor).unsafeToFuture().map {
+      l => l.map(a => DbAddress(
+        a.uprn,
+        Seq(a.line1, a.line2, a.line3).flatten.toList,
+        a.posttown,
+        a.postcode,
+        a.subivision,
+        a.countrycode,
+        a.localcustodiancode.map(_.toInt),
+        a.language,
+        a.blpustate.map(_.toInt),
+        a.logicalstatus.map(_.toInt),
+        None,
+        None,
+        a.location,
+        a.poboxnumber))
     }
   }
 
@@ -46,3 +59,10 @@ class AddressLookupRepository @Inject()(transactor: Transactor[IO]) extends Addr
 
   override def searchFuzzy(sp: SearchParameters): Future[List[DbAddress]] = ???
 }
+
+case class SqlDbAddress(uprn: String, line1: Option[String], line2: Option[String], line3: Option[String],
+                        subivision: Option[String], countrycode: Option[String], localcustodiancode: Option[String],
+                        language: Option[String], blpustate: Option[String], logicalstatus: Option[String],
+                        posttown: Option[String], postcode: String, location: Option[String],
+                        poboxnumber: Option[String], localAuthority: Option[String])
+
