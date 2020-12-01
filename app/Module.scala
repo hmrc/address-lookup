@@ -16,13 +16,17 @@
 
 import bfpo.BFPOFileParser
 import bfpo.outmodel.BFPO
-import com.google.inject.{AbstractModule, Provides}
+import cats.effect.IO
+import com.google.inject.{AbstractModule, Provides, TypeLiteral}
+
 import javax.inject.Singleton
 import com.kenshoo.play.metrics.Metrics
 import config.ConfigHelper
+import doobie.Transactor
 import osgb.services._
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.{Configuration, Environment}
+import repositories.{AddressLookupRepository, TransactorProvider}
 import uk.gov.hmrc.address.services.es.{ESAdminImpl, ElasticSettings, ElasticsearchHelper, IndexMetadata}
 import uk.gov.hmrc.logging.{LoggerFacade, SimpleLogger}
 
@@ -37,6 +41,7 @@ class Module(environment: Environment,
 
   def configure(): Unit = {
     bind(classOf[CannedData]).to(classOf[CannedDataImpl]).asEagerSingleton()
+    bind(new TypeLiteral[Transactor[IO]] {}).toProvider(classOf[TransactorProvider])
   }
 
   @Provides @Singleton
@@ -61,13 +66,19 @@ class Module(environment: Environment,
   }
 
   @Provides @Singleton
-  def provideAddressSearcher(indexMetadata: IndexMetadata, metrics: Metrics, configHelper: ConfigHelper, settings: ElasticSettings, logger: SimpleLogger): AddressSearcher = {
-    val indexName: String = configHelper.getConfigString("elastic.indexName").getOrElse(IndexMetadata.ariAliasName)
+  def provideAddressSearcher(indexMetadata: IndexMetadata, metrics: Metrics, configHelper: ConfigHelper, settings: ElasticSettings, transactor: Transactor[IO], logger: SimpleLogger): AddressSearcher = {
+    val dbEnabled = isDbEnabled(configHelper)
 
-    def elasticSearcher: AddressSearcher = new AddressESSearcher(indexMetadata.clients.head, indexName, "GB", defaultContext, settings, logger)
+    if (dbEnabled) new AddressLookupRepository(transactor)
+    else {
+      val indexName: String = configHelper.getConfigString("elastic.indexName").getOrElse(IndexMetadata.ariAliasName)
 
-    new AddressSearcherMetrics(elasticSearcher, metrics.defaultRegistry, defaultContext)
+      new AddressESSearcher(indexMetadata.clients.head, indexName, "GB", defaultContext, settings, logger)
+    }
   }
+
+  private def isDbEnabled(configHelper: ConfigHelper): Boolean =
+    configHelper.getConfigString("db.address-lookup.enabled").getOrElse("false").toBoolean
 
   @Provides @Singleton
   def provideBFPOList(configHelper: ConfigHelper): List[BFPO] = BFPOFileParser.loadResource(configHelper.mustGetConfigString("bfpo.data"))
