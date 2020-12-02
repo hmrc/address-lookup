@@ -47,17 +47,21 @@ class AddressLookupRepository @Inject()(transactor: Transactor[IO]) extends Addr
            |blpustate,
            |logicalstatus,
            |location,
-           |poboxnumber
+           |posttown,
+           |postcode,
+           |poboxnumber,
+           |localauthority
            |FROM address_lookup
            |WHERE postcode = ${postcode.toString}""".stripMargin.query[SqlDbAddress]
 
     query.to[List].transact(transactor).unsafeToFuture().map {
-      l => l.map(a => DbAddress(
+      l =>
+        l.map(a => DbAddress(
         a.uprn,
         Seq(a.line1, a.line2, a.line3).flatten.toList,
         a.posttown,
-        a.postcode,
-        a.subivision,
+        a.postcode.getOrElse(""), //This should not be a problem as we are searching on a provided postcode so in practice this should exist.
+        a.subdivision,
         a.countrycode,
         a.localcustodiancode.map(_.toInt),
         a.language,
@@ -75,9 +79,19 @@ class AddressLookupRepository @Inject()(transactor: Transactor[IO]) extends Addr
   override def searchFuzzy(sp: SearchParameters): Future[List[DbAddress]] = ???
 }
 
-case class SqlDbAddress(uprn: String, line1: Option[String], line2: Option[String], line3: Option[String],
-                        subivision: Option[String], countrycode: Option[String], localcustodiancode: Option[String],
-                        language: Option[String], blpustate: Option[String], logicalstatus: Option[String],
-                        posttown: Option[String], postcode: String, location: Option[String],
-                        poboxnumber: Option[String], localAuthority: Option[String])
+case class SqlDbAddress(uprn: String,
+                        line1: Option[String],
+                        line2: Option[String],
+                        line3: Option[String],
+                        subdivision: Option[String],
+                        countrycode: Option[String],
+                        localcustodiancode: Option[String],
+                        language: Option[String],
+                        blpustate: Option[String],
+                        logicalstatus: Option[String],
+                        location: Option[String],
+                        posttown: Option[String],
+                        postcode: Option[String],
+                        poboxnumber: Option[String],
+                        localauthority: Option[String])
 
