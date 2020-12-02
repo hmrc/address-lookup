@@ -34,7 +34,22 @@ class AddressLookupRepository @Inject()(transactor: Transactor[IO]) extends Addr
   override def findUprn(uprn: String): Future[List[DbAddress]] = ???
 
   override def findPostcode(postcode: Postcode, filter: Option[String]): Future[List[DbAddress]] = {
-    val query = sql"SELECT postcode FROM address_lookup where postcode = $postcode".query[SqlDbAddress]
+    val query =
+      sql"""SELECT
+           |uprn,
+           |line1,
+           |line2,
+           |line3,
+           |subdivision,
+           |countrycode,
+           |localcustodiancode,
+           |language,
+           |blpustate,
+           |logicalstatus,
+           |location,
+           |poboxnumber
+           |FROM address_lookup
+           |WHERE postcode = ${postcode.toString}""".stripMargin.query[SqlDbAddress]
 
     query.to[List].transact(transactor).unsafeToFuture().map {
       l => l.map(a => DbAddress(
