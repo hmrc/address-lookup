@@ -19,9 +19,12 @@ package repositories
 import cats.effect.IO
 import doobie.Transactor
 import doobie.implicits._
+import doobie.util.fragment
+
 import javax.inject.Inject
 import osgb.SearchParameters
 import osgb.services.AddressSearcher
+import repositories.AddressLookupRepository.baseQuery
 import uk.gov.hmrc.address.osgb.DbAddress
 import uk.gov.hmrc.address.uk.{Outcode, Postcode}
 
@@ -31,52 +34,89 @@ import scala.concurrent.Future
 class AddressLookupRepository @Inject()(transactor: Transactor[IO]) extends AddressSearcher {
   override def findID(id: String): Future[Option[DbAddress]] = ???
 
-  override def findUprn(uprn: String): Future[List[DbAddress]] = ???
+  override def findUprn(uprn: String): Future[List[DbAddress]] = {
+    val cleanUprn = uprn.replaceFirst("^[Gg][Bb]", "")
+    val query = (
+        baseQuery ++ doobie.Fragments.whereAnd(sql"""uprn = ${cleanUprn.toInt}""")
+      ).query[SqlDbAddress]
 
-  override def findPostcode(postcode: Postcode, filter: Option[String]): Future[List[DbAddress]] = {
-    val query =
-      sql"""SELECT
-           |uprn,
-           |line1,
-           |line2,
-           |line3,
-           |subdivision,
-           |countrycode,
-           |localcustodiancode,
-           |language,
-           |blpustate,
-           |logicalstatus,
-           |location,
-           |posttown,
-           |postcode,
-           |poboxnumber,
-           |localauthority
-           |FROM address_lookup
-           |WHERE postcode = ${postcode.toString}""".stripMargin.query[SqlDbAddress]
-
-    query.to[List].transact(transactor).unsafeToFuture().map {
-      l =>
-        l.map(a => DbAddress(
-        a.uprn,
-        Seq(a.line1, a.line2, a.line3).flatten.toList,
-        a.posttown,
-        a.postcode.getOrElse(""), //This should not be a problem as we are searching on a provided postcode so in practice this should exist.
-        a.subdivision,
-        a.countrycode,
-        a.localcustodiancode.map(_.toInt),
-        a.language,
-        a.blpustate.map(_.toInt),
-        a.logicalstatus.map(_.toInt),
-        None,
-        None,
-        a.location,
-        a.poboxnumber))
-    }
+    query.to[List].transact(transactor).unsafeToFuture().map(l => l.map(mapToDbAddress))
   }
 
-  override def findOutcode(outcode: Outcode, filter: String): Future[List[DbAddress]] = ???
+
+  override def findPostcode(postcode: Postcode, filter: Option[String]): Future[List[DbAddress]] = {
+    val query = {
+      filterOptToTsQueryOpt(filter)
+        .foldLeft(baseQuery ++ doobie.Fragments.whereAnd(sql"postcode = ${postcode.toString}")) {
+        case (a, f) =>
+          a ++ doobie.Fragments.and(f)
+      }.query[SqlDbAddress]
+    }
+
+    println(query.sql)
+
+    query.to[List].transact(transactor).unsafeToFuture().map(l => l.map(mapToDbAddress))
+  }
+
+  override def findOutcode(outcode: Outcode, filter: String): Future[List[DbAddress]] = {
+    val query = (
+      baseQuery ++ doobie.Fragments.whereAnd(
+        sql"postcode like ${outcode.toString + "%"}",
+        filterToTsQuery(filter)
+      )).query[SqlDbAddress]
+
+    query.to[List].transact(transactor).unsafeToFuture().map(l => l.map(mapToDbAddress))
+  }
 
   override def searchFuzzy(sp: SearchParameters): Future[List[DbAddress]] = ???
+
+  private def filterOptToTsQueryOpt(filterOpt: Option[String]): Option[fragment.Fragment] =
+    filterOpt.map(filterToTsQuery)
+
+  private def filterToTsQuery(filter: String): fragment.Fragment =
+    sql"address_lookup_ft_col @@ to_tsquery(${filter.replace("""\p{Space}+""", " & ")})"
+
+  private def mapToDbAddress(sqlDbAddress: SqlDbAddress): DbAddress = {
+    DbAddress(
+      sqlDbAddress.uprn,
+      Seq(sqlDbAddress.line1, sqlDbAddress.line2, sqlDbAddress.line3).flatten.toList,
+      sqlDbAddress.posttown,
+      sqlDbAddress.postcode.getOrElse(""), //This should not be a problem as we are searching on a provided postcode
+      // so in practice this should exist.
+
+      sqlDbAddress.subdivision,
+      sqlDbAddress.countrycode,
+      sqlDbAddress.localcustodiancode.map(_.toInt),
+      sqlDbAddress.language,
+      sqlDbAddress.blpustate.map(_.toInt),
+      sqlDbAddress.logicalstatus.map(_.toInt),
+      None,
+      None,
+      sqlDbAddress.location,
+      sqlDbAddress.poboxnumber)
+  }
+}
+
+object AddressLookupRepository {
+  private val baseQuery =
+    sql"""SELECT
+         |uprn,
+         |line1,
+         |line2,
+         |line3,
+         |subdivision,
+         |countrycode,
+         |localcustodiancode,
+         |language,
+         |blpustate,
+         |logicalstatus,
+         |location,
+         |posttown,
+         |postcode,
+         |poboxnumber,
+         |localauthority
+         |FROM address_lookup """.stripMargin
+
 }
 
 case class SqlDbAddress(uprn: String,
