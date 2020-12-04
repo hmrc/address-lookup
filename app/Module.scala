@@ -77,7 +77,7 @@ class Module(environment: Environment,
                              logger: SimpleLogger): AddressSearcher = {
     val dbEnabled = isDbEnabled(configHelper)
 
-    if (dbEnabled) {
+    val searcher = if (dbEnabled) {
       val transactor = new TransactorProvider(configuration, applicationLifecycle).get(executionContext)
       new AddressLookupRepository(transactor)
     } else {
@@ -85,6 +85,8 @@ class Module(environment: Environment,
 
       new AddressESSearcher(indexMetadata.clients.head, indexName, "GB", defaultContext, settings, logger)
     }
+
+    new AddressSearcherMetrics(searcher, metrics.defaultRegistry, defaultContext)
   }
 
   private def isDbEnabled(configHelper: ConfigHelper): Boolean =
