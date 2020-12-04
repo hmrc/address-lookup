@@ -78,7 +78,7 @@ class Module(environment: Environment,
     val dbEnabled = isDbEnabled(configHelper)
 
     if (dbEnabled) {
-      val transactor = new TransactorProvider(configuration, applicationLifecycle).get(executionContext)
+      lazy val transactor = new TransactorProvider(configuration, applicationLifecycle).get(executionContext)
       new AddressLookupRepository(transactor)
     } else {
       val indexName: String = configHelper.getConfigString("elastic.indexName").getOrElse(IndexMetadata.ariAliasName)
