@@ -78,7 +78,7 @@ class Module(environment: Environment,
     val dbEnabled = isDbEnabled(configHelper)
 
     if (dbEnabled) {
-      lazy val transactor = new TransactorProvider(configuration, applicationLifecycle).get(executionContext)
+      val transactor = new TransactorProvider(configuration, applicationLifecycle).get(executionContext)
       new AddressLookupRepository(transactor)
     } else {
       val indexName: String = configHelper.getConfigString("elastic.indexName").getOrElse(IndexMetadata.ariAliasName)
@@ -88,7 +88,7 @@ class Module(environment: Environment,
   }
 
   private def isDbEnabled(configHelper: ConfigHelper): Boolean =
-    configHelper.getConfigString("db.address-lookup.enabled").getOrElse("false").toBoolean
+    configHelper.getConfigString("address-lookup-rds.enabled").getOrElse("false").toBoolean
 
   @Provides
   @Singleton
