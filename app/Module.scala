@@ -24,6 +24,7 @@ import com.kenshoo.play.metrics.Metrics
 import config.ConfigHelper
 import doobie.Transactor
 import osgb.services._
+import play.api.inject.ApplicationLifecycle
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.{Configuration, Environment}
 import repositories.{AddressLookupRepository, TransactorProvider}
@@ -41,13 +42,14 @@ class Module(environment: Environment,
 
   def configure(): Unit = {
     bind(classOf[CannedData]).to(classOf[CannedDataImpl]).asEagerSingleton()
-    bind(new TypeLiteral[Transactor[IO]] {}).toProvider(classOf[TransactorProvider])
   }
 
-  @Provides @Singleton
+  @Provides
+  @Singleton
   def provideLogger: SimpleLogger = new LoggerFacade(play.api.Logger.logger)
 
-  @Provides @Singleton
+  @Provides
+  @Singleton
   def provideElasticSettings(configHelper: ConfigHelper): ElasticSettings = {
     val localMode = configHelper.getConfigString("elastic.localMode").exists(_.toBoolean)
     val homeDir = configHelper.getConfigString("elastic.homeDir")
@@ -58,19 +60,27 @@ class Module(environment: Environment,
     ElasticSettings(localMode, homeDir, preDelete, connectionString, isCluster, clusterName, numShards)
   }
 
-  @Provides @Singleton
-  def provideIndexMetadata(configHelper: ConfigHelper, logger: SimpleLogger, ec: ExecutionContext, settings: ElasticSettings): IndexMetadata = {
+  @Provides
+  @Singleton
+  def provideIndexMetadata(configHelper: ConfigHelper, logger: SimpleLogger, ec: ExecutionContext,
+                           settings: ElasticSettings): IndexMetadata = {
     val clients = ElasticsearchHelper.buildClients(settings, new LoggerFacade(play.api.Logger.logger))
     val esImpl = new ESAdminImpl(clients, logger, ec, settings)
     new IndexMetadata(esImpl, settings.isCluster, numShards, logger, ec)
   }
 
-  @Provides @Singleton
-  def provideAddressSearcher(indexMetadata: IndexMetadata, metrics: Metrics, configHelper: ConfigHelper, settings: ElasticSettings, transactor: Transactor[IO], logger: SimpleLogger): AddressSearcher = {
+  @Provides
+  @Singleton
+  def provideAddressSearcher(indexMetadata: IndexMetadata, metrics: Metrics, configuration: Configuration,
+                             configHelper: ConfigHelper, executionContext: ExecutionContext,
+                             settings: ElasticSettings, applicationLifecycle: ApplicationLifecycle,
+                             logger: SimpleLogger): AddressSearcher = {
     val dbEnabled = isDbEnabled(configHelper)
 
-    if (dbEnabled) new AddressLookupRepository(transactor)
-    else {
+    if (dbEnabled) {
+      val transactor = new TransactorProvider(configuration, applicationLifecycle).get(executionContext)
+      new AddressLookupRepository(transactor)
+    } else {
       val indexName: String = configHelper.getConfigString("elastic.indexName").getOrElse(IndexMetadata.ariAliasName)
 
       new AddressESSearcher(indexMetadata.clients.head, indexName, "GB", defaultContext, settings, logger)
@@ -80,10 +90,13 @@ class Module(environment: Environment,
   private def isDbEnabled(configHelper: ConfigHelper): Boolean =
     configHelper.getConfigString("db.address-lookup.enabled").getOrElse("false").toBoolean
 
-  @Provides @Singleton
-  def provideBFPOList(configHelper: ConfigHelper): List[BFPO] = BFPOFileParser.loadResource(configHelper.mustGetConfigString("bfpo.data"))
+  @Provides
+  @Singleton
+  def provideBFPOList(configHelper: ConfigHelper): List[BFPO] = BFPOFileParser.loadResource(configHelper
+    .mustGetConfigString("bfpo.data"))
 
-  @Provides @Singleton
+  @Provides
+  @Singleton
   def providesReferenceData(configHelper: ConfigHelper): ReferenceData =
     ReferenceData.load(configHelper.mustGetConfigString("lcc.table"), configHelper.mustGetConfigString("lcc.counties"))
 }

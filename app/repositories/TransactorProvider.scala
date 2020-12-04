@@ -16,22 +16,18 @@
 
 package repositories
 
-import java.util.concurrent.Executors
-
 import cats.effect.{ContextShift, IO}
 import doobie.Transactor
 import doobie.hikari.HikariTransactor
-import javax.inject.{Inject, Provider, Singleton}
 import play.api.Configuration
 import play.api.inject.ApplicationLifecycle
 
+import java.util.concurrent.Executors
 import scala.concurrent.ExecutionContext
 
-@Singleton
-class TransactorProvider @Inject()(configuration: Configuration, ec: ExecutionContext, applicationLifecycle: ApplicationLifecycle)
-    extends Provider[Transactor[IO]] {
+class TransactorProvider (configuration: Configuration, applicationLifecycle: ApplicationLifecycle) {
 
-  override lazy val get: Transactor[IO] = {
+  def get(ec: ExecutionContext): Transactor[IO] = {
     implicit val cs: ContextShift[IO] = IO.contextShift(ec)
 
     val dbConfig = configuration.get[Configuration]("db.address-lookup")
