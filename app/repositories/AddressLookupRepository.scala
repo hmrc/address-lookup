@@ -79,7 +79,8 @@ class AddressLookupRepository @Inject()(transactor: Transactor[IO]) extends Addr
   private def mapToDbAddress(sqlDbAddress: SqlDbAddress): DbAddress = {
     DbAddress(
       sqlDbAddress.uprn,
-      Seq(sqlDbAddress.line1, sqlDbAddress.line2, sqlDbAddress.line3).flatten.toList,
+      Seq(sqlDbAddress.line1, sqlDbAddress.line2, sqlDbAddress.line3)
+        .collect { case l if l.isDefined & !l.get.isEmpty => l.get }.toList,
       sqlDbAddress.posttown,
       sqlDbAddress.postcode.getOrElse(""), //This should not be a problem as we are searching on a provided postcode
       // so in practice this should exist.
