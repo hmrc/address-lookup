@@ -20,11 +20,11 @@ import cats.effect.IO
 import doobie.Transactor
 import doobie.implicits._
 import doobie.util.fragment
-
 import javax.inject.Inject
 import osgb.SearchParameters
 import osgb.services.AddressSearcher
 import uk.gov.hmrc.address.osgb.DbAddress
+import uk.gov.hmrc.address.services.Capitalisation._
 import uk.gov.hmrc.address.uk.{Outcode, Postcode}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -44,10 +44,9 @@ class AddressLookupRepository @Inject()(transactor: Transactor[IO]) extends Addr
 
   override def findPostcode(postcode: Postcode, filter: Option[String]): Future[List[DbAddress]] = {
     val queryFragment = baseQuery ++ sql""" WHERE postcode = ${postcode.toString}"""
-    val queryFragmentWithFilter =
-      filterOptToTsQueryOpt(filter).foldLeft(queryFragment) { case (a, f) => a ++ sql" AND " ++ f }
-
-    println(queryFragmentWithFilter)
+         val queryFragmentWithFilter =
+      filterOptToTsQueryOpt(filter).foldLeft(queryFragment) { case (a, f) =>
+            a ++ sql" AND " ++ f }
 
     queryFragmentWithFilter.query[SqlDbAddress].to[List].transact(transactor).unsafeToFuture()
       .map(l => l.map(mapToDbAddress))
@@ -74,9 +73,12 @@ class AddressLookupRepository @Inject()(transactor: Transactor[IO]) extends Addr
   private def mapToDbAddress(sqlDbAddress: SqlDbAddress): DbAddress = {
     DbAddress(
       sqlDbAddress.uprn,
-      Seq(sqlDbAddress.line1, sqlDbAddress.line2, sqlDbAddress.line3)
-        .collect { case l if l.isDefined & !l.get.isEmpty => l.get }.toList,
-      sqlDbAddress.posttown,
+      Seq(
+        sqlDbAddress.line1.map(normaliseAddressLine(_)),
+        sqlDbAddress.line2.map(normaliseAddressLine(_)),
+        sqlDbAddress.line3.map(normaliseAddressLine(_))
+      ).collect { case l if l.isDefined & !l.get.isEmpty => l.get }.toList,
+      sqlDbAddress.posttown.map(normaliseAddressLine(_)),
       sqlDbAddress.postcode.getOrElse(""), //This should not be a problem as we are searching on a provided postcode so in practice this should exist.
       sqlDbAddress.subdivision,
       sqlDbAddress.countrycode,
