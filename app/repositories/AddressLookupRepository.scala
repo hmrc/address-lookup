@@ -69,8 +69,7 @@ class AddressLookupRepository @Inject()(transactor: Transactor[IO]) extends Addr
     filterOpt.map(filterToTsQuery)
 
   private def filterToTsQuery(filter: String): fragment.Fragment = {
-    val processedFilter = """\p{Space}+""".r.replaceAllIn(filter, " & ")
-    sql"""address_lookup_ft_col @@ to_tsquery('english', ${processedFilter})"""
+    sql"""address_lookup_ft_col @@ plainto_tsquery('english', ${filter})"""
   }
 
   private def mapToDbAddress(sqlDbAddress: SqlDbAddress): DbAddress = {
