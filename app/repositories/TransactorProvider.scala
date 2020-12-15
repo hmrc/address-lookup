@@ -30,6 +30,8 @@ class TransactorProvider (configuration: Configuration, applicationLifecycle: Ap
   def get(ec: ExecutionContext): Transactor[IO] = {
     implicit val cs: ContextShift[IO] = IO.contextShift(ec)
 
+    println(s"TransactorProvider.get()")
+
     val dbConfig = configuration.get[Configuration]("address-lookup-rds")
 
     val hikariTransactorResource = HikariTransactor.newHikariTransactor[IO](

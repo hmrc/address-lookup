@@ -33,6 +33,7 @@ import scala.concurrent.Future
 class AddressLookupRepository @Inject()(transactor: Transactor[IO]) extends AddressSearcher {
   import AddressLookupRepository._
 
+
   override def findID(id: String): Future[Option[DbAddress]] = ???
 
   override def findUprn(uprn: String): Future[List[DbAddress]] = {
@@ -67,8 +68,10 @@ class AddressLookupRepository @Inject()(transactor: Transactor[IO]) extends Addr
   private def filterOptToTsQueryOpt(filterOpt: Option[String]): Option[fragment.Fragment] =
     filterOpt.map(filterToTsQuery)
 
-  private def filterToTsQuery(filter: String): fragment.Fragment =
-    sql"address_lookup_ft_col @@ to_tsquery(${filter.replace("""\p{Space}+""", " & ")})"
+  private def filterToTsQuery(filter: String): fragment.Fragment = {
+    val processedFilter = """\p{Space}+""".r.replaceAllIn(filter, " & ")
+    sql"""address_lookup_ft_col @@ to_tsquery(${processedFilter})"""
+  }
 
   private def mapToDbAddress(sqlDbAddress: SqlDbAddress): DbAddress = {
     DbAddress(
