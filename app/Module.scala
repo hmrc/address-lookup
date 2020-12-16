@@ -71,6 +71,16 @@ class Module(environment: Environment,
 
   @Provides
   @Singleton
+  def provideTransactorOptional(configHelper: ConfigHelper, configuration: Configuration,
+                                applicationLifecycle: ApplicationLifecycle,
+                                executionContext: ExecutionContext): Option[Transactor[IO]] = {
+    if (isDbEnabled(configHelper))
+      Some(new TransactorProvider(configuration, applicationLifecycle).get(executionContext))
+    else None
+  }
+
+  @Provides
+  @Singleton
   def provideAddressSearcher(indexMetadata: IndexMetadata, metrics: Metrics, configuration: Configuration,
                              configHelper: ConfigHelper, executionContext: ExecutionContext,
                              settings: ElasticSettings, applicationLifecycle: ApplicationLifecycle,

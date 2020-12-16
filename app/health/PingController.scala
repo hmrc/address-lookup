@@ -19,20 +19,27 @@ package health
 import cats.effect.IO
 import doobie.implicits._
 import doobie.util.transactor.Transactor
+
 import javax.inject.Inject
 import play.api.mvc.{Action, AnyContent, DefaultControllerComponents}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
-class PingController @Inject()(controllerComponents: DefaultControllerComponents, transactor: Transactor[IO])
+class PingController @Inject()(controllerComponents: DefaultControllerComponents, transactor: Option[Transactor[IO]])
   extends BackendController(controllerComponents) {
 
   def ping(): Action[AnyContent] = Action.async { _ =>
     val testPostCode = "W14 9HR"
-    sql"""SELECT COUNT(*) FROM address_lookup WHERE postcode = $testPostCode"""
-      .query[Int].unique.transact(transactor).unsafeToFuture() map { count =>
-        if (count > 0) Ok else ServiceUnavailable
+    transactor match {
+      case Some(t) =>
+        sql"""SELECT COUNT(*) FROM address_lookup WHERE postcode = $testPostCode"""
+          .query[Int].unique.transact(t).unsafeToFuture() map {
+          count =>
+            if (count > 0) Ok else ServiceUnavailable
+        }
+      case _ => Future.successful(Ok)
     }
   }
 }
