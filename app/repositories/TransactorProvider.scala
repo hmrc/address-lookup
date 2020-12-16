@@ -37,7 +37,7 @@ class TransactorProvider (configuration: Configuration, applicationLifecycle: Ap
       dbConfig.get[String]("url"),
       dbConfig.get[String]("username"),
       dbConfig.get[String]("password"),
-      ExecutionContext.fromExecutor(Executors.newFixedThreadPool(50)), // waiting for connections
+      ExecutionContext.fromExecutor(Executors.newFixedThreadPool(10)), // waiting for connections
       ExecutionContext.fromExecutor(Executors.newCachedThreadPool()) // executing db calls, bounded by hikari connection pool size
     )
 
