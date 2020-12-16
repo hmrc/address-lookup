@@ -47,7 +47,8 @@ object AddressWriteable {
       (JsPath \ "location").writeNullable[Seq[BigDecimal]] and
       (JsPath \ "blpuState").writeNullable[String] and
       (JsPath \ "logicalState").writeNullable[String] and
-      (JsPath \ "streetClassification").writeNullable[String]
-  ) (unlift(AddressRecord.unapply))
+      (JsPath \ "streetClassification").writeNullable[String] and
+      (JsPath \ "administrativeArea").writeNullable[String]
+    ) (unlift(AddressRecord.unapply))
 
 }

@@ -31,10 +31,11 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class AddressLookupRepository @Inject()(transactor: Transactor[IO]) extends AddressSearcher {
+
   import AddressLookupRepository._
 
 
-  override def findID(id: String): Future[Option[DbAddress]] = ???
+  override def findID(id: String): Future[Option[DbAddress]] = findUprn(id).map(_.headOption)
 
   override def findUprn(uprn: String): Future[List[DbAddress]] = {
     val queryFragment = baseQuery ++
@@ -45,9 +46,10 @@ class AddressLookupRepository @Inject()(transactor: Transactor[IO]) extends Addr
 
   override def findPostcode(postcode: Postcode, filter: Option[String]): Future[List[DbAddress]] = {
     val queryFragment = baseQuery ++ sql""" WHERE postcode = ${postcode.toString}"""
-         val queryFragmentWithFilter =
+    val queryFragmentWithFilter =
       filterOptToTsQueryOpt(filter).foldLeft(queryFragment) { case (a, f) =>
-            a ++ sql" AND " ++ f }
+        a ++ sql" AND " ++ f
+      }
 
     queryFragmentWithFilter.query[SqlDbAddress].to[List].transact(transactor).unsafeToFuture()
       .map(l => l.map(mapToDbAddress))
@@ -55,7 +57,7 @@ class AddressLookupRepository @Inject()(transactor: Transactor[IO]) extends Addr
 
   override def findOutcode(outcode: Outcode, filter: String): Future[List[DbAddress]] = {
     val queryFragment =
-    baseQuery ++ sql""" WHERE postcode like ${outcode.toString + "%"} AND """ ++ filterToTsQuery(filter)
+      baseQuery ++ sql""" WHERE postcode like ${outcode.toString + "%"} AND """ ++ filterToTsQuery(filter)
 
     queryFragment.query[SqlDbAddress].to[List].transact(transactor).unsafeToFuture()
       .map(l => l.map(mapToDbAddress))
@@ -91,7 +93,8 @@ class AddressLookupRepository @Inject()(transactor: Transactor[IO]) extends Addr
       None,
       None,
       sqlDbAddress.location,
-      sqlDbAddress.poboxnumber)
+      sqlDbAddress.poboxnumber,
+      sqlDbAddress.localauthority)
   }
 }
 
