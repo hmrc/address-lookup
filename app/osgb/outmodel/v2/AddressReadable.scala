@@ -48,7 +48,8 @@ object AddressReadable {
       (JsPath \ "location").readNullable[Seq[BigDecimal]] and
       (JsPath \ "blpuState").readNullable[String] and
       (JsPath \ "logicalState").readNullable[String] and
-      (JsPath \ "streetClassification").readNullable[String]
+      (JsPath \ "streetClassification").readNullable[String] and
+      (JsPath \ "administrativeArea").readNullable[String]
     ) (AddressRecord.apply _)
 
 }
