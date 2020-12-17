@@ -20,6 +20,7 @@ import cats.effect.IO
 import doobie.Transactor
 import doobie.implicits._
 import doobie.util.fragment
+
 import javax.inject.Inject
 import osgb.SearchParameters
 import osgb.services.AddressSearcher
@@ -35,11 +36,11 @@ class AddressLookupRepository @Inject()(transactor: Transactor[IO]) extends Addr
   import AddressLookupRepository._
 
 
-  override def findID(id: String): Future[Option[DbAddress]] = findUprn(id).map(_.headOption)
+  override def findID(id: String): Future[Option[DbAddress]] = findUprn(cleanUprn(id)).map(_.headOption)
 
   override def findUprn(uprn: String): Future[List[DbAddress]] = {
     val queryFragment = baseQuery ++
-      sql""" WHERE uprn = ${cleanUprn(uprn).toInt}"""
+      sql""" WHERE uprn = ${uprn.toInt}"""
 
     queryFragment.query[SqlDbAddress].to[List].transact(transactor).unsafeToFuture().map(l => l.map(mapToDbAddress))
   }

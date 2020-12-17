@@ -25,6 +25,7 @@ import uk.gov.hmrc.address.v2.AddressRecord
 import uk.gov.hmrc.logging.SimpleLogger
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Try
 
 class AddressLookupIdController @Inject()(addressSearch: AddressSearcher, responseProcessor: ResponseProcessor,
                                           logger: SimpleLogger, ec: ExecutionContext, cc: ControllerComponents)
@@ -44,7 +45,7 @@ class AddressLookupIdController @Inject()(addressSearch: AddressSearcher, respon
 
   private[osgb] def findByIdRequest[A](request: Request[A], id: String, marshall: AddressRecord => JsValue): Future[Result] = {
     val origin = getOriginHeaderIfSatisfactory(request.headers)
-    addressSearch.findID(id).map {
+    Try(addressSearch.findID(id).map {
       a =>
         val list = a.toList
         logEvent("LOOKUP", "origin" -> origin, "id" -> id, "matches" -> list.size.toString)
@@ -55,6 +56,6 @@ class AddressLookupIdController @Inject()(addressSearch: AddressSearcher, respon
         else {
           NotFound(s"id matched nothing")
         }
-    }
+    }).getOrElse(Future.successful(BadRequest(s"Check the id supplied: $id")))
   }
 }
