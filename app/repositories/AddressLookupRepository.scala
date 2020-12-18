@@ -40,7 +40,7 @@ class AddressLookupRepository @Inject()(transactor: Transactor[IO]) extends Addr
 
   override def findUprn(uprn: String): Future[List[DbAddress]] = {
     val queryFragment = baseQuery ++
-      sql""" WHERE uprn = ${uprn.toInt}"""
+      sql""" WHERE uprn = ${uprn.toLong}"""
 
     queryFragment.query[SqlDbAddress].to[List].transact(transactor).unsafeToFuture().map(l => l.map(mapToDbAddress))
   }
@@ -77,7 +77,7 @@ class AddressLookupRepository @Inject()(transactor: Transactor[IO]) extends Addr
 
   private def mapToDbAddress(sqlDbAddress: SqlDbAddress): DbAddress = {
     DbAddress(
-      sqlDbAddress.uprn,
+      "GB" + sqlDbAddress.uprn, //To keep things in line with current output.
       Seq(
         sqlDbAddress.line1.map(normaliseAddressLine(_)),
         sqlDbAddress.line2.map(normaliseAddressLine(_)),
