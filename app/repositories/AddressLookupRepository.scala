@@ -64,7 +64,24 @@ class AddressLookupRepository @Inject()(transactor: Transactor[IO]) extends Addr
       .map(l => l.map(mapToDbAddress))
   }
 
-  override def searchFuzzy(sp: SearchParameters): Future[List[DbAddress]] = ???
+  override def searchFuzzy(sp: SearchParameters): Future[List[DbAddress]] = {
+    val filter =  for {
+      f <- Option(sp.lines).map(_.mkString(" ")).orElse(Some(" "))
+      t <- sp.town.orElse(Some(" "))
+    } yield (f + " " + t).trim.replaceAll("\\p{Space}+", " ")
+    if(sp.postcode.isDefined) findPostcode(sp.postcode.get, filter)
+    else findWithOnlyFilter(filter)
+  }
+
+  private def findWithOnlyFilter(filter: Option[String]): Future[List[DbAddress]] = {
+    val queryFragmentWithFilter =
+      filterOptToTsQueryOpt(filter).foldLeft(baseQuery) { case (a, f) =>
+        a ++ sql" WHERE " ++ f
+      }
+
+    queryFragmentWithFilter.query[SqlDbAddress].to[List].transact(transactor).unsafeToFuture()
+      .map(l => l.map(mapToDbAddress))
+  }
 
   private def cleanUprn(uprn: String): String = uprn.replaceFirst("^[Gg][Bb]", "")
 
