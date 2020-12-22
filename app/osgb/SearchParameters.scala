@@ -28,7 +28,7 @@ case class SearchParameters(
                              lines: List[String] = Nil
                            ) {
 
-  private def nonBlank(s: Option[String]) = if (s.contains("")) None else s
+  private def nonBlank(s: Option[String]) = if (s.map(_.trim).contains("")) None else s
 
   def clean = new SearchParameters(
     uprn = nonBlank(uprn),
@@ -37,7 +37,7 @@ case class SearchParameters(
     fuzzy = nonBlank(fuzzy),
     filter = nonBlank(filter),
     town = nonBlank(town),
-    lines.filterNot(_.isEmpty))
+    lines.filterNot(_.trim.isEmpty))
 
   def isFuzzy: Boolean = fuzzy.isDefined || lines.nonEmpty // don't care about town
 
