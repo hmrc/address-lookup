@@ -1,7 +1,7 @@
 # We need the /address-lookup prefix because the Nginx reverse proxy passes requests through to us
 # with that prefix. Some of the entry points need to be both with and without the prefix.
 
-GET           /ping/ping                        health.PingController.ping()
+GET           /ping/ping                        uk.gov.hmrc.play.health.HealthController.ping
 
 # Kenshoo metrics https://github.com/kenshoo/metrics-play
 GET           /admin/metrics                    com.kenshoo.play.metrics.MetricsController.metrics
