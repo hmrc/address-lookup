@@ -20,6 +20,7 @@ import cats.effect.IO
 import doobie.Transactor
 import doobie.implicits._
 import doobie.util.fragment
+import doobie.util.fragment.Fragment
 
 import javax.inject.Inject
 import osgb.SearchParameters
@@ -31,10 +32,8 @@ import uk.gov.hmrc.address.uk.{Outcode, Postcode}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class AddressLookupRepository @Inject()(transactor: Transactor[IO]) extends AddressSearcher {
-
+class AddressLookupRepository @Inject()(transactor: Transactor[IO], queryConfig: RdsQueryConfig) extends AddressSearcher {
   import AddressLookupRepository._
-
 
   override def findID(id: String): Future[Option[DbAddress]] = findUprn(cleanUprn(id)).map(_.headOption)
 
@@ -65,22 +64,28 @@ class AddressLookupRepository @Inject()(transactor: Transactor[IO]) extends Addr
   }
 
   override def searchFuzzy(sp: SearchParameters): Future[List[DbAddress]] = {
-    val filter =  for {
+    val filter = for {
       f <- Option(sp.lines).map(_.mkString(" ")).orElse(Some(" "))
       t <- sp.town.orElse(Some(" "))
     } yield (f + " " + t).trim.replaceAll("\\p{Space}+", " ")
-    if(sp.postcode.isDefined) findPostcode(sp.postcode.get, filter)
+    if (sp.postcode.isDefined) findPostcode(sp.postcode.get, filter)
     else findWithOnlyFilter(filter)
   }
 
   private def findWithOnlyFilter(filter: Option[String]): Future[List[DbAddress]] = {
+    val timeLimit = Fragment(s"SET statement_timeout=${queryConfig.queryTimeoutMillis}", List())
+    val limitSql = Fragment(s" LIMIT ${queryConfig.queryResultsLimit}", List())
+
     val queryFragmentWithFilter =
       filterOptToTsQueryOpt(filter).foldLeft(baseQuery) { case (a, f) =>
-        a ++ sql" WHERE " ++ f
+        a ++ sql" WHERE " ++ f ++ limitSql
       }
 
-    queryFragmentWithFilter.query[SqlDbAddress].to[List].transact(transactor).unsafeToFuture()
-      .map(l => l.map(mapToDbAddress))
+    val toRun = for {
+      _   <- timeLimit.update.run.transact(transactor)
+      res <- queryFragmentWithFilter.query[SqlDbAddress].to[List].transact(transactor)
+    } yield res
+    toRun.unsafeToFuture().map(l => l.map(mapToDbAddress))
   }
 
   private def cleanUprn(uprn: String): String = uprn.replaceFirst("^[Gg][Bb]", "")
