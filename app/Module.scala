@@ -27,7 +27,7 @@ import osgb.services._
 import play.api.inject.ApplicationLifecycle
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.{Configuration, Environment}
-import repositories.{AddressLookupRepository, TransactorProvider}
+import repositories.{AddressLookupRepository, RdsQueryConfig, TransactorProvider}
 import uk.gov.hmrc.address.services.es.{ESAdminImpl, ElasticSettings, ElasticsearchHelper, IndexMetadata}
 import uk.gov.hmrc.logging.{LoggerFacade, SimpleLogger}
 
@@ -62,6 +62,17 @@ class Module(environment: Environment,
 
   @Provides
   @Singleton
+  def provideRdsQueryConfig(configHelper: ConfigHelper): RdsQueryConfig = {
+    val queryTimeoutMillis =
+      configHelper.getConfigString("address-lookup-rds.query-timeout-ms").map(_.toInt).getOrElse(10000)
+    val queryResultsLimit =
+      configHelper.getConfigString("address-lookup-rds.query-results-limit").map(_.toInt).getOrElse(300)
+
+    RdsQueryConfig(queryTimeoutMillis, queryResultsLimit)
+  }
+
+  @Provides
+  @Singleton
   def provideIndexMetadata(configHelper: ConfigHelper, logger: SimpleLogger, ec: ExecutionContext,
                            settings: ElasticSettings): IndexMetadata = {
     val clients = ElasticsearchHelper.buildClients(settings, new LoggerFacade(play.api.Logger.logger))
@@ -82,14 +93,14 @@ class Module(environment: Environment,
   @Provides
   @Singleton
   def provideAddressSearcher(indexMetadata: IndexMetadata, metrics: Metrics, configuration: Configuration,
-                             configHelper: ConfigHelper, executionContext: ExecutionContext,
+                             configHelper: ConfigHelper, rdsQueryConfig: RdsQueryConfig, executionContext: ExecutionContext,
                              settings: ElasticSettings, applicationLifecycle: ApplicationLifecycle,
                              logger: SimpleLogger): AddressSearcher = {
     val dbEnabled = isDbEnabled(configHelper)
 
     val searcher = if (dbEnabled) {
       val transactor = new TransactorProvider(configuration, applicationLifecycle).get(executionContext)
-      new AddressLookupRepository(transactor)
+      new AddressLookupRepository(transactor, rdsQueryConfig)
     } else {
       val indexName: String = configHelper.getConfigString("elastic.indexName").getOrElse(IndexMetadata.ariAliasName)
 
