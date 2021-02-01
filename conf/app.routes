@@ -1,6 +1,7 @@
 # We need the /address-lookup prefix because the Nginx reverse proxy passes requests through to us
 # with that prefix. Some of the entry points need to be both with and without the prefix.
 
+->            /                                 definition.Routes
 GET           /ping/ping                        uk.gov.hmrc.play.health.HealthController.ping
 
 # Kenshoo metrics https://github.com/kenshoo/metrics-play
@@ -14,6 +15,8 @@ GET           /v1/gb/addresses                  osgb.AddressSearchController.sea
 GET           /v1/uk/addresses                  osgb.AddressSearchController.searchV1()
 GET           /v2/gb/addresses                  osgb.AddressSearchController.searchV2()
 GET           /v2/uk/addresses                  osgb.AddressSearchController.searchV2()
+
+GET           /lookup                           osgb.AddressSearchController.searchV2()
 
 # original style - now deprecated
 GET           /v1/gb/addresses.json             osgb.AddressSearchController.searchV1()
