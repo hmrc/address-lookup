@@ -34,25 +34,6 @@ class ResponseProcessor @Inject() (referenceData: ReferenceData) {
     }
     sorted.map(a => convertAddress(a, withMetadata).truncatedAddress()).toList
   }
-
-  // simple algorithm measured to be 30% slower
-  //  def filterAndConvertAddressList(dbAddresses: Seq[DbAddress], filterStr: Option[String]): List[AddressRecord] = {
-  //    val filtered = filterList(dbAddresses, filterStr)
-  //    val converted = filtered.map(convertAddress)
-  //    val result = converted.sortWith {
-  //      (ar1, ar2) => ar1.address.printable < ar2.address.printable
-  //    }
-  //    result.toList
-  //  }
-
-  // alternative algorithm also found to be slower
-  //  def filterAndConvertAddressList(dbAddresses: Seq[DbAddress], filterStr: Option[String]): List[AddressRecord] = {
-  //    val filtered = filterList(dbAddresses, filterStr).toArray
-  //    Sorting.quickSort(filtered)(DbAddressOrderingByLines)
-  //    val converted = filtered.map(convertAddress)
-  //    converted.toList
-  //  }
-
 }
 
 

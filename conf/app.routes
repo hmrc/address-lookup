@@ -28,9 +28,6 @@ GET           /uk/addresses/:id                 osgb.AddressLookupIdController.f
 GET           /v2/gb/addresses/:id              osgb.AddressLookupIdController.findByIdV2(id)
 GET           /v2/uk/addresses/:id              osgb.AddressLookupIdController.findByIdV2(id)
 
-# ----- British Forces Postal Office lookup service -----
-### This route is now obsolete ###
-GET           /bfpo/addresses                   bfpo.BFPOLookupController.findByPostCode()
 
 # ----- Postcodes endppint -----
 GET           /v1/gb/postcodes/:pc                    osgb.PostcodesController.lookup(pc)

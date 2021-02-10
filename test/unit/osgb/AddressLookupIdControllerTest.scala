@@ -23,9 +23,10 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatestplus.junit.JUnitRunner
 import org.scalatestplus.mockito.MockitoSugar
 import osgb.outmodel.Marshall
-import osgb.services.{AddressESSearcher, ReferenceData, ResponseProcessor}
+import osgb.services.{ReferenceData, ResponseProcessor}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
+import repositories.AddressLookupRepository
 import uk.gov.hmrc.address.osgb.DbAddress
 import uk.gov.hmrc.address.v2._
 import uk.gov.hmrc.http.UpstreamErrorResponse
@@ -63,7 +64,7 @@ class AddressLookupIdControllerTest extends WordSpec with ScalaFutures with Mock
   }
 
   class Context {
-    val searcher = mock[AddressESSearcher]
+    val searcher = mock[AddressLookupRepository]
   }
 
   "postcode lookup" must {

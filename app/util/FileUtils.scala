@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,11 +14,18 @@
  * limitations under the License.
  */
 
-package it.helper
+package util
 
-import org.scalatest.Suites
+import java.io.File
 
-class PSuites(suitesToNest: org.scalatest.Suite*) extends Suites(suitesToNest: _*) {
-  // expose this publicly
-  override def runNestedSuites(args: org.scalatest.Args): org.scalatest.Status = super.runNestedSuites(args)
+object FileUtils {
+
+  def deleteDir(path: File) {
+    val sub = Option(path.listFiles())
+    if (sub.isDefined) {
+      sub.get.toSeq.foreach(f => deleteDir(f))
+    }
+    path.delete()
+  }
+
 }

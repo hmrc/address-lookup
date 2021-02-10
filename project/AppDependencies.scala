@@ -15,13 +15,12 @@ object AppDependencies {
     "uk.gov.hmrc" %% "bootstrap-backend-play-26" % "3.0.0",
     "uk.gov.hmrc" %% "domain" % "5.10.0-play-26",
     "uk.gov.hmrc" %% "logging" % "0.7.0" withSources(),
-    "uk.gov.hmrc" %% "address-reputation-store" % "2.41.0" withSources(),
+    "uk.gov.hmrc" %% "address-reputation-store" % "2.41.0" withSources(), // Migrate to this repo
     "com.univocity" % "univocity-parsers" % "1.5.6",
     "com.fasterxml.jackson.core" % "jackson-core" % jacksonVersion,
     "com.fasterxml.jackson.core" % "jackson-databind" % jacksonVersion,
     "com.fasterxml.jackson.core" % "jackson-annotations" % jacksonVersion,
     "com.fasterxml.jackson.module" %% "jackson-module-scala" % jacksonVersion,
-    "com.sksamuel.elastic4s" %% "elastic4s-core" % "2.4.0",
     "com.github.tototoshi" %% "scala-csv" % "1.3.6",
 
     "org.tpolecat" %% "doobie-core"       % "0.7.1",
@@ -47,7 +46,6 @@ object AppDependencies {
         "org.scalatestplus.play" %% "scalatestplus-play" % "3.1.3" % scope,
         "org.jsoup" % "jsoup" % "1.7.3" % scope,
         "org.mockito" % "mockito-all" % "1.10.19" % scope,
-        "org.elasticsearch" % "elasticsearch" % "2.4.1" % scope,
 
         "org.tpolecat"           %% "doobie-scalatest"            % "0.7.1"   % "test, it"
       )
@@ -67,8 +65,7 @@ object AppDependencies {
         "org.scalamock" %% "scalamock-scalatest-support" % "3.2" % scope,
         "org.scalatestplus.play" %% "scalatestplus-play" % "1.5.1" % scope,
         "org.jsoup" % "jsoup" % "1.7.3" % scope,
-        "org.mockito" % "mockito-all" % "1.10.19" % scope,
-        "org.elasticsearch" % "elasticsearch" % "2.4.1" % scope
+        "org.mockito" % "mockito-all" % "1.10.19" % scope
       )
     }.test
   }
