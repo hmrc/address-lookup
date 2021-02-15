@@ -32,7 +32,8 @@ import scala.io.Source
 
 trait CannedData
 
-class CannedDataImpl @Inject()(indexMetadata: IndexMetadata, logger: SimpleLogger, env: Environment, configHelper: ConfigHelper, ec: ExecutionContext) extends CannedData {
+class CannedDataImpl @Inject()(indexMetadataProvider: IndexedMetadataProvider, logger: SimpleLogger, env: Environment,
+                               configHelper: ConfigHelper, ec: ExecutionContext) extends CannedData {
   val cannedData = "conf/data/testaddresses.csv"
 
   def upload(): String = {
@@ -43,9 +44,11 @@ class CannedDataImpl @Inject()(indexMetadata: IndexMetadata, logger: SimpleLogge
   }
 
   def uploadToElasticSearch(file: File): String = {
+    val indexedMetadata = indexMetadataProvider.indexedMetaData
+
     val indexName = IndexName("test", Some(1), Some(IndexName.newTimestamp))
     val noProvenance = BuildProvenance(None, None)
-    val out = new OutputESWriter(indexName, logger, indexMetadata, WriterSettings.default, ec, noProvenance)
+    val out = new OutputESWriter(indexName, logger, indexedMetadata, WriterSettings.default, ec, noProvenance)
 
     out.begin()
 
@@ -60,7 +63,7 @@ class CannedDataImpl @Inject()(indexMetadata: IndexMetadata, logger: SimpleLogge
     }
     out.end(true)
 
-    indexMetadata.setIndexInUse(indexName)
+    indexedMetadata.setIndexInUse(indexName)
 
     val status =
       s"""
