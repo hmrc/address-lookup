@@ -21,7 +21,6 @@ import com.sksamuel.elastic4s.{ElasticClient, RichGetResponse, RichSearchRespons
 import org.elasticsearch.common.unit.TimeValue
 import org.scalatest._
 import org.scalatestplus.play.ServerProvider
-import osgb.services.AddressSearcher
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.TestServer
@@ -113,17 +112,8 @@ trait AppServerWithES extends SuiteMixin with ServerProvider {
     "elastic.indexName" -> idx,
     "mongodb.cannedData" -> "false")
 
-//  implicit override final lazy val app: Application = GuiceApplicationBuilder().configure(appConfiguration).build()
+  implicit override final lazy val app: Application = GuiceApplicationBuilder().configure(appConfiguration).build()
 
-  implicit override final lazy val app: Application = {
-    import play.api.inject.bind
-
-    GuiceApplicationBuilder()
-      .overrides(bind[ESTestConfig].toSelf)
-      //.overrides(bind[ESTestAddressSearcher].toSelf)
-      .overrides(bind[AddressSearcher].to[ESTestAddressSearcherMetrics])
-      .configure(appConfiguration).build()
-  }
   /**
     * The port used by the `TestServer`.  By default this will be set to the result returned from
     * `Helpers.testServerPort`. You can override this to provide a different port number.
