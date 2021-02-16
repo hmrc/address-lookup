@@ -14,11 +14,13 @@
  * limitations under the License.
  */
 
+import cats.effect.IO
 import com.google.inject.{AbstractModule, Provides}
 
 import javax.inject.Singleton
 import com.kenshoo.play.metrics.Metrics
 import config.ConfigHelper
+import doobie.Transactor
 import osgb.services._
 import play.api.inject.ApplicationLifecycle
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
@@ -48,18 +50,36 @@ class Module(environment: Environment,
     RdsQueryConfig(queryTimeoutMillis, queryResultsLimit)
   }
 
+  // TODO: Do we need this still?
+  @Provides
+  @Singleton
+  def provideTransactorOptional(configHelper: ConfigHelper, configuration: Configuration,
+                                applicationLifecycle: ApplicationLifecycle,
+                                executionContext: ExecutionContext): Option[Transactor[IO]] = {
+    if (isDbEnabled(configHelper))
+      Some(new TransactorProvider(configuration, applicationLifecycle).get(executionContext))
+    else None
+  }
+
   @Provides
   @Singleton
   def provideAddressSearcher(metrics: Metrics, configuration: Configuration,
-                             configHelper: ConfigHelper, rdsQueryConfig: RdsQueryConfig, executionContext: ExecutionContext,
-                             applicationLifecycle: ApplicationLifecycle, logger: SimpleLogger): AddressSearcher = {
-    val searcher = {
+                             configHelper: ConfigHelper, rdsQueryConfig: RdsQueryConfig, executionContext: ExecutionContext, applicationLifecycle: ApplicationLifecycle,
+                             logger: SimpleLogger): AddressSearcher = {
+    val dbEnabled = isDbEnabled(configHelper)
+
+    val searcher = if (dbEnabled) {
       val transactor = new TransactorProvider(configuration, applicationLifecycle).get(executionContext)
       new AddressLookupRepository(transactor, rdsQueryConfig)
+    } else {
+      new InMemoryAddressLookupRepository(environment, defaultContext)
     }
 
     new AddressSearcherMetrics(searcher, metrics.defaultRegistry, defaultContext)
   }
+
+  private def isDbEnabled(configHelper: ConfigHelper): Boolean =
+    configHelper.getConfigString("address-lookup-rds.enabled").getOrElse("false").toBoolean
 
   @Provides
   @Singleton
