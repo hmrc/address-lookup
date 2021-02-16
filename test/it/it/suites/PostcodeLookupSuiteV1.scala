@@ -16,22 +16,24 @@
 
 package it.suites
 
-import javax.inject.Inject
-
 import it.helper.AppServerTestApi
 import it.tools.Utils.headerOrigin
 import org.scalatest.{MustMatchers, WordSpec}
+import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import osgb.outmodel.v1.AddressReadable._
-import play.api.Application
 import play.api.libs.json.{JsArray, Json}
 import play.api.libs.ws.{WSClient, WSResponse}
 import play.api.test.Helpers._
 import uk.gov.hmrc.address.v1.AddressRecord
 
-class PostcodeLookupSuiteV1 @Inject()(val wsClient: WSClient, val appEndpoint: String, largePostcodeExampleSize: Int)(implicit val app: Application)
-  extends WordSpec with MustMatchers with AppServerTestApi {
+class PostcodeLookupSuiteV1()
+  extends WordSpec with GuiceOneServerPerSuite with MustMatchers with AppServerTestApi {
 
   import FixturesV1._
+
+  private val largePostcodeExampleSize = 2517
+  override val appEndpoint: String = s"http://localhost:$port"
+  override val wsClient: WSClient = app.injector.instanceOf[WSClient]
 
   "postcode lookup" when {
 

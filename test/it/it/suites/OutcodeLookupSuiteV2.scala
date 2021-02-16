@@ -16,22 +16,22 @@
 
 package it.suites
 
-import javax.inject.Inject
-
 import it.helper.AppServerTestApi
 import it.tools.Utils.headerOrigin
 import org.scalatest.{MustMatchers, WordSpec}
+import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import osgb.outmodel.v2.AddressReadable._
-import play.api.Application
 import play.api.libs.json.Json
 import play.api.libs.ws.WSClient
 import play.api.test.Helpers._
 import uk.gov.hmrc.address.v2.AddressRecord
 
-class OutcodeLookupSuiteV2 @Inject()(val wsClient: WSClient, val appEndpoint: String)(implicit val app: Application)
-  extends WordSpec with MustMatchers with AppServerTestApi {
+class OutcodeLookupSuiteV2()
+  extends WordSpec with GuiceOneServerPerSuite with MustMatchers with AppServerTestApi {
 
   import FixturesV2._
+  override val appEndpoint: String = s"http://localhost:$port"
+  override val wsClient: WSClient = app.injector.instanceOf[WSClient]
 
   "outcode lookup" when {
 
@@ -92,7 +92,7 @@ class OutcodeLookupSuiteV2 @Inject()(val wsClient: WSClient, val appEndpoint: St
       }
 
       "give sorted results when two addresses are returned" in {
-        val body = get("/v2/uk/addresses?outcode=FX1&filter=Street").body
+        val body = get("/v2/uk/addresses?outcode=FX1&filter=Boulevard").body
         body must startWith("[{")
         body must endWith("}]")
         val json = Json.parse(body)

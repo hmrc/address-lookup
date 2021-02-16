@@ -23,7 +23,7 @@ import play.api.test.FakeRequest
 object Utils {
 
 
-  lazy val headerOrigin =  ConfigFactory.load().getString("header.x-origin")
+  lazy val headerOrigin: String =  ConfigFactory.load().getString("header.x-origin")
 
   implicit class FakeRequestWithOrigin[T](fake: FakeRequest[T]) {
     def withHeadersOrigin: FakeRequest[T] =

@@ -22,30 +22,25 @@ import org.scalatest.WordSpec
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatestplus.junit.JUnitRunner
 import org.scalatestplus.mockito.MockitoSugar
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import osgb.outmodel.Marshall
-import osgb.services.{AddressESSearcher, ReferenceData, ResponseProcessor}
-import play.api.mvc.ControllerComponents
+import osgb.services.{ReferenceData, ResponseProcessor}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
+import repositories.AddressLookupRepository
 import uk.gov.hmrc.address.osgb.DbAddress
 import uk.gov.hmrc.address.uk.{Outcode, Postcode}
 import uk.gov.hmrc.address.v2._
+import uk.gov.hmrc.http.UpstreamErrorResponse
 import uk.gov.hmrc.logging.StubLogger
 import util.Utils._
 
 import scala.concurrent.Future
-import uk.gov.hmrc.http.UpstreamErrorResponse
 
 @RunWith(classOf[JUnitRunner])
 class AddressSearchControllerTest extends WordSpec with ScalaFutures with MockitoSugar {
 
   implicit val ec = scala.concurrent.ExecutionContext.Implicits.global
   val cc = play.api.test.Helpers.stubControllerComponents()
-
-  private val lc4510 = Some(LocalCustodian(4510, "Test upon Tyne"))
-  private val lc9999 = Some(LocalCustodian(9999, "Somewhere"))
-  private val lc2935 = Some(LocalCustodian(2935, "Testland"))
 
   private val en = "en"
   private val InUse = Some("In_Use")
@@ -54,40 +49,29 @@ class AddressSearchControllerTest extends WordSpec with ScalaFutures with Mockit
 
   import Countries._
 
-  val shire = Some("Thereshire")
-  val addr1Loc = Location("12.345678", "-12.345678")
-  val addr1Db = DbAddress("GB100001", List("10 Test Court", "Test Street", "Tester"), Some("Test upon Tyne"), "FX1 5XD",
-    Some("GB-ENG"), Some("UK"), Some(4510), Some("en"), Some(2), Some(1), None, None, Some(addr1Loc.toString))
-  val addr1Ar = AddressRecord("GB100001", Some(100001L), Address(List("10 Test Court", "Test Street", "Tester"), Some("Test upon Tyne"), shire, "FX1 5XD", Some(England), UK), en, lc4510, Some(addr1Loc.toSeq), InUse, Approved, AllVehicles)
+  val addr1Db = DbAddress("GB100001", List("10 Test Court", "Test Street", "Tester"), Some("Test upon Tyne"), "FX1 5XD", Some("GB-ENG"), Some("UK"), Some(4510), Some("en"), Some(2), Some(1), None, None, Some(Location("12.345678", "-12.345678").toString), None, Some("TestLocalAuthority"))
+  val addr1Ar = AddressRecord("GB100001", Some(100001L), Address(List("10 Test Court", "Test Street", "Tester"), Some("Test upon Tyne"), Some("Thereshire"), "FX1 5XD", Some(England), UK), en, Some(LocalCustodian(4510, "Test upon Tyne")), Some(Location("12.345678", "-12.345678").toSeq), InUse, Approved, AllVehicles, Some("TestLocalAuthority"))
 
-  val dx1A = DbAddress("GB100002", List("1 Test Street"), Some("Testtown"), "FZ22 7ZW", Some("GB-XXX"),
-    Some("UK"), Some(9999), Some("en"), Some(2), Some(1), None, None, Some("54.914561,-1.3905597"))
-  val dx1B = DbAddress("GB100003", List("2 Test Street"), Some("Testtown"), "FZ22 7ZW", Some("GB-XXX"),
-    Some("UK"), Some(9999), Some("en"), Some(2), Some(1), None, None, Some("54.914561,-1.3905597"))
-  val dx1C = DbAddress("GB100004", List("3 Test Street"), Some("Testtown"), "FZ22 7ZW", Some("GB-XXX"),
-    Some("UK"), Some(9999), Some("en"), Some(2), Some(1), None, None, Some("54.914561,-1.3905597"))
+  val dx1A = DbAddress("GB100002", List("1 Test Street"), Some("Testtown"), "FZ22 7ZW", Some("GB-XXX"), Some("UK"), Some(9999), Some("en"), Some(2), Some(1), None, None, Some("54.914561,-1.3905597"), None, Some("TestLocalAuthority"))
+  val dx1B = DbAddress("GB100003", List("2 Test Street"), Some("Testtown"), "FZ22 7ZW", Some("GB-XXX"), Some("UK"), Some(9999), Some("en"), Some(2), Some(1), None, None, Some("54.914561,-1.3905597"), None, Some("TestLocalAuthority"))
+  val dx1C = DbAddress("GB100004", List("3 Test Street"), Some("Testtown"), "FZ22 7ZW", Some("GB-XXX"), Some("UK"), Some(9999), Some("en"), Some(2), Some(1), None, None, Some("54.914561,-1.3905597"), None, Some("TestLocalAuthority"))
 
-  val loc0 = Location("0,0")
-  val fx1A = AddressRecord("GB100002", Some(100002L), Address(List("1 Test Street"), Some("Testtown"), shire, "FZ22 7ZW", Some(England), UK), en, lc9999, Some(loc0.toSeq), InUse, Approved, AllVehicles)
-  val fx1B = AddressRecord("GB100003", Some(100003L), Address(List("2 Test Street"), Some("Testtown"), shire, "FZ22 7ZW", Some(England), UK), en, lc9999, Some(loc0.toSeq), InUse, Approved, AllVehicles)
-  val fx1C = AddressRecord("GB100004", Some(100004L), Address(List("3 Test Street"), Some("Testtown"), shire, "FZ22 7ZW", Some(England), UK), en, lc9999, Some(loc0.toSeq), InUse, Approved, AllVehicles)
+  val fx1A = AddressRecord("GB100002", Some(100002L), Address(List("1 Test Street"), Some("Testtown"), Some("Thereshire"), "FZ22 7ZW", Some(England), UK), en, Some(LocalCustodian(9999, "Somewhere")), Some(Location("0,0").toSeq), InUse, Approved, AllVehicles, Some("TestLocalAuthority"))
+  val fx1B = AddressRecord("GB100003", Some(100003L), Address(List("2 Test Street"), Some("Testtown"), Some("Thereshire"), "FZ22 7ZW", Some(England), UK), en, Some(LocalCustodian(9999, "Somewhere")), Some(Location("0,0").toSeq), InUse, Approved, AllVehicles, Some("TestLocalAuthority"))
+  val fx1C = AddressRecord("GB100004", Some(100004L), Address(List("3 Test Street"), Some("Testtown"), Some("Thereshire"), "FZ22 7ZW", Some(England), UK), en, Some(LocalCustodian(9999, "Somewhere")), Some(Location("0,0").toSeq), InUse, Approved, AllVehicles, Some("TestLocalAuthority"))
 
-  val addressLoc1 = Location("12.345678", "-12.345678")
-  val addressDb1 = DbAddress("GB100005", List("Test Road"), Some("ATown"), "FX11 7LX", Some("GB-ENG"),
-    Some("UK"), Some(2935), Some("en"), Some(2), Some(1), None, None, Some(addressLoc1.toString))
-  val addressLoc2 = Location("12.345678", "-12.345678")
-  val addressDb2 = DbAddress("GB100006", List("ARoad", "ARoad"), Some("Atown"), "FX11 7LA", Some("GB-ENG"),
-    Some("UK"), Some(2935), Some("en"), Some(2), Some(1), None, None, Some(addressLoc2.toString))
+  val addressDb1 = DbAddress("GB100005", List("Test Road"), Some("ATown"), "FX11 7LX", Some("GB-ENG"), Some("UK"), Some(2935), Some("en"), Some(2), Some(1), None, None, Some(Location("12.345678", "-12.345678").toString), None, Some("TestLocalAuthority"))
+  val addressDb2 = DbAddress("GB100006", List("ARoad", "ARoad"), Some("Atown"), "FX11 7LA", Some("GB-ENG"), Some("UK"), Some(2935), Some("en"), Some(2), Some(1), None, None, Some(Location("12.345678", "-12.345678").toString), None, Some("TestLocalAuthority"))
 
-  val addressAr1 = AddressRecord("GB100005", Some(100005L), Address(List("Test Road"), Some("ATown"), Some("Testland"), "FX11 7LX", Some(England), UK), en, lc2935, Some(addressLoc1.toSeq), InUse, Approved, AllVehicles)
-  val addressAr2 = AddressRecord("GB100006", Some(100006L), Address(List("Test Station", "Test Road"), Some("ATown"), Some("Testland"), "FX11 7LA", Some(England), UK), en, lc2935, Some(addressLoc2.toSeq), InUse, Approved, AllVehicles)
+  val addressAr1 = AddressRecord("GB100005", Some(100005L), Address(List("Test Road"), Some("ATown"), Some("Testland"), "FX11 7LX", Some(England), UK), en, Some(LocalCustodian(2935, "Testland")), Some(Location("12.345678", "-12.345678").toSeq), InUse, Approved, AllVehicles, Some("TestLocalAuthority"))
+  val addressAr2 = AddressRecord("GB100006", Some(100006L), Address(List("Test Station", "Test Road"), Some("ATown"), Some("Testland"), "FX11 7LA", Some(England), UK), en, Some(LocalCustodian(2935, "Testland")), Some(Location("12.345678", "-12.345678").toSeq), InUse, Approved, AllVehicles, Some("TestLocalAuthority"))
 
   class ResponseStub(a: List[AddressRecord]) extends ResponseProcessor(ReferenceData.empty) {
     override def convertAddressList(dbAddresses: Seq[DbAddress], withMetadata: Boolean): List[AddressRecord] = a
   }
 
   class Context {
-    val searcher = mock[AddressESSearcher]
+    val searcher = mock[AddressLookupRepository]
   }
 
   "postcode lookup" must {
