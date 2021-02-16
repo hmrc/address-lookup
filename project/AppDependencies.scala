@@ -2,6 +2,7 @@
 import sbt.{ModuleID, _}
 
 object AppDependencies {
+
   import play.sbt.PlayImport._
   import play.core.PlayVersion
 
@@ -9,6 +10,7 @@ object AppDependencies {
   private val scalaTestVersion = "3.0.8"
   private val pegdownVersion = "1.6.0"
   private val jacksonVersion = "2.8.9"
+  private val doobieVersion = "0.7.1"
 
   val compile = Seq(
     ws,
@@ -23,53 +25,24 @@ object AppDependencies {
     "com.fasterxml.jackson.module" %% "jackson-module-scala" % jacksonVersion,
     "com.github.tototoshi" %% "scala-csv" % "1.3.6",
 
-    "org.tpolecat" %% "doobie-core"       % "0.7.1",
-    "org.tpolecat" %% "doobie-hikari"     % "0.7.1",
-    "org.tpolecat" %% "doobie-postgres"   % "0.7.1",
-    "org.tpolecat" %% "doobie-hikari"     % "0.7.1",
+    "org.tpolecat" %% "doobie-core" % doobieVersion,
+    "org.tpolecat" %% "doobie-hikari" % doobieVersion,
+    "org.tpolecat" %% "doobie-postgres" % doobieVersion,
+    "org.tpolecat" %% "doobie-hikari" % doobieVersion,
     jdbc
   )
 
-  trait TestDependencies {
-    lazy val scope: String = "test"
-    lazy val test : Seq[ModuleID] = ???
-  }
+  val test = Seq(
+    "uk.gov.hmrc" %% "hmrctest" % hmrcTestVersion % "test, it",
+    "org.scalatest" %% "scalatest" % scalaTestVersion % "test, it",
+    "org.pegdown" % "pegdown" % pegdownVersion % "test, it",
+    "com.typesafe.play" %% "play-test" % PlayVersion.current % "test, it",
+    "org.scalamock" %% "scalamock-scalatest-support" % "3.2" % "test, it",
+    "org.scalatestplus.play" %% "scalatestplus-play" % "3.1.3" % "test, it",
+    "org.jsoup" % "jsoup" % "1.7.3" % "test, it",
+    "org.mockito" % "mockito-all" % "1.10.19" % "test, it",
 
-  object Test {
-    def apply(): Seq[ModuleID] = new TestDependencies {
-      override lazy val test = Seq(
-        "uk.gov.hmrc" %% "hmrctest" % hmrcTestVersion % scope,
-        "org.scalatest" %% "scalatest" % scalaTestVersion % scope,
-        "org.pegdown" % "pegdown" % pegdownVersion % scope,
-        "com.typesafe.play" %% "play-test" % PlayVersion.current % scope,
-        "org.scalamock" %% "scalamock-scalatest-support" % "3.2" % scope,
-        "org.scalatestplus.play" %% "scalatestplus-play" % "3.1.3" % scope,
-        "org.jsoup" % "jsoup" % "1.7.3" % scope,
-        "org.mockito" % "mockito-all" % "1.10.19" % scope,
-
-        "org.tpolecat"           %% "doobie-scalatest"            % "0.7.1"   % "test, it"
-      )
-    }.test
-  }
-
-  object IntegrationTest {
-    def apply(): Seq[ModuleID] = new TestDependencies {
-
-      override lazy val scope: String = "it"
-
-      override lazy val test = Seq(
-        "uk.gov.hmrc" %% "hmrctest" % hmrcTestVersion % scope,
-        "org.scalatest" %% "scalatest" % scalaTestVersion % scope,
-        "org.pegdown" % "pegdown" % pegdownVersion % scope,
-        "com.typesafe.play" %% "play-test" % PlayVersion.current % scope,
-        "org.scalamock" %% "scalamock-scalatest-support" % "3.2" % scope,
-        "org.scalatestplus.play" %% "scalatestplus-play" % "1.5.1" % scope,
-        "org.jsoup" % "jsoup" % "1.7.3" % scope,
-        "org.mockito" % "mockito-all" % "1.10.19" % scope
-      )
-    }.test
-  }
-
-  def apply(): Seq[ModuleID] = compile ++ Test() ++ IntegrationTest()
+    "org.tpolecat" %% "doobie-scalatest" % doobieVersion % "test, it"
+  )
 }
 

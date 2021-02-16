@@ -47,10 +47,14 @@ class AddressSearchController @Inject() (addressSearch: AddressSearcher, respons
   private[osgb] def searchRequest[A](request: Request[A], marshall: List[AddressRecord] => JsValue): Future[Result] = {
     val origin = getOriginHeaderIfSatisfactory(request.headers)
     val sp = SearchParameters.fromRequest(request.queryString).clean
-    if (sp.uprn.isDefined) searchUprnRequest(request, sp.uprn.get, origin, marshall)
-    else if (sp.outcode.isDefined) searchOutcodeRequest(request, sp, origin, marshall)
-    else if (sp.isFuzzy) searchFuzzyRequest(request, sp, origin, marshall)
-    else searchPostcodeRequest(request, sp, origin, marshall)
+    if (sp.uprn.isDefined)
+      searchUprnRequest(request, sp.uprn.get, origin, marshall)
+    else if (sp.outcode.isDefined)
+      searchOutcodeRequest(request, sp, origin, marshall)
+    else if (sp.isFuzzy)
+      searchFuzzyRequest(request, sp, origin, marshall)
+    else
+      searchPostcodeRequest(request, sp, origin, marshall)
   }
 
   private[osgb] def searchUprnRequest[A](request: Request[A], uprn: String, origin: String, marshall: List[AddressRecord] => JsValue): Future[Result] = {
@@ -113,8 +117,10 @@ class AddressSearchController @Inject() (addressSearch: AddressSearcher, respons
   }
 
   private[osgb] def searchFuzzyRequest[A](request: Request[A], sp: SearchParameters, origin: String, marshall: List[AddressRecord] => JsValue): Future[Result] = {
-    addressSearch.searchFuzzy(sp).map {
+    println(s">>> sp: $sp")
+        addressSearch.searchFuzzy(sp).map {
       a =>
+        println(s">>> using '$sp' got results: ${a.mkString(",")}")
         val a2 = responseProcessor.convertAddressList(a, false)
         logEvent("LOOKUP", origin, a2.size, sp.tupled)
         Ok(marshall(a2))
