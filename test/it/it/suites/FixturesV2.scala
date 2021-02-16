@@ -67,13 +67,13 @@ object FixturesV2 {
 
   val fx1_6jn_a_augmented = AddressRecord(id2, uprn2, Address(List("11 A Street"), TownName1, CountyName1, Postcode1, Some(England), UK),
     en, lc4510, Some(location2.toSeq), InUse, Approved, None)
-  val fx1_6jn_a_terse = AddressRecord(id2, uprn2, Address(List("11 A Street"), TownName1, CountyName1, Postcode1, Some(England), UK),
+  val fx1_6jn_a_terse = AddressRecord(id2, uprn2, Address(List("11 A Boulevard"), TownName1, CountyName1, Postcode1, Some(England), UK),
     en, lc4510, Some(location2.toSeq), None, None, None)
 
 
   val fx1_6jn_b_augmented = AddressRecord(id3, uprn3, Address(List("A House 5-7", "A Street"), TownName1, CountyName1, Postcode1, Some(England), UK),
     en, lc4510, Some(aHouseLocation2.toSeq), InUse, Approved, None)
-  val fx1_6jn_b_terse = AddressRecord(id3, uprn3, Address(List("A House 5-7", "A Street"), TownName1, CountyName1, Postcode1, Some(England), UK),
+  val fx1_6jn_b_terse = AddressRecord(id3, uprn3, Address(List("A House 5-7", "A Boulevard"), TownName1, CountyName1, Postcode1, Some(England), UK),
     en, lc4510, Some(aHouseLocation2.toSeq), None, None, None)
 
 

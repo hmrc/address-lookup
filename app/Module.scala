@@ -37,7 +37,6 @@ class Module(environment: Environment, configuration: Configuration) extends Abs
   def configure(): Unit = {
     bind(classOf[ElasticSettingsProvider])
     bind(classOf[IndexedMetadataProvider])
-    bind(classOf[CannedData]).to(classOf[CannedDataImpl]).asEagerSingleton()
   }
 
   @Provides
@@ -77,11 +76,7 @@ class Module(environment: Environment, configuration: Configuration) extends Abs
       val transactor = new TransactorProvider(configuration, applicationLifecycle).get(executionContext)
       new AddressLookupRepository(transactor, rdsQueryConfig)
     } else {
-      val indexMetadata = indexMetadataProvider.indexedMetaData
-      val indexName: String = configHelper.getConfigString("elastic.indexName").getOrElse(IndexMetadata.ariAliasName)
-
-      val settings = settingsProvider.elasticSettings
-      new AddressESSearcher(indexMetadata.clients.head, indexName, "GB", defaultContext, settings, logger)
+      new InMemoryAddressLookupRepository(environment, defaultContext)
     }
 
     new AddressSearcherMetrics(searcher, metrics.defaultRegistry, defaultContext)

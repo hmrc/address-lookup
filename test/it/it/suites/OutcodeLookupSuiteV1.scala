@@ -92,7 +92,7 @@ class OutcodeLookupSuiteV1 @Inject()(val wsClient: WSClient, val appEndpoint: St
       }
 
       "give sorted results when two addresses are returned" in {
-        val body = get("/uk/addresses?outcode=FX1&filter=Street").body
+        val body = get("/uk/addresses?outcode=FX1&filter=Boulevard").body
         body must startWith("[{")
         body must endWith("}]")
         val json = Json.parse(body)

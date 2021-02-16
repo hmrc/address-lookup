@@ -94,8 +94,8 @@ class ESUnigrationTest extends WordSpec with AppServerWithES with SequentialNest
         new IdLookupSuiteV2(wsClient, appEndpoint)(app),
         new BfpoLookupSuite(wsClient, appEndpoint)(app),
         new FuzzySearchSuiteV2(wsClient, appEndpoint)(app),
-        new MetricsSuiteV1(wsClient, appEndpoint, "AddressESSearcher")(app),
-        new MetricsSuiteV2(wsClient, appEndpoint, "AddressESSearcher")(app),
+        new MetricsSuiteV1(wsClient, appEndpoint, "InMemoryAddressLookupRepository")(app),
+        new MetricsSuiteV2(wsClient, appEndpoint, "InMemoryAddressLookupRepository")(app),
         new PostcodesSuiteV1(wsClient, appEndpoint)(app)
       )
       s.runNestedSuites(args)

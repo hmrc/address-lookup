@@ -106,13 +106,13 @@ trait AppServerWithES extends SuiteMixin with ServerProvider {
 
   //-----------------------------------------------------------------------------------------------
 
-  private lazy val appConfiguration = Map(
-    "app.store" -> "elasticsearch",
-    "elastic.localMode" -> "true",
-    "elastic.indexName" -> idx,
-    "mongodb.cannedData" -> "false")
+//  private lazy val appConfiguration = Map(
+//    "app.store" -> "elasticsearch",
+//    "elastic.localMode" -> "true",
+//    "elastic.indexName" -> idx,
+//    "mongodb.cannedData" -> "false")
 
-  implicit override final lazy val app: Application = GuiceApplicationBuilder().configure(appConfiguration).build()
+  implicit override final lazy val app: Application = GuiceApplicationBuilder().build()
 
   /**
     * The port used by the `TestServer`.  By default this will be set to the result returned from
@@ -123,7 +123,7 @@ trait AppServerWithES extends SuiteMixin with ServerProvider {
   lazy val appEndpoint = s"http://localhost:$port"
 
   abstract override def run(testName: Option[String], args: Args): Status = {
-    println("********** AppServerWithES ********** " + getClass.getSimpleName)
+    println("********** AppServerWithInMemory ********** " + getClass.getSimpleName)
     Thread.sleep(10)
     beforeAppServerStarts()
     val testServer = TestServer(port, app)
