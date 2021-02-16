@@ -23,6 +23,7 @@ import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import osgb.SearchParameters
 import osgb.outmodel.v2.AddressReadable._
+import osgb.services.AddressSearcher
 import play.api.http.Status
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.{JsArray, Json}
@@ -43,7 +44,7 @@ class FuzzySearchSuiteV2 extends WordSpec with Matchers with Status with GuiceOn
 
   override def fakeApplication(): Application = {
     new GuiceApplicationBuilder()
-      .overrides(inject.bind[AddressLookupRepository].toInstance(mockAddressLookupRepository))
+      .overrides(inject.bind[AddressSearcher].toInstance(mockAddressLookupRepository))
       .build()
   }
   val wsClient = app.injector.instanceOf[WSClient]
@@ -55,7 +56,7 @@ class FuzzySearchSuiteV2 extends WordSpec with Matchers with Status with GuiceOn
         val searchParameters = SearchParameters(None,None,None,Some("bankside"),Some("100"),None,Nil)
         reset(mockAddressLookupRepository)
         when(mockAddressLookupRepository.searchFuzzy(meq(searchParameters))).thenReturn(
-          Future.successful(List(DbAddress("1", List("1 Bankside"), None, "EC14 2AB", None, None, None, None, None, None, None, None, None, None, None)))
+          Future.successful(List(DbAddress("1", List("100 Bankside"), None, "EC14 2AB", None, None, None, None, None, None, None, None, None, None, None)))
         )
 
         val response = Await.result(wsClient.url(url("/v2/uk/addresses?fuzzy=bankside&filter=100")).withHttpHeaders("User-Agent" -> "test").get, defaultDuration)
@@ -94,7 +95,9 @@ class FuzzySearchSuiteV2 extends WordSpec with Matchers with Status with GuiceOn
 
       "give sorted results when multiple addresses are returned" in {
         val searchParameters = SearchParameters(fuzzy = Some("bankside"))
-        val dbAddressList: List[DbAddress] = Stream.continually(DbAddress("id", List("1 Bankside"), None, "postcode", None, None, None, None, None, None, None, None, None, None, None)).take(3000).toList
+        val dbAddressList: List[DbAddress] = Stream.continually(DbAddress("10000", List("1 Bankside"), None, "postcode", None, None, None, None, None, None, None, None, None, None, None)).zipWithIndex.map{
+          case (dba, idx) => dba.copy(id = s"$idx", lines = List(s"$idx Bankside"))
+        }.take(3000).toList
         reset(mockAddressLookupRepository)
         when(mockAddressLookupRepository.searchFuzzy(any())).thenReturn(Future.successful(dbAddressList))
 
@@ -104,10 +107,10 @@ class FuzzySearchSuiteV2 extends WordSpec with Matchers with Status with GuiceOn
         val arr = json.asInstanceOf[JsArray].value
         arr.size shouldBe 3000
         // TODO this sort order indicates a numbering problem with result sorting (see TXMNT-64)
-        Json.fromJson[AddressRecord](arr.head).get.address.line1 shouldBe "1 Bankside"
-        Json.fromJson[AddressRecord](arr(1)).get.address.line1 shouldBe "10 Bankside"
-        Json.fromJson[AddressRecord](arr(2)).get.address.line1 shouldBe "100 Bankside"
-        Json.fromJson[AddressRecord](arr(3)).get.address.line1 shouldBe "1000 Bankside"
+        Json.fromJson[AddressRecord](arr.head).get.address.line1 shouldBe "0 Bankside"
+        Json.fromJson[AddressRecord](arr(1)).get.address.line1 shouldBe "1 Bankside"
+        Json.fromJson[AddressRecord](arr(2)).get.address.line1 shouldBe "10 Bankside"
+        Json.fromJson[AddressRecord](arr(3)).get.address.line1 shouldBe "100 Bankside"
       }
 
       "set the content type to application/json" in {

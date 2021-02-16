@@ -117,10 +117,8 @@ class AddressSearchController @Inject() (addressSearch: AddressSearcher, respons
   }
 
   private[osgb] def searchFuzzyRequest[A](request: Request[A], sp: SearchParameters, origin: String, marshall: List[AddressRecord] => JsValue): Future[Result] = {
-    println(s">>> sp: $sp")
         addressSearch.searchFuzzy(sp).map {
       a =>
-        println(s">>> using '$sp' got results: ${a.mkString(",")}")
         val a2 = responseProcessor.convertAddressList(a, false)
         logEvent("LOOKUP", origin, a2.size, sp.tupled)
         Ok(marshall(a2))
