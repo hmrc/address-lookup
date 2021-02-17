@@ -23,7 +23,6 @@ object AppDependencies {
     "com.fasterxml.jackson.core"    %  "jackson-databind"           % jacksonVersion,
     "com.fasterxml.jackson.core"    %  "jackson-annotations"        % jacksonVersion,
     "com.fasterxml.jackson.module"  %% "jackson-module-scala"       % jacksonVersion,
-    "com.sksamuel.elastic4s"        %% "elastic4s-core"             % "2.4.0",
     "com.github.tototoshi"          %% "scala-csv"                  % "1.3.6",
     "org.tpolecat"                  %% "doobie-core"                % doobieVersion,
     "org.tpolecat"                  %% "doobie-hikari"              % doobieVersion,
@@ -38,11 +37,9 @@ object AppDependencies {
       "org.scalatest"           %% "scalatest"                    % scalaTestVersion    % "test, it",
       "org.pegdown"             %  "pegdown"                      % pegdownVersion      % "test, it",
       "com.typesafe.play"       %% "play-test"                    % PlayVersion.current % "test, it",
-      "org.scalamock"           %% "scalamock-scalatest-support"  % "3.2"               % "test, it",
       "org.scalatestplus.play"  %% "scalatestplus-play"           % "3.1.3"             % "test, it",
       "org.jsoup"               %  "jsoup"                        % "1.7.3"             % "test, it",
       "org.mockito"             %  "mockito-all"                  % "1.10.19"           % "test, it",
-      "org.elasticsearch"       %  "elasticsearch"                % "2.4.1"             % "test, it",
       "org.tpolecat"            %% "doobie-scalatest"             % doobieVersion       % "test, it"
     )
   }

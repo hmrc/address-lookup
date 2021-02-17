@@ -31,7 +31,7 @@ class AddressLookupIdController @Inject()(addressSearch: AddressSearcher, respon
                                           logger: SimpleLogger, ec: ExecutionContext, cc: ControllerComponents)
   extends AddressController(logger, cc) {
 
-  implicit private val xec = ec
+  implicit private val xec: ExecutionContext = ec
 
   def findByIdV1(id: String): Action[AnyContent] = Action.async {
     request =>

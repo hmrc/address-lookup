@@ -41,60 +41,60 @@ object FixturesV2 {
   private val CountyName1 = Some("Tyne & Wear")
   private val Postcode1 = "FX1 6JN"
 
-  val location1 = Location("12.345678", "-12.345678")
+  val location1: Location = Location("12.345678", "-12.345678")
   val id1 = "GB11111"
-  val urpn1 = Some(11111L)
-  val db_fx9_9py = DbAddress(id1, List("A House 27-45", "A Street"), Some("London"), "FX9 9PY",
+  val urpn1: Some[Long] = Some(11111L)
+  val db_fx9_9py: DbAddress = DbAddress(id1, List("A House 27-45", "A Street"), Some("London"), "FX9 9PY",
     Some("GB-ENG"), Some("UK"), Some(5840), Some("en"), Some(2), Some(1), Some(8), None, Some(location1.toString))
-  val fx9_9py_terse = AddressRecord(id1, urpn1, Address(List("A House 27-45", "A Street"), Some("London"), Some("Greater London"), "FX9 9PY", Some(England), UK),
+  val fx9_9py_terse: AddressRecord = AddressRecord(id1, urpn1, Address(List("A House 27-45", "A Street"), Some("London"), Some("Greater London"), "FX9 9PY", Some(England), UK),
     en, lc5840, Some(location1.toSeq), None, None, None)
-  val fx9_9py_augmented = AddressRecord(id1, urpn1, Address(List("A House 27-45", "A Street"), Some("London"), Some("Greater London"), "FX9 9PY", Some(England), UK),
+  val fx9_9py_augmented: AddressRecord = AddressRecord(id1, urpn1, Address(List("A House 27-45", "A Street"), Some("London"), Some("Greater London"), "FX9 9PY", Some(England), UK),
     en, lc5840, Some(location1.toSeq), InUse, Approved, None)
 
   // This sample is a length-2 postcode
   val id2 = "GB22222"
-  val uprn2 = Some(22222L)
+  val uprn2: Some[Long] = Some(22222L)
 
   val id3 = "GB33333"
-  val uprn3 = Some(33333L)
+  val uprn3: Some[Long] = Some(33333L)
 
-  val location2 = Location("12.345678", "-12.345678")
-  val db_fx1_6jn_a = DbAddress(id2, List("11 A Street"), TownName1, Postcode1,
+  val location2: Location = Location("12.345678", "-12.345678")
+  val db_fx1_6jn_a: DbAddress = DbAddress(id2, List("11 A Street"), TownName1, Postcode1,
     Some("GB-ENG"), Some("UK"), Some(4510), Some("en"), Some(2), Some(1), Some(8), None, Some(location2.toString))
-  val aHouseLocation2 = Location("12.345678", "-12.345678")
-  val db_fx1_6jn_b = DbAddress(id3, List("A House 5-7", "A Street"), TownName1, Postcode1,
+  val aHouseLocation2: Location = Location("12.345678", "-12.345678")
+  val db_fx1_6jn_b: DbAddress = DbAddress(id3, List("A House 5-7", "A Street"), TownName1, Postcode1,
     Some("GB-ENG"), Some("UK"), Some(4510), Some("en"), Some(2), Some(1), Some(8), None, Some(aHouseLocation2.toString))
 
-  val fx1_6jn_a_augmented = AddressRecord(id2, uprn2, Address(List("11 A Street"), TownName1, CountyName1, Postcode1, Some(England), UK),
+  val fx1_6jn_a_augmented: AddressRecord = AddressRecord(id2, uprn2, Address(List("11 A Street"), TownName1, CountyName1, Postcode1, Some(England), UK),
     en, lc4510, Some(location2.toSeq), InUse, Approved, None)
-  val fx1_6jn_a_terse = AddressRecord(id2, uprn2, Address(List("11 A Boulevard"), TownName1, CountyName1, Postcode1, Some(England), UK),
+  val fx1_6jn_a_terse: AddressRecord = AddressRecord(id2, uprn2, Address(List("11 A Boulevard"), TownName1, CountyName1, Postcode1, Some(England), UK),
     en, lc4510, Some(location2.toSeq), None, None, None)
 
 
-  val fx1_6jn_b_augmented = AddressRecord(id3, uprn3, Address(List("A House 5-7", "A Street"), TownName1, CountyName1, Postcode1, Some(England), UK),
+  val fx1_6jn_b_augmented: AddressRecord = AddressRecord(id3, uprn3, Address(List("A House 5-7", "A Street"), TownName1, CountyName1, Postcode1, Some(England), UK),
     en, lc4510, Some(aHouseLocation2.toSeq), InUse, Approved, None)
-  val fx1_6jn_b_terse = AddressRecord(id3, uprn3, Address(List("A House 5-7", "A Boulevard"), TownName1, CountyName1, Postcode1, Some(England), UK),
+  val fx1_6jn_b_terse: AddressRecord = AddressRecord(id3, uprn3, Address(List("A House 5-7", "A Boulevard"), TownName1, CountyName1, Postcode1, Some(England), UK),
     en, lc4510, Some(aHouseLocation2.toSeq), None, None, None)
 
 
   val id4 = "GB44444"
-  val uprn4 = Some(44444L)
+  val uprn4: Some[Long] = Some(44444L)
 
   // address with very long lines
-  val db_fx2_2tb = DbAddress(id4, List("An address with a very long first line",
+  val db_fx2_2tb: DbAddress = DbAddress(id4, List("An address with a very long first line",
     "Second line of address is just as long maybe longer",
     "Third line is not the longest but is still very long"),
     Some("Llanfairpwllgwyngyllgogerychwyrndrobwllllantysiliogogogoch"), "FX2 2TB", Some("GB-WLS"), Some("UK"),
     Some(915), Some("en"), Some(2), Some(1), Some(8), None, Some(aHouseLocation2.toString))
 
-  val fx2_2tb = AddressRecord(id4, uprn4, Address(List("An address with a very long first line",
+  val fx2_2tb: AddressRecord = AddressRecord(id4, uprn4, Address(List("An address with a very long first line",
     "Second line of address is just as long maybe longer",
     "Wavell Drive, Rosehill Industrial Estate"),
     Some("Llanfairpwllgwyngyllgogerychwyrndrobwllllantysiliogogogoch"), Some("Avalon"), "FX2 2TB", Some(Wales), UK),
     en, lc915, Some(aHouseLocation2.toSeq), InUse, Approved, AllVehicles)
 
   val id5 = "GB55555"
-  val db_fx17_1tb = DbAddress(id5, List("An address with a PO Box"),
+  val db_fx17_1tb: DbAddress = DbAddress(id5, List("An address with a PO Box"),
     None, "FX17 1TB", Some("GB-WLS"), Some("UK"),
     Some(666), Some("en"), Some(2), Some(1), Some(8), None, Some(aHouseLocation2.toString), Some("PO Box 1234"))
 

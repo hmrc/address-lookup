@@ -35,10 +35,10 @@ class ConfigHelper @Inject() (config: Configuration, env: Environment) {
     }
   }
 
-  def getConfigString(key: String): Option[String] = config.getString(key)
+  def getConfigString(key: String): Option[String] = config.getOptional[String](key)
 
   def getConfigStringMode(key: String): Option[String] = {
     val modeKey = s"$env.mode.$key"
-    config.getString(modeKey).orElse(config.getString(key))
+    config.getOptional[String](modeKey).orElse(config.getOptional[String](key))
   }
 }

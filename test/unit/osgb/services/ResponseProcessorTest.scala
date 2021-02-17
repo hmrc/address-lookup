@@ -36,59 +36,59 @@ class ResponseProcessorTest extends FunSuite {
   private val lc4510 = Some(LocalCustodian(4510, "Newcastle upon Tyne"))
   private val lc8132 = Some(LocalCustodian(8132, "Belfast"))
 
-  val loc1 = Location("12.345678", "-12.345678")
-  val loc2 = Location("12.345678", "-12.345678")
-  val loc3 = Location("12.345678", "-12.345678")
-  val loc10 = Location("12.345678", "-12.345678")
-  val loc11 = Location("12.345678", "-12.345678")
-  val locZ = Location("12.345678", "-12.345678")
+  val loc1: Location = Location("12.345678", "-12.345678")
+  val loc2: Location = Location("12.345678", "-12.345678")
+  val loc3: Location = Location("12.345678", "-12.345678")
+  val loc10: Location = Location("12.345678", "-12.345678")
+  val loc11: Location = Location("12.345678", "-12.345678")
+  val locZ: Location = Location("12.345678", "-12.345678")
 
-  val dbGB1 = DbAddress("GB10001", List("1 Line", "Line2", "Line3"), Some("ATown"), "FX11 4HG",
+  val dbGB1: DbAddress = DbAddress("GB10001", List("1 Line", "Line2", "Line3"), Some("ATown"), "FX11 4HG",
     Some("GB-ENG"), Some("UK"), Some(4510), Some("en"), Some(2), Some(1), Some(8), None, Some(loc1.toString))
-  val dbGB2 = DbAddress("GB10002", List("2 Line", "Line2", "Line3"), Some("ATown"), "FX11 4HG",
+  val dbGB2: DbAddress = DbAddress("GB10002", List("2 Line", "Line2", "Line3"), Some("ATown"), "FX11 4HG",
     Some("GB-ENG"), Some("UK"), Some(4510), Some("en"), Some(2), Some(1), Some(8), None, Some(loc2.toString))
-  val dbGB3 = DbAddress("GB10003", List("3 Line", "Line2", "Line3"), Some("ATown"), "FX11 4HG",
+  val dbGB3: DbAddress = DbAddress("GB10003", List("3 Line", "Line2", "Line3"), Some("ATown"), "FX11 4HG",
     Some("GB-ENG"), Some("UK"), Some(4510), Some("en"), Some(2), Some(1), Some(8), None, Some(loc3.toString))
-  val dbGB10 = DbAddress("GB10004", List("10 Line", "Line2", "Line3"), Some("ATown"), "FX11 4HG",
+  val dbGB10: DbAddress = DbAddress("GB10004", List("10 Line", "Line2", "Line3"), Some("ATown"), "FX11 4HG",
     Some("GB-ENG"), Some("UK"), Some(4510), Some("en"), Some(2), Some(1), Some(8), None, Some(loc10.toString))
-  val dbGB11 = DbAddress("GB10005", List("11 Line", "Line2", "Line3"), Some("ATown"), "FX11 4HG",
+  val dbGB11: DbAddress = DbAddress("GB10005", List("11 Line", "Line2", "Line3"), Some("ATown"), "FX11 4HG",
     Some("GB-ENG"), Some("UK"), Some(4510), Some("en"), Some(2), Some(1), Some(8), None, Some(loc11.toString))
-  val dbGBZ = DbAddress("GB10006", List("wxyz1", "wxyz2", "wxyz3"), Some("ATown"), "FX11 4HG",
+  val dbGBZ: DbAddress = DbAddress("GB10006", List("wxyz1", "wxyz2", "wxyz3"), Some("ATown"), "FX11 4HG",
     Some("GB-ENG"), Some("UK"), Some(4510), Some("en"), Some(2), Some(1), Some(8), None, Some(locZ.toString))
 
-  val expGB1M = AddressRecord("GB10001", Some(10001L), Address(List("1 Line", "Line2", "Line3"), Some("ATown"), TyneAndWear, "FX11 4HG", Some(England), UK), en, lc4510, Some(loc1.toSeq), InUse, Approved, AllVehicles)
-  val expGB1X = expGB1M.withoutMetadata
+  val expGB1M: AddressRecord = AddressRecord("GB10001", Some(10001L), Address(List("1 Line", "Line2", "Line3"), Some("ATown"), TyneAndWear, "FX11 4HG", Some(England), UK), en, lc4510, Some(loc1.toSeq), InUse, Approved, AllVehicles)
+  val expGB1X: AddressRecord = expGB1M.withoutMetadata
 
-  val expGB2M = AddressRecord("GB10002", Some(10002L), Address(List("2 Line", "Line2", "Line3"), Some("ATown"), TyneAndWear, "FX11 4HG", Some(England), UK), en, lc4510, Some(loc2.toSeq), InUse, Approved, AllVehicles)
-  val expGB2X = expGB2M.withoutMetadata
+  val expGB2M: AddressRecord = AddressRecord("GB10002", Some(10002L), Address(List("2 Line", "Line2", "Line3"), Some("ATown"), TyneAndWear, "FX11 4HG", Some(England), UK), en, lc4510, Some(loc2.toSeq), InUse, Approved, AllVehicles)
+  val expGB2X: AddressRecord = expGB2M.withoutMetadata
 
-  val expGB3M = AddressRecord("GB10003", Some(10003L), Address(List("3 Line", "Line2", "Line3"), Some("ATown"), TyneAndWear, "FX11 4HG", Some(England), UK), en, lc4510, Some(loc3.toSeq), InUse, Approved, AllVehicles)
-  val expGB3X = expGB3M.withoutMetadata
+  val expGB3M: AddressRecord = AddressRecord("GB10003", Some(10003L), Address(List("3 Line", "Line2", "Line3"), Some("ATown"), TyneAndWear, "FX11 4HG", Some(England), UK), en, lc4510, Some(loc3.toSeq), InUse, Approved, AllVehicles)
+  val expGB3X: AddressRecord = expGB3M.withoutMetadata
 
-  val expGB10M = AddressRecord("GB10004", Some(10004L), Address(List("10 Line", "Line2", "Line3"), Some("ATown"), TyneAndWear, "FX11 4HG", Some(England), UK), en, lc4510, Some(loc10.toSeq), InUse, Approved, AllVehicles)
-  val expGB10X = expGB10M.withoutMetadata
+  val expGB10M: AddressRecord = AddressRecord("GB10004", Some(10004L), Address(List("10 Line", "Line2", "Line3"), Some("ATown"), TyneAndWear, "FX11 4HG", Some(England), UK), en, lc4510, Some(loc10.toSeq), InUse, Approved, AllVehicles)
+  val expGB10X: AddressRecord = expGB10M.withoutMetadata
 
-  val expGB11M = AddressRecord("GB10005", Some(10005L), Address(List("11 Line", "Line2", "Line3"), Some("ATown"), TyneAndWear, "FX11 4HG", Some(England), UK), en, lc4510, Some(loc11.toSeq), InUse, Approved, AllVehicles)
-  val expGB11X = expGB11M.withoutMetadata
+  val expGB11M: AddressRecord = AddressRecord("GB10005", Some(10005L), Address(List("11 Line", "Line2", "Line3"), Some("ATown"), TyneAndWear, "FX11 4HG", Some(England), UK), en, lc4510, Some(loc11.toSeq), InUse, Approved, AllVehicles)
+  val expGB11X: AddressRecord = expGB11M.withoutMetadata
 
-  val expGBZM = AddressRecord("GB10006", Some(10006L), Address(List("wxyz1", "wxyz2", "wxyz3"), Some("ATown"), TyneAndWear, "FX11 4HG", Some(England), UK), en, lc4510, Some(loc11.toSeq), InUse, Approved, AllVehicles)
-  val expGBZX = expGBZM.withoutMetadata
+  val expGBZM: AddressRecord = AddressRecord("GB10006", Some(10006L), Address(List("wxyz1", "wxyz2", "wxyz3"), Some("ATown"), TyneAndWear, "FX11 4HG", Some(England), UK), en, lc4510, Some(loc11.toSeq), InUse, Approved, AllVehicles)
+  val expGBZX: AddressRecord = expGBZM.withoutMetadata
 
-  val locNI1 = Location("12.345678", "-12.345678")
-  val locNI2 = Location("12.345678", "-12.345678")
+  val locNI1: Location = Location("12.345678", "-12.345678")
+  val locNI2: Location = Location("12.345678", "-12.345678")
 
-  val dbNI1 = DbAddress("GB10007", List("Line1", "Line2", "Line3"), Some("ATown"), "FX11 4HG",
+  val dbNI1: DbAddress = DbAddress("GB10007", List("Line1", "Line2", "Line3"), Some("ATown"), "FX11 4HG",
     Some("GB-NIR"), Some("UK"), Some(8132), Some("en"), Some(2), Some(1), Some(8), None, Some(locNI1.toString))
-  val dbNI2 = DbAddress("GB10008", List("wxyz1", "wxyz2", "wxyz3"), Some("ATown"), "FX11 4HG",
+  val dbNI2: DbAddress = DbAddress("GB10008", List("wxyz1", "wxyz2", "wxyz3"), Some("ATown"), "FX11 4HG",
     Some("GB-NIR"), Some("UK"), Some(8132), Some("en"), Some(2), Some(1), Some(8), None, Some(locNI2.toString))
 
-  val expNI1M = AddressRecord("GB10007", Some(10007L), Address(List("Line1", "Line2", "Line3"), Some("ATown"), Some("County Antrim"), "FX11 4HG", Some(NorthernIreland), UK), en, lc8132, Some(locNI1.toSeq), InUse, Approved, AllVehicles)
-  val expNI1X = expNI1M.withoutMetadata
+  val expNI1M: AddressRecord = AddressRecord("GB10007", Some(10007L), Address(List("Line1", "Line2", "Line3"), Some("ATown"), Some("County Antrim"), "FX11 4HG", Some(NorthernIreland), UK), en, lc8132, Some(locNI1.toSeq), InUse, Approved, AllVehicles)
+  val expNI1X: AddressRecord = expNI1M.withoutMetadata
 
-  val expNI2M = AddressRecord("GB10008", Some(10008L), Address(List("wxyz1", "wxyz2", "wxyz3"), Some("ATown"), Some("County Antrim"), "FX11 4HG", Some(NorthernIreland), UK), en, lc8132, Some(locNI2.toSeq), InUse, Approved, AllVehicles)
-  val expNI2X = expNI2M.withoutMetadata
+  val expNI2M: AddressRecord = AddressRecord("GB10008", Some(10008L), Address(List("wxyz1", "wxyz2", "wxyz3"), Some("ATown"), Some("County Antrim"), "FX11 4HG", Some(NorthernIreland), UK), en, lc8132, Some(locNI2.toSeq), InUse, Approved, AllVehicles)
+  val expNI2X: AddressRecord = expNI2M.withoutMetadata
 
-  val refData = ReferenceData.load("sample_local_custodian_table.csv", "sample_local_custodian_ceremonial_counties.csv")
+  val refData: ReferenceData = ReferenceData.load("sample_local_custodian_table.csv", "sample_local_custodian_ceremonial_counties.csv")
 
 
   test(
@@ -101,7 +101,7 @@ class ResponseProcessorTest extends FunSuite {
     for (de <- List(dbGB1 -> expGB1M, dbGB2 -> expGB2M, dbGB10 -> expGB10M, dbGB11 -> expGB11M, dbGBZ -> expGBZM, dbNI1 -> expNI1M, dbNI2 -> expNI2M)) {
       val in = List(de._1)
       val exp = List(de._2)
-      val adr = rp.convertAddressList(in, true)
+      val adr = rp.convertAddressList(in, withMetadata = true)
       assert(adr === exp)
     }
   }
@@ -112,7 +112,7 @@ class ResponseProcessorTest extends FunSuite {
        and apply the local custodian from the reference data
     """) {
     val rp = new ResponseProcessor(refData)
-    val adr = rp.convertAddressList(List(dbGB1, dbGB2, dbGB10, dbGB11, dbGBZ, dbNI1, dbNI2), false)
+    val adr = rp.convertAddressList(List(dbGB1, dbGB2, dbGB10, dbGB11, dbGBZ, dbNI1, dbNI2), withMetadata = false)
     assert(adr.toSet === Set(expGB1X, expGB2X, expGB10X, expGB11X, expGBZX, expNI1X, expNI2X))
   }
 
@@ -121,8 +121,8 @@ class ResponseProcessorTest extends FunSuite {
        convertAddressList will sort the data correctly - 1
     """) {
     val rp = new ResponseProcessor(refData)
-    val adr1 = rp.convertAddressList(List(dbGB1, dbGB2, dbGB3, dbGBZ), false)
-    val adr2 = rp.convertAddressList(List(dbGBZ, dbGB3, dbGB2, dbGB1), false)
+    val adr1 = rp.convertAddressList(List(dbGB1, dbGB2, dbGB3, dbGBZ), withMetadata = false)
+    val adr2 = rp.convertAddressList(List(dbGBZ, dbGB3, dbGB2, dbGB1), withMetadata = false)
     assert(adr1 === List(expGB1X, expGB2X, expGB3X, expGBZX))
     assert(adr2 === List(expGB1X, expGB2X, expGB3X, expGBZX))
   }
@@ -157,18 +157,18 @@ class ResponseProcessorTest extends FunSuite {
     val shuffled = addresses.toSet.toList
     val reversed = addresses.toList.reverse
 
-    val actual1 = rp.convertAddressList(shuffled, false)
-    val actual2 = rp.convertAddressList(reversed, false)
+    val actual1 = rp.convertAddressList(shuffled, withMetadata = false)
+    val actual2 = rp.convertAddressList(reversed, withMetadata = false)
 
     assert(actual1 === expected.toList)
     assert(actual2 === expected.toList)
 
     val start = System.currentTimeMillis
-    for (i <- 1 to 200) {
-      rp.convertAddressList(shuffled, false)
-      rp.convertAddressList(reversed, false)
+    for (_ <- 1 to 200) {
+      rp.convertAddressList(shuffled, withMetadata = false)
+      rp.convertAddressList(reversed, withMetadata = false)
     }
     val took = System.currentTimeMillis - start
-    println("took " + took + "ms")
+    println(s"took ${took}ms")
   }
 }

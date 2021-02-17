@@ -14,14 +14,15 @@
  * limitations under the License.
  */
 
-package osgb.services
+package repositories
 
 import osgb.SearchParameters
+import osgb.services.{AddressSearcher, CSV}
 import play.api.Environment
 import uk.gov.hmrc.address.osgb.DbAddress
 import uk.gov.hmrc.address.services.CsvLineSplitter
 import uk.gov.hmrc.address.uk.{Outcode, Postcode}
-import uk.gov.hmrc.address.v2.{LocalCustodian, Location}
+import uk.gov.hmrc.address.v2.Location
 
 import javax.inject.Inject
 import scala.collection.JavaConverters.asScalaIteratorConverter

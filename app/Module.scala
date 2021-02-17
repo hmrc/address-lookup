@@ -21,23 +21,19 @@ import com.google.inject.{AbstractModule, Provides}
 import com.kenshoo.play.metrics.Metrics
 import config.ConfigHelper
 import doobie.Transactor
+
 import javax.inject.Singleton
 import osgb.services._
 import play.api.inject.ApplicationLifecycle
-import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.{Configuration, Environment}
-import repositories.{AddressLookupRepository, RdsQueryConfig, TransactorProvider}
-import uk.gov.hmrc.address.services.es.{ElasticSettings, IndexMetadata}
+import repositories.{AddressLookupRepository, InMemoryAddressLookupRepository, RdsQueryConfig, TransactorProvider}
 import uk.gov.hmrc.logging.{LoggerFacade, SimpleLogger}
 
 import scala.concurrent.ExecutionContext
 
 class Module(environment: Environment, configuration: Configuration) extends AbstractModule {
 
-  def configure(): Unit = {
-    bind(classOf[ElasticSettingsProvider])
-    bind(classOf[IndexedMetadataProvider])
-  }
+  def configure(): Unit = {}
 
   @Provides
   @Singleton
@@ -76,10 +72,10 @@ class Module(environment: Environment, configuration: Configuration) extends Abs
       val transactor = new TransactorProvider(configuration, applicationLifecycle).get(executionContext)
       new AddressLookupRepository(transactor, rdsQueryConfig)
     } else {
-      new InMemoryAddressLookupRepository(environment, defaultContext)
+      new InMemoryAddressLookupRepository(environment, executionContext)
     }
 
-    new AddressSearcherMetrics(searcher, metrics.defaultRegistry, defaultContext)
+    new AddressSearcherMetrics(searcher, metrics.defaultRegistry, executionContext)
   }
 
   private def isDbEnabled(configHelper: ConfigHelper): Boolean =
