@@ -94,9 +94,7 @@ class InMemoryAddressLookupRepository @Inject()(env: Environment, ec: ExecutionC
       filter.map(_.toLowerCase.split("[ ]+")).map(_.toSet.filterNot(_.isEmpty)).getOrElse(Set())
     filteredDbAddressStr.filter { dba =>
       val dbAddString = dbsToFilterText(dba)
-      val isSubset = filterTokens.subsetOf(dbAddString)
-//      println(s">>> filterTokens: [${filterTokens.map(x => s"'$x'")}] dbAddString: [${dbAddString.map(x => s"'$x'")}] isSubset: [$isSubset]")
-      isSubset
+      filterTokens.subsetOf(dbAddString)
     }
   }
 }

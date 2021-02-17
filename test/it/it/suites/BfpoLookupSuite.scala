@@ -16,19 +16,20 @@
 
 package it.suites
 
-import javax.inject.Inject
 import bfpo.outmodel.{BFPO, BFPOReadWrite}
 import it.helper.AppServerTestApi
 import org.scalatest.{MustMatchers, WordSpec}
-import play.api.Application
+import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.libs.json.Json
 import play.api.libs.ws.WSClient
 import play.api.test.Helpers._
 
-class BfpoLookupSuite @Inject() (val wsClient: WSClient, val appEndpoint: String)(implicit val app: Application)
-  extends WordSpec with MustMatchers with AppServerTestApi {
+class BfpoLookupSuite()
+  extends WordSpec with GuiceOneServerPerSuite with MustMatchers with AppServerTestApi {
 
   implicit val bfpoReadWrite = BFPOReadWrite.AddressReads
+  override val appEndpoint: String = s"http://localhost:$port"
+  override val wsClient: WSClient = app.injector.instanceOf[WSClient]
 
   "bfpo lookup" when {
 
