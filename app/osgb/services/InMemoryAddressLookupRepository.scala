@@ -84,9 +84,8 @@ class InMemoryAddressLookupRepository @Inject()(env: Environment, ec: ExecutionC
 
     if (sp.postcode.isDefined)
       findPostcode(sp.postcode.get, filter)
-    else {
+    else
       Future.successful { doFilter(dbAddresses, filter).toList.take(3000) }
-    }
   }
 
   private def doFilter(filteredDbAddressStr: Seq[DbAddress], filter: Option[String]): Seq[DbAddress] = {
