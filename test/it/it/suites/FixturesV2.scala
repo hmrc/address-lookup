@@ -16,8 +16,8 @@
 
 package it.suites
 
-import uk.gov.hmrc.address.osgb.DbAddress
-import uk.gov.hmrc.address.v2._
+import address.osgb.DbAddress
+import address.v2._
 
 // Please keep FixturesV1 and FixturesV2 as similar as possible.
 

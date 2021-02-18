@@ -25,9 +25,9 @@ import doobie.util.fragment.Fragment
 import javax.inject.Inject
 import osgb.SearchParameters
 import osgb.services.AddressSearcher
-import uk.gov.hmrc.address.osgb.DbAddress
-import uk.gov.hmrc.address.services.Capitalisation._
-import uk.gov.hmrc.address.uk.{Outcode, Postcode}
+import address.osgb.DbAddress
+import address.services.Capitalisation._
+import address.uk.{Outcode, Postcode}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future

@@ -16,11 +16,12 @@
 
 package bfpo
 
+import address.uk.Postcode
 import bfpo.outmodel.{BFPO, BFPOReadWrite}
+
 import javax.inject.Inject
 import play.api.libs.json.Json
 import play.api.mvc.{ControllerComponents, Headers, Request, Result}
-import uk.gov.hmrc.address.uk.Postcode
 import uk.gov.hmrc.http.UpstreamErrorResponse
 import uk.gov.hmrc.logging.SimpleLogger
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController

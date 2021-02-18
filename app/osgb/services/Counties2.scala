@@ -16,7 +16,7 @@
 
 package osgb.services
 
-import uk.gov.hmrc.address.services.{Capitalisation, CsvParser}
+import address.services.{Capitalisation, CsvParser}
 
 import scala.collection.mutable
 

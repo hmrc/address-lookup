@@ -17,7 +17,7 @@
 package osgb
 
 import org.scalatest.FunSuite
-import uk.gov.hmrc.address.uk.Postcode
+import address.uk.Postcode
 
 class SearchParametersTest extends FunSuite {
 

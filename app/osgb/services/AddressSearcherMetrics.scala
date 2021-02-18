@@ -20,8 +20,8 @@ import com.codahale.metrics.MetricRegistry.name
 import com.codahale.metrics.Timer.Context
 import com.codahale.metrics.{MetricRegistry, Timer}
 import osgb.SearchParameters
-import uk.gov.hmrc.address.osgb.DbAddress
-import uk.gov.hmrc.address.uk.{Outcode, Postcode}
+import address.osgb.DbAddress
+import address.uk.{Outcode, Postcode}
 
 import scala.concurrent.{ExecutionContext, Future}
 

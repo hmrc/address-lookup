@@ -16,8 +16,8 @@
 
 package osgb.outmodel
 
+import address.v2._
 import play.api.libs.json.{JsValue, Json}
-import uk.gov.hmrc.address.v2.AddressRecord
 
 object Marshall {
 

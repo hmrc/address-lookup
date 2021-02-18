@@ -21,8 +21,8 @@ import java.util.zip.GZIPInputStream
 
 import com.github.tototoshi.csv.CSVReader
 import config._
-import uk.gov.hmrc.address.services.Capitalisation
-import uk.gov.hmrc.address.v2.ReferenceItem
+import address.services.Capitalisation
+import address.v2.ReferenceItem
 
 import scala.collection.mutable.ListBuffer
 import scala.io.{Codec, Source}

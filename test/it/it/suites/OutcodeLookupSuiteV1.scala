@@ -24,7 +24,7 @@ import osgb.outmodel.v1.AddressReadable._
 import play.api.libs.json.Json
 import play.api.libs.ws.WSClient
 import play.api.test.Helpers._
-import uk.gov.hmrc.address.v1.AddressRecord
+import address.v1.AddressRecord
 
 class OutcodeLookupSuiteV1()
   extends WordSpec with GuiceOneServerPerSuite with MustMatchers with AppServerTestApi {

@@ -18,8 +18,8 @@ package osgb.services
 
 import javax.inject.Inject
 
-import uk.gov.hmrc.address.osgb.DbAddress
-import uk.gov.hmrc.address.v2.{AddressRecord, AddressRecordConverter}
+import address.osgb.DbAddress
+import address.v2.{AddressRecord, AddressRecordConverter}
 
 class ResponseProcessor @Inject() (referenceData: ReferenceData) {
 

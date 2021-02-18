@@ -22,11 +22,11 @@ import org.scalatestplus.mockito.MockitoSugar
 import org.mockito.Mockito._
 import org.mockito.Matchers._
 import play.api.test.Helpers._
-import uk.gov.hmrc.address.osgb.DbAddress
+import address.osgb.DbAddress
 import com.codahale.metrics.Timer
 import com.codahale.metrics.Timer.Context
 import osgb.SearchParameters
-import uk.gov.hmrc.address.uk.{Outcode, Postcode}
+import address.uk.{Outcode, Postcode}
 
 import scala.concurrent.Future
 
