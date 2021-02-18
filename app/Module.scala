@@ -62,10 +62,8 @@ class Module(environment: Environment, configuration: Configuration) extends Abs
 
   @Provides
   @Singleton
-  def provideAddressSearcher(indexMetadataProvider: IndexedMetadataProvider, metrics: Metrics, configuration: Configuration,
-                             configHelper: ConfigHelper, rdsQueryConfig: RdsQueryConfig, executionContext: ExecutionContext,
-                             settingsProvider: ElasticSettingsProvider, applicationLifecycle: ApplicationLifecycle,
-                             logger: SimpleLogger): AddressSearcher = {
+  def provideAddressSearcher(metrics: Metrics, configuration: Configuration,
+                             configHelper: ConfigHelper, rdsQueryConfig: RdsQueryConfig, executionContext: ExecutionContext, applicationLifecycle: ApplicationLifecycle, logger: SimpleLogger): AddressSearcher = {
     val dbEnabled = isDbEnabled(configHelper)
 
     val searcher = if (dbEnabled) {

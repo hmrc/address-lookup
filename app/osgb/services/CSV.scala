@@ -17,9 +17,9 @@
 package osgb.services
 
 import osgb.outmodel._
-import uk.gov.hmrc.address.osgb.DbAddress
-import uk.gov.hmrc.address.services.Capitalisation._
-import uk.gov.hmrc.address.uk.Postcode
+import address.osgb.DbAddress
+import address.services.Capitalisation._
+import address.uk.Postcode
 
 object CSV {
   def convertCsvLine(line: Array[String]): DbAddress = {

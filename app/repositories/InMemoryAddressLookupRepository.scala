@@ -16,13 +16,13 @@
 
 package repositories
 
+import address.osgb.DbAddress
+import address.services.CsvLineSplitter
+import address.uk.{Outcode, Postcode}
+import address.v2.Location
 import osgb.SearchParameters
 import osgb.services.{AddressSearcher, CSV}
 import play.api.Environment
-import uk.gov.hmrc.address.osgb.DbAddress
-import uk.gov.hmrc.address.services.CsvLineSplitter
-import uk.gov.hmrc.address.uk.{Outcode, Postcode}
-import uk.gov.hmrc.address.v2.Location
 
 import javax.inject.Inject
 import scala.collection.JavaConverters.asScalaIteratorConverter

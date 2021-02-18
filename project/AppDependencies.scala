@@ -17,7 +17,6 @@ object AppDependencies {
     "uk.gov.hmrc"                   %% "bootstrap-backend-play-26"  % "3.0.0",
     "uk.gov.hmrc"                   %% "domain"                     % "5.10.0-play-26",
     "uk.gov.hmrc"                   %% "logging"                    % "0.7.0" withSources(),
-    "uk.gov.hmrc"                   %% "address-reputation-store"   % "2.41.0" withSources(),
     "com.univocity"                 %  "univocity-parsers"          % "1.5.6",
     "com.fasterxml.jackson.core"    %  "jackson-core"               % jacksonVersion,
     "com.fasterxml.jackson.core"    %  "jackson-databind"           % jacksonVersion,

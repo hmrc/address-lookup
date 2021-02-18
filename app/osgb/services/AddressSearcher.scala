@@ -17,8 +17,8 @@
 package osgb.services
 
 import osgb.SearchParameters
-import uk.gov.hmrc.address.osgb.DbAddress
-import uk.gov.hmrc.address.uk.{Outcode, Postcode}
+import address.osgb.DbAddress
+import address.uk.{Outcode, Postcode}
 
 import scala.concurrent.Future
 

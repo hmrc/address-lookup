@@ -22,7 +22,7 @@ import org.scalatestplus.junit.JUnitRunner
 import osgb.outmodel.v1.AddressReadable._
 import osgb.outmodel.v1.AddressWriteable._
 import play.api.libs.json.{JsError, JsSuccess, Json}
-import uk.gov.hmrc.address.v1.{Address, AddressRecord, Countries, LocalCustodian}
+import address.v1.{Address, AddressRecord, Countries, LocalCustodian}
 
 @RunWith(classOf[JUnitRunner])
 class AddressReadWriteTest extends WordSpec {

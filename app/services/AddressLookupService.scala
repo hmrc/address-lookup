@@ -18,8 +18,8 @@ package services
 
 import play.api.mvc.Result
 import repositories.AddressLookupRepository
-import uk.gov.hmrc.address.osgb.DbAddress
-import uk.gov.hmrc.address.uk.Postcode
+import address.osgb.DbAddress
+import address.uk.Postcode
 
 import javax.inject.Inject
 import scala.concurrent.Future

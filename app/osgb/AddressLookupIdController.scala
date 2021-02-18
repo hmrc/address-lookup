@@ -21,7 +21,7 @@ import osgb.outmodel.Marshall
 import osgb.services.{AddressSearcher, ResponseProcessor}
 import play.api.libs.json.JsValue
 import play.api.mvc.{Action, AnyContent, ControllerComponents, Request, Result}
-import uk.gov.hmrc.address.v2.AddressRecord
+import address.v2.AddressRecord
 import uk.gov.hmrc.logging.SimpleLogger
 
 import scala.concurrent.{ExecutionContext, Future}

@@ -16,9 +16,9 @@
 
 package osgb.outmodel.v1
 
+import address.v1._
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
-import uk.gov.hmrc.address.v1.{Address, AddressRecord, Country, LocalCustodian}
 
 object AddressWriteable {
 

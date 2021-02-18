@@ -16,8 +16,8 @@
 
 package bfpo
 
+import address.services.CsvParser
 import bfpo.outmodel.BFPO
-import uk.gov.hmrc.address.services.CsvParser
 
 object BFPOFileParser {
 

@@ -27,8 +27,8 @@ import osgb.services.{ReferenceData, ResponseProcessor}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import repositories.AddressLookupRepository
-import uk.gov.hmrc.address.osgb.DbAddress
-import uk.gov.hmrc.address.v2._
+import address.osgb.DbAddress
+import address.v2._
 import uk.gov.hmrc.http.UpstreamErrorResponse
 import uk.gov.hmrc.logging.StubLogger
 import util.Utils._

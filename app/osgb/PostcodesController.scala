@@ -22,7 +22,7 @@ import javax.inject.Inject
 import osgb.services.{AddressSearcher, ResponseProcessor}
 import play.api.libs.json._
 import play.api.mvc.{Action, AnyContent, ControllerComponents, Request, Result}
-import uk.gov.hmrc.address.uk.Postcode
+import address.uk.Postcode
 import uk.gov.hmrc.logging.SimpleLogger
 
 import scala.concurrent.{ExecutionContext, Future}

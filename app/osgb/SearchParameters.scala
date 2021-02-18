@@ -16,7 +16,7 @@
 
 package osgb
 
-import uk.gov.hmrc.address.uk.{Outcode, Postcode}
+import address.uk.{Outcode, Postcode}
 
 case class SearchParameters(
                              uprn: Option[String] = None,

@@ -23,7 +23,7 @@ import osgb.outmodel.v2.AddressReadable._
 import play.api.libs.json.Json
 import play.api.libs.ws.WSClient
 import play.api.test.Helpers._
-import uk.gov.hmrc.address.v2.AddressRecord
+import address.v2.AddressRecord
 
 // Please keep IdLookupSuiteV1 and IdLookupSuiteV2 as similar as appropriate.
 
