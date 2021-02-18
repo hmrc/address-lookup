@@ -16,15 +16,17 @@
 
 package it.suites
 
-import javax.inject.Inject
-
 import it.helper.AppServerTestApi
 import org.scalatest.{MustMatchers, WordSpec}
-import play.api.Application
+import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.libs.ws.WSClient
 
-class MetricsSuiteV2 @Inject() (val wsClient: WSClient, val appEndpoint: String, className: String)(implicit val app: Application)
-  extends WordSpec with MustMatchers with AppServerTestApi {
+class MetricsSuiteV2()
+  extends WordSpec with GuiceOneServerPerSuite with MustMatchers with AppServerTestApi {
+
+  private val className = "InMemoryAddressLookupRepository"
+  override val appEndpoint: String = s"http://localhost:$port"
+  override val wsClient: WSClient = app.injector.instanceOf[WSClient]
 
   "metrics" when {
     "successful" must {

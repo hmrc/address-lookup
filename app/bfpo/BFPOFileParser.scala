@@ -28,7 +28,7 @@ object BFPOFileParser {
       if line.length > 2 && line(1).startsWith(expectedOutcode)
     } yield {
       val addressLines = line.drop(3).toList
-      new BFPO(blankToOption(line(2)), addressLines, line(1), line(0))
+      BFPO(blankToOption(line(2)), addressLines, line(1), line(0))
     }
     data.toList
   }

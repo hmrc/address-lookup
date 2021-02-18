@@ -17,12 +17,10 @@ lazy val root = Project("address-lookup", file("."))
     fork in Test := false,
     retrieveManaged := true
   )
-
   .configs(Test)
   .settings(
     unmanagedSourceDirectories in Test := (baseDirectory in Test) (base => Seq(base / "test" / "unit")).value,
     addTestReportOption(Test, "test-reports"))
-
   .configs(IntegrationTest)
   .settings(inConfig(IntegrationTest)(Defaults.itSettings): _*)
   .settings(
@@ -31,7 +29,6 @@ lazy val root = Project("address-lookup", file("."))
     unmanagedResourceDirectories in IntegrationTest :=  (baseDirectory in Test) (base => Seq(base / "test" / "resources")).value,
     addTestReportOption(IntegrationTest, "int-test-reports"),
     parallelExecution in IntegrationTest := false)
-
   .settings(
     sources in doc in Compile := List(),
     sources in doc in Test := List(),

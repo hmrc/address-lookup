@@ -16,19 +16,20 @@
 
 package it.suites
 
-import javax.inject.Inject
-
 import it.helper.AppServerTestApi
 import org.scalatest.{MustMatchers, WordSpec}
+import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import osgb.outmodel.v2.AddressReadable._
-import play.api.Application
 import play.api.libs.json.{JsArray, Json}
 import play.api.libs.ws.WSClient
 import play.api.test.Helpers._
 import uk.gov.hmrc.address.v2.AddressRecord
 
-class FuzzySearchSuiteV2 @Inject() (val wsClient: WSClient, val appEndpoint: String)(implicit val app: Application)
-  extends WordSpec with MustMatchers with AppServerTestApi {
+class FuzzySearchSuiteV2()
+  extends WordSpec with GuiceOneServerPerSuite with MustMatchers with AppServerTestApi {
+
+  override val appEndpoint: String = s"http://localhost:$port"
+  override val wsClient: WSClient = app.injector.instanceOf[WSClient]
 
   "fuzzy search lookup" when {
 

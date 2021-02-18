@@ -16,16 +16,17 @@
 
 package it.suites
 
-import javax.inject.Inject
-
 import it.helper.AppServerTestApi
 import org.scalatest.{MustMatchers, WordSpec}
-import play.api.Application
+import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.libs.json.Json
 import play.api.libs.ws.WSClient
 
-class PostcodesSuiteV1 @Inject()(val wsClient: WSClient, val appEndpoint: String)(implicit val app: Application)
-  extends WordSpec with MustMatchers with AppServerTestApi {
+class PostcodesSuiteV1()
+  extends WordSpec with GuiceOneServerPerSuite with MustMatchers with AppServerTestApi {
+
+  override val appEndpoint: String = s"http://localhost:$port"
+  override val wsClient: WSClient = app.injector.instanceOf[WSClient]
 
   "postcode lookup" when {
 

@@ -59,13 +59,10 @@ class ResponseProcessor @Inject() (referenceData: ReferenceData) {
 object DbAddressOrderingByLines extends Ordering[DbAddress] {
   def compare(a: DbAddress, b: DbAddress): Int = {
     val l1 = a.line1 compare b.line1
-    if (l1 != 0) l1
-    else {
+    if (l1 != 0) l1 else {
       val l2 = a.line2 compare b.line2
       if (l2 != 0) l2
-      else {
-        a.line3 compare b.line3
-      }
+      else a.line3 compare b.line3
     }
   }
 }

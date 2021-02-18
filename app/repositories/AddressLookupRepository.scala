@@ -65,11 +65,16 @@ class AddressLookupRepository @Inject()(transactor: Transactor[IO], queryConfig:
 
   override def searchFuzzy(sp: SearchParameters): Future[List[DbAddress]] = {
     val filter = for {
-      f <- Option(sp.lines).map(_.mkString(" ")).orElse(Some(" "))
-      t <- sp.town.orElse(Some(" "))
-    } yield (f + " " + t).trim.replaceAll("\\p{Space}+", " ")
-    if (sp.postcode.isDefined) findPostcode(sp.postcode.get, filter)
-    else findWithOnlyFilter(filter)
+      f <- Option(sp.lines).map(_.mkString(" ")).orElse(Some(""))
+      t <- sp.town.orElse(Some(""))
+      fz <- sp.fuzzy.orElse(Some(""))
+      ff <- sp.filter.orElse(Some(""))
+    } yield (f + " " + t + " " + fz + " " + ff).trim.replaceAll("\\p{Space}+", " ")
+
+    if (sp.postcode.isDefined)
+      findPostcode(sp.postcode.get, filter)
+    else
+      findWithOnlyFilter(filter)
   }
 
   private def findWithOnlyFilter(filter: Option[String]): Future[List[DbAddress]] = {
