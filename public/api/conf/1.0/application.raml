@@ -4,7 +4,7 @@ title: Address Lookup
 version: 1.0
 
 protocols: [ HTTPS ]
-baseUri: https://address-lookup.service.hmrc.gov.uk/
+baseUri: https://api.service.hmrc.gov.uk/
 
 documentation:
  - title: Overview
@@ -29,6 +29,7 @@ uses:
       description: |
         Lookup of postal and BFPO (British Forces Post Office) address details within the UK
       is: [headers.acceptHeader]
+      securedBy: [ sec.x-application ]
       responses:
         200:
           body:
