@@ -23,47 +23,46 @@ uses:
   types: https://developer.service.hmrc.gov.uk/api-documentation/assets/common/modules/types.raml
 
 /lookup:
-  /address:
-    get:
-      displayName: Lookup address
-      description: |
-        Lookup of postal and BFPO (British Forces Post Office) address details within the UK
-      is: [headers.acceptHeader]
-      securedBy: [ sec.x-application ]
-      responses:
-        200:
-          body:
-            application/json:
-              example: |
-                [
-                  {
-                    "id": "GB34046631",
-                    "uprn": 34046631,
-                    "address": {
-                      "lines": [
-                        "31 Danehurst Street"
-                      ],
-                      "town": "London",
-                      "county": "Greater London",
-                      "postcode": "SW6 6SA",
-                      "subdivision": {
-                        "code": "GB-ENG",
-                        "name": "England"
-                      },
-                      "country": {
-                        "code": "UK",
-                        "name": "United Kingdom"
-                      }
-                    },
-                    "language": "en",
-                    "localCustodian": {
-                      "code": 5390,
-                      "name": "Hammersmith and Fulham"
-                    },
-                    "location": [
-                      51.4776127,
-                      -0.2122289
+  get:
+    displayName: Lookup address
+    description: |
+      Lookup of postal and BFPO (British Forces Post Office) address details within the UK
+    is: [headers.acceptHeader]
+    securedBy: [ sec.x-application ]
+    responses:
+      200:
+        body:
+          application/json:
+            example: |
+              [
+                {
+                  "id": "GB34046631",
+                  "uprn": 34046631,
+                  "address": {
+                    "lines": [
+                      "31 Danehurst Street"
                     ],
-                    "administrativeArea": "HAMMERSMITH AND FULHAM"
-                  }
-                ]
+                    "town": "London",
+                    "county": "Greater London",
+                    "postcode": "SW6 6SA",
+                    "subdivision": {
+                      "code": "GB-ENG",
+                      "name": "England"
+                    },
+                    "country": {
+                      "code": "UK",
+                      "name": "United Kingdom"
+                    }
+                  },
+                  "language": "en",
+                  "localCustodian": {
+                    "code": 5390,
+                    "name": "Hammersmith and Fulham"
+                  },
+                  "location": [
+                    51.4776127,
+                    -0.2122289
+                  ],
+                  "administrativeArea": "HAMMERSMITH AND FULHAM"
+                }
+              ]
