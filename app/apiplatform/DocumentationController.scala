@@ -16,14 +16,20 @@
 
 package apiplatform
 
+import config.ConfigHelper
 import controllers.Assets
 import javax.inject.Inject
-import play.api.mvc.{Action, AnyContent, ControllerComponents}
+import play.api.http.{ContentTypes, MimeTypes}
+import play.api.mvc.{Action, AnyContent, Codec, ControllerComponents}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
-class DocumentationController @Inject()(assets: Assets, cc: ControllerComponents) extends BackendController(cc) {
-  def definition(): Action[AnyContent] = {
-    assets.at("/public/api", "definition.json")
+import scala.concurrent.Future
+
+class DocumentationController @Inject()(assets: Assets, cc: ControllerComponents, configHelper: ConfigHelper) extends BackendController(cc) {
+  private val apiStatus = configHelper.mustGetConfigString("api-platform.status")
+
+  def definition(): Action[AnyContent] = Action.async {
+    Future.successful(Ok(txt.definition(apiStatus)).as(ContentTypes.withCharset(MimeTypes.JSON)(Codec.utf_8)))
   }
 
   def raml(version: String, file: String): Action[AnyContent] = {
