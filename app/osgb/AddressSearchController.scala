@@ -63,7 +63,7 @@ class AddressSearchController @Inject() (addressSearch: AddressSearcher, respons
     } else
       addressSearch.findUprn(uprn).map {
         a =>
-          val a2 = responseProcessor.convertAddressList(a, withMetadata = false)
+          val a2 = responseProcessor.convertAddressList(a)
           logEvent("LOOKUP", "origin" -> origin, "uprn" -> uprn, "matches" -> a2.size.toString)
           Ok(marshall(a2))
       }
@@ -82,7 +82,7 @@ class AddressSearchController @Inject() (addressSearch: AddressSearcher, respons
     } else {
       addressSearch.findPostcode(sp.postcode.get, sp.filter).map {
         a =>
-          val a2 = responseProcessor.convertAddressList(a, withMetadata = false)
+          val a2 = responseProcessor.convertAddressList(a)
           logEvent("LOOKUP", origin, a2.size, sp.tupled)
           Ok(marshall(a2))
       }
@@ -105,7 +105,7 @@ class AddressSearchController @Inject() (addressSearch: AddressSearcher, respons
     } else {
       addressSearch.findOutcode(sp.outcode.get, sp.filter.get).map {
         a =>
-          val a2 = responseProcessor.convertAddressList(a, withMetadata = false)
+          val a2 = responseProcessor.convertAddressList(a)
           logEvent("LOOKUP", origin, a2.size, sp.tupled)
           Ok(marshall(a2))
       }
@@ -115,7 +115,7 @@ class AddressSearchController @Inject() (addressSearch: AddressSearcher, respons
   private[osgb] def searchFuzzyRequest[A](request: Request[A], sp: SearchParameters, origin: String, marshall: List[AddressRecord] => JsValue): Future[Result] = {
     addressSearch.searchFuzzy(sp).map {
       a =>
-        val a2 = responseProcessor.convertAddressList(a, withMetadata = false)
+        val a2 = responseProcessor.convertAddressList(a)
         logEvent("LOOKUP", origin, a2.size, sp.tupled)
         Ok(marshall(a2))
     }

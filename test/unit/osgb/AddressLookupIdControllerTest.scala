@@ -54,13 +54,13 @@ class AddressLookupIdControllerTest extends WordSpec with ScalaFutures with Mock
   val shire = Some("Thereshire")
   val addr1Loc = Location("12.345678", "-12.345678")
   val addr1Db = DbAddress("GB123456", List("10 Test Court", "Test Street", "Tester"), Some("Testtown upon Tyne"), "FX1 1AA",
-    Some("GB-ENG"), Some("UK"), Some(4510), Some("en"), Some(2), Some(1), None, None, Some(addr1Loc.toString))
-  val addr1Ar = AddressRecord("GB123456", Some(123456L), Address(List("10 Test Court", "A Street", "Tester"), Some("Testtown upon Tyne"), shire, "FX1 1AA", Some(England), UK), en, lc4510, Some(addr1Loc.toSeq), InUse, Approved, AllVehicles)
+    Some("GB-ENG"), Some("UK"), Some(4510), Some("en"), None, Some(addr1Loc.toString))
+  val addr1Ar = AddressRecord("GB123456", Some(123456L), Address(List("10 Test Court", "A Street", "Tester"), Some("Testtown upon Tyne"), shire, "FX1 1AA", Some(England), UK), en, lc4510, Some(addr1Loc.toSeq))
 
   val cc = play.api.test.Helpers.stubControllerComponents()
 
   class ResponseStub(a: List[AddressRecord]) extends ResponseProcessor(ReferenceData.empty) {
-    override def convertAddressList(dbAddresses: Seq[DbAddress], withMetadata: Boolean): List[AddressRecord] = a
+    override def convertAddressList(dbAddresses: Seq[DbAddress]): List[AddressRecord] = a
   }
 
   class Context {

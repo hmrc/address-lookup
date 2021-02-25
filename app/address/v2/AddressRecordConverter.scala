@@ -19,15 +19,15 @@ package address.v2
 import address.osgb.DbAddress
 
 
-
 case class ReferenceItem(code: Int, localCustodian: String, county: Option[String])
 
 
 object AddressRecordConverter {
 
-  def convert(d: DbAddress, refItem: Option[ReferenceItem], incMetadata: Boolean): AddressRecord = {
+  def convert(d: DbAddress, refItem: Option[ReferenceItem]): AddressRecord = {
     // blank the county if it is the same name as the city
-    val optCounty = if (refItem.isEmpty || refItem.get.county.isEmpty || d.town.contains(refItem.get.county.get)) None else refItem.get.county
+    val optCounty = if (refItem.isEmpty || refItem.get.county.isEmpty || d.town.contains(refItem.get.county.get))
+      None else refItem.get.county
 
     val optLC = refItem.map(it => LocalCustodian(it.code, it.localCustodian))
 
@@ -41,13 +41,7 @@ object AddressRecordConverter {
 
     val a = new Address(d.lines, d.town, optCounty, d.postcode, optSubdivision, country)
 
-    val blpuState = if (incMetadata) d.blpuState.flatMap(BLPUStateHelper.codeToString) else None
-
-    val logicalState = if (incMetadata) d.logicalState.flatMap(LogicalStateHelper.codeToString) else None
-
-    val streetClassification = if (incMetadata) d.streetClass.flatMap(StreetClassificationHelper.codeToString) else None
-
-    new AddressRecord(d.id, Some(d.uprn), a, language, optLC, location, blpuState, logicalState, streetClassification, d.administrativeArea)
+    new AddressRecord(d.id, Some(d.uprn), a, language, optLC, location, d.administrativeArea)
   }
 
   final val English = "en"

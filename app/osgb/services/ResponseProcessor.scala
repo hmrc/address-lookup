@@ -21,38 +21,19 @@ import javax.inject.Inject
 import address.osgb.DbAddress
 import address.v2.{AddressRecord, AddressRecordConverter}
 
-class ResponseProcessor @Inject() (referenceData: ReferenceData) {
+class ResponseProcessor @Inject()(referenceData: ReferenceData) {
 
-  private def convertAddress(dbAddress: DbAddress, withMetadata: Boolean): AddressRecord = {
+  private def convertAddress(dbAddress: DbAddress): AddressRecord = {
     val refItem = referenceData.get(dbAddress.localCustodianCode)
-    AddressRecordConverter.convert(dbAddress, refItem, withMetadata)
+    AddressRecordConverter.convert(dbAddress, refItem)
   }
 
-  def convertAddressList(dbAddresses: Seq[DbAddress], withMetadata: Boolean): List[AddressRecord] = {
+  def convertAddressList(dbAddresses: Seq[DbAddress]): List[AddressRecord] = {
     val sorted = dbAddresses.sortWith {
       (a, b) => DbAddressOrderingByLines.compare(a, b) < 0
     }
-    sorted.map(a => convertAddress(a, withMetadata).truncatedAddress()).toList
+    sorted.map(a => convertAddress(a).truncatedAddress()).toList
   }
-
-  // simple algorithm measured to be 30% slower
-  //  def filterAndConvertAddressList(dbAddresses: Seq[DbAddress], filterStr: Option[String]): List[AddressRecord] = {
-  //    val filtered = filterList(dbAddresses, filterStr)
-  //    val converted = filtered.map(convertAddress)
-  //    val result = converted.sortWith {
-  //      (ar1, ar2) => ar1.address.printable < ar2.address.printable
-  //    }
-  //    result.toList
-  //  }
-
-  // alternative algorithm also found to be slower
-  //  def filterAndConvertAddressList(dbAddresses: Seq[DbAddress], filterStr: Option[String]): List[AddressRecord] = {
-  //    val filtered = filterList(dbAddresses, filterStr).toArray
-  //    Sorting.quickSort(filtered)(DbAddressOrderingByLines)
-  //    val converted = filtered.map(convertAddress)
-  //    converted.toList
-  //  }
-
 }
 
 

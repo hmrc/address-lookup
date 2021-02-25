@@ -41,22 +41,22 @@ class InMemoryAddressLookupRepository @Inject()(env: Environment, ec: ExecutionC
     splitter.map(CSV.convertCsvLine)
   } ++ Seq(
     DbAddress("GB11111", List("A House 27-45", "A Street"), Some("London"), "FX9 9PY", Some("GB-ENG"), Some("UK"),
-      Some(5840), Some("en"), Some(2), Some(1), Some(8), None, Some(Location("12.345678", "-12.345678").toString)),
+      Some(5840), Some("en"), None, Some(Location("12.345678", "-12.345678").toString)),
     DbAddress("GB33333", List("A House 5-7", "A Boulevard"), Some("Newcastle upon Tyne"), "FX1 6JN", Some("GB-ENG"),
-      Some("UK"), Some(4510), Some("en"), Some(2), Some(1), Some(8), None, Some(Location("12.345678", "-12.345678")
+      Some("UK"), Some(4510), Some("en"), None, Some(Location("12.345678", "-12.345678")
         .toString)),
     DbAddress("GB44444", List("An address with a very long first line", "Second line of address is just as long maybe" +
       " longer", "Third line is not the longest but is still very long"), Some
     ("Llanfairpwllgwyngyllgogerychwyrndrobwllllantysiliogogogoch"), "FX2 2TB", Some("GB-WLS"), Some("UK"), Some(915),
-      Some("en"), Some(2), Some(1), Some(8), None, Some(Location("12.345678", "-12.345678").toString)),
+      Some("en"), None, Some(Location("12.345678", "-12.345678").toString)),
     DbAddress("GB55555", List("An address with a PO Box"), None, "FX17 1TB", Some("GB-WLS"), Some("UK"), Some(666),
-      Some("en"), Some(2), Some(1), Some(8), None, Some(Location("12.345678", "-12.345678").toString), Some("PO Box " +
+      Some("en"), None, Some(Location("12.345678", "-12.345678").toString), Some("PO Box " +
         "1234")),
-    DbAddress("GB22222", List("11 A Boulevard"), Some("Newcastle upon Tyne"), "FX1 6JN", Some("GB-ENG"), Some("UK"), Some(4510), Some("en"), Some(2), Some(1), Some(8), None, Some(Location("12.345678", "-12.345678").toString))) ++ (for (i <- 1 to 2517) yield {
-    DbAddress(s"GB100$i", List(s"Flat $i", "A Apartments", "ARoad"), Some("ATown"), "FX4 7AL", Some("GB-ENG"), Some("UK"), Some(3725), Some("en"), Some(2), Some(1), None, None, None)
+    DbAddress("GB22222", List("11 A Boulevard"), Some("Newcastle upon Tyne"), "FX1 6JN", Some("GB-ENG"), Some("UK"), Some(4510), Some("en"), None, Some(Location("12.345678", "-12.345678").toString))) ++ (for (i <- 1 to 2517) yield {
+    DbAddress(s"GB100$i", List(s"Flat $i", "A Apartments", "ARoad"), Some("ATown"), "FX4 7AL", Some("GB-ENG"), Some("UK"), Some(3725), Some("en"), None, None)
   }) ++ (for (i <- 1 to 3001) yield {
     DbAddress(s"GB200$i", List(s"$i Bankside"), Some("ATown"), "FX4 7AJ",
-      Some("GB-ENG"), Some("UK"), Some(3725), Some("en"), Some(2), Some(1), None, None, None)
+      Some("GB-ENG"), Some("UK"), Some(3725), Some("en"), None, None)
   })
 
 

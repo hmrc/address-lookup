@@ -50,7 +50,7 @@ class AddressLookupIdController @Inject()(addressSearch: AddressSearcher, respon
         val list = a.toList
         logEvent("LOOKUP", "origin" -> origin, "id" -> id, "matches" -> list.size.toString)
         if (a.isDefined) {
-          val a2 = responseProcessor.convertAddressList(list, false)
+          val a2 = responseProcessor.convertAddressList(list)
           Ok(marshall(a2.head))
         }
         else {
