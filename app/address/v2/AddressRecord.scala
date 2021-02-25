@@ -16,8 +16,8 @@
 
 package address.v2
 
-import com.fasterxml.jackson.annotation.JsonIgnore
 import address.v1
+import com.fasterxml.jackson.annotation.JsonIgnore
 
 
 case class LocalCustodian(code: Int, name: String) {
@@ -38,9 +38,6 @@ case class AddressRecord(
                           language: String,
                           localCustodian: Option[LocalCustodian],
                           location: Option[Seq[BigDecimal]],
-                          blpuState: Option[String],
-                          logicalState: Option[String],
-                          streetClassification: Option[String],
                           administrativeArea: Option[String] = None) {
 
   require(location.isEmpty || location.get.size == 2, location.get)
@@ -52,15 +49,7 @@ case class AddressRecord(
     if (address.longestLineLength <= maxLen) this
     else copy(address = address.truncatedAddress(maxLen))
 
-  def withoutMetadata: AddressRecord = copy(blpuState = None, logicalState = None, streetClassification = None)
-
   def asV1 = v1.AddressRecord(id, uprn, address.asV1, localCustodian.map(_.asV1), language)
 
   def locationValue: Option[Location] = location.map(loc => Location(loc.head, loc(1)))
-
-  def blpuStateValue: Option[BLPUState] = blpuState.flatMap(v => Option(BLPUState.valueOf(v)))
-
-  def logicalStateValue: Option[LogicalState] = logicalState.flatMap(v => Option(LogicalState.valueOf(v)))
-
-  def streetClassificationValue: Option[StreetClassification] = streetClassification.flatMap(v => Option(StreetClassification.valueOf(v)))
 }

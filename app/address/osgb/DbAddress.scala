@@ -48,9 +48,6 @@ case class DbAddress(
                       country: Option[String],
                       localCustodianCode: Option[Int],
                       language: Option[String],
-                      blpuState: Option[Int],
-                      logicalState: Option[Int],
-                      streetClass: Option[Int],
                       blpuClass: Option[String],
                       location: Option[String],
                       poBox: Option[String] = None,
@@ -83,9 +80,6 @@ case class DbAddress(
       country.toList.map("country" -> _) ++
       localCustodianCode.toList.map("localCustodianCode" -> _) ++
       language.toList.map("language" -> _) ++
-      blpuState.toList.map("blpuState" -> _) ++
-      logicalState.toList.map("logicalState" -> _) ++
-      streetClass.toList.map("streetClass" -> _) ++
       blpuClass.toList.map("blpuClass" -> _) ++
       location.toList.map("location" -> _) ++
       poBox.toList.map("poBox" -> _) ++
@@ -110,9 +104,6 @@ case class DbAddress(
       country.toList.map("country" -> _) ++
       localCustodianCode.toList.map("localCustodianCode" -> _) ++
       language.toList.map("language" -> _) ++
-      blpuState.toList.map("blpuState" -> _) ++
-      logicalState.toList.map("logicalState" -> _) ++
-      streetClass.toList.map("streetClass" -> _) ++
       blpuClass.toList.map("blpuClass" -> _) ++
       location.toList.map("location" -> _) ++
       poBox.toList.map("poBox" -> _) ++
