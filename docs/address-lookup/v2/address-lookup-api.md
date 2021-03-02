@@ -353,7 +353,9 @@ Response:
      [Example response (v2)](address-response-sample1.json)
 
 
-## 5. BFPO Address Lookup By Postcode or BFPO Number
+## 5. BFPO Address Lookup By Postcode or BFPO Number (Deprecated)
+
+This endpoint is deprecated, BFPO addresses can be found using the standard [Lookup by Postcode](#4B.-Lookup-by-Postcode) endpoint
 
 URL:
 
