@@ -1,6 +1,6 @@
 #%RAML 1.0
 ---
-title: Address Lookup
+title: Address Verification
 version: 1.0
 
 protocols: [ HTTPS ]
@@ -22,7 +22,7 @@ uses:
   annotations: https://developer.service.hmrc.gov.uk/api-documentation/assets/common/modules/annotations.raml
   types: https://developer.service.hmrc.gov.uk/api-documentation/assets/common/modules/types.raml
 
-/lookup:
+/misc/address-verification/lookup:
   get:
     displayName: Lookup address
     description: |

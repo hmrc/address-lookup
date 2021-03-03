@@ -3,13 +3,16 @@
 {
   "scopes": [],
   "api": {
-    "name": "Lookup address",
-    "description": "Lookup of postal and BFPO (British Forces Post Office) address details within the UK",
-    "context": "misc/address-validation",
+    "name": "Address Verification",
+    "description": "Search for postal and BFPO (British Forces Post Office) address details within the UK and retrieve them in a common format",
+    "context": "misc/address-verification",
     "versions": [
       {
         "version": "1.0",
         "status": "@status",
+        "access": {
+          "type": "PRIVATE"
+        },
         "endpointsEnabled": @{status != "ALPHA"}
       }
     ]
