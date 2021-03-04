@@ -4,9 +4,7 @@
 REST microservice that implements the lookup of postal and BFPO (British Forces Post Office) address details within the UK.
 
 ## Documentation
-Please [browse the docs](docs) for more info, or dive straight into
-the [**address-lookup API definition**](docs/address-lookup/address-lookup-api.md).
-
+Please read the [**address-lookup API definition**](public/api/conf/1.0/docs/address-lookup-api.md) for more information.
 
 ## Dependencies
 * SBT

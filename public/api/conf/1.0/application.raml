@@ -29,40 +29,20 @@ uses:
       Lookup of postal and BFPO (British Forces Post Office) address details within the UK
     is: [headers.acceptHeader]
     securedBy: [ sec.x-application ]
+    queryParameters:
+      postcode:
+        description: Full postcode to search for (must be url escaped)
+        type: string
+        required: true
+        example: W14+9HR
+      filter:
+        description: Refine the search results futher based on house number or street name
+        type: string
+        required: false
+        example: 36A+Comeragh
     responses:
       200:
         body:
           application/json:
-            example: |
-              [
-                {
-                  "id": "GB34046631",
-                  "uprn": 34046631,
-                  "address": {
-                    "lines": [
-                      "31 Danehurst Street"
-                    ],
-                    "town": "London",
-                    "county": "Greater London",
-                    "postcode": "SW6 6SA",
-                    "subdivision": {
-                      "code": "GB-ENG",
-                      "name": "England"
-                    },
-                    "country": {
-                      "code": "UK",
-                      "name": "United Kingdom"
-                    }
-                  },
-                  "language": "en",
-                  "localCustodian": {
-                    "code": 5390,
-                    "name": "Hammersmith and Fulham"
-                  },
-                  "location": [
-                    51.4776127,
-                    -0.2122289
-                  ],
-                  "administrativeArea": "HAMMERSMITH AND FULHAM"
-                }
-              ]
+            type: !include docs/uk-address-object.json
+            example: !include docs/example-response.json
