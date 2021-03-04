@@ -4,11 +4,11 @@
         "uprn": 200000698110,
         "address": {
             "lines": [
-                "2 the Copse"
+                "2 The Test Close"
             ],
-            "town": "Romsey",
-            "county": "Hampshire",
-            "postcode": "SO51 7UR",
+            "town": "Test Town",
+            "county": "Test County",
+            "postcode": "BB00 0BB",
             "subdivision": {
                 "code": "GB-ENG",
                 "name": "England"
@@ -29,11 +29,11 @@
         "uprn": 200000708497,
         "address": {
             "lines": [
-                "4 the Copse"
+                "4 Test Close"
             ],
-            "town": "Romsey",
-            "county": "Hampshire",
-            "postcode": "SO51 7UR",
+            "town": "Test Town",
+            "county": "Test County",
+            "postcode": "BB00 0BB",
             "subdivision": {
                 "code": "GB-ENG",
                 "name": "England"
@@ -54,11 +54,11 @@
         "uprn": 200000704710,
         "address": {
             "lines": [
-                "6 the Copse"
+                "6 Test Close"
             ],
-            "town": "Romsey",
-            "county": "Hampshire",
-            "postcode": "SO51 7UR",
+            "town": "Test Town",
+            "county": "Test County",
+            "postcode": "BB00 0BB",
             "subdivision": {
                 "code": "GB-ENG",
                 "name": "England"
@@ -79,11 +79,11 @@
         "uprn": 200000700558,
         "address": {
             "lines": [
-                "8 the Copse"
+                "8 Test Close"
             ],
-            "town": "Romsey",
-            "county": "Hampshire",
-            "postcode": "SO51 7UR",
+            "town": "Test Town",
+            "county": "Test County",
+            "postcode": "BB00 0BB",
             "subdivision": {
                 "code": "GB-ENG",
                 "name": "England"
@@ -104,12 +104,12 @@
         "uprn": 200010012154,
         "address": {
             "lines": [
-                "Elm Lodge",
-                "The Copse"
+                "Test Lodge",
+                "Test Close"
             ],
-            "town": "Romsey",
-            "county": "Hampshire",
-            "postcode": "SO51 7UR",
+            "town": "Test Town",
+            "county": "Test County",
+            "postcode": "BB00 0BB",
             "subdivision": {
                 "code": "GB-ENG",
                 "name": "England"
@@ -130,12 +130,12 @@
         "uprn": 200000706253,
         "address": {
             "lines": [
-                "Hunters House",
-                "The Copse"
+                "Test House",
+                "Test Close"
             ],
-            "town": "Romsey",
-            "county": "Hampshire",
-            "postcode": "SO51 7UR",
+            "town": "Test Town",
+            "county": "Test County",
+            "postcode": "BB00 0BB",
             "subdivision": {
                 "code": "GB-ENG",
                 "name": "England"

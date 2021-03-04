@@ -4,12 +4,12 @@
     "uprn": 200000706253,
     "address": {
       "lines": [
-        "Hunters House",
-        "The Copse"
+        "Test House",
+        "The Tests"
       ],
-      "town": "Romsey",
-      "county": "Hampshire",
-      "postcode": "SO51 7UR",
+      "town": "Test Town",
+      "county": "Test County",
+      "postcode": "BB00 0BB",
       "subdivision": {
         "code": "GB-ENG",
         "name": "England"
@@ -28,6 +28,6 @@
       -1.4690977
     ],
     "language": "en",
-    "administrativeArea": "HAMPSHIRE"
+    "administrativeArea": "TEST COUNTY"
   }
 ]
