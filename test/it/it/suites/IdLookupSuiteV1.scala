@@ -61,8 +61,7 @@ class IdLookupSuiteV1()
         address1.line1 mustBe "An address with a very long first l"
         address1.line2 mustBe "Second line of address is just as l"
         address1.line3 mustBe "Third line is not the longest but i"
-        address1.town.get mustBe fx2_2tb.address.town.get.substring(0, 35)
-        address1.county.get mustBe "Cumbria"
+        address1.town mustBe fx2_2tb.address.town.substring(0, 35)
       }
 
       "give an address record for a known id without a county" in {

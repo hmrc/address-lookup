@@ -32,7 +32,7 @@ import scala.concurrent.Future
 
 class AddressSearcherMetricsTest extends FunSuite with MockitoSugar {
 
-  val dummyGBDbAddr1 = DbAddress("GB123456", List("Line1", "Line2", "Line3"), Some("ATOWN"), "FX30 4HG",
+  val dummyGBDbAddr1 = DbAddress("GB123456", List("Line1", "Line2", "Line3"), "ATOWN", "FX30 4HG",
     Some("GB-ENG"), Some("UK"), Some(4510), Some("en"), None, Some("12.34567,-12.34567"))
   implicit val ec = scala.concurrent.ExecutionContext.global
 

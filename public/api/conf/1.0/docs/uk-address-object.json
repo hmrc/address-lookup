@@ -33,12 +33,6 @@
                         "minLength": 1,
                         "maxLength": 35
                     },
-                    "county": {
-                        "description": "ceremonial county",
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 35
-                    },
                     "postcode": {
                         "description": "the outcode, incode combination specified for the UK by Royal Mail",
                         "type": "string",

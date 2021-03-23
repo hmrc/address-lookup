@@ -87,5 +87,5 @@ class Module(environment: Environment, configuration: Configuration) extends Abs
   @Provides
   @Singleton
   def providesReferenceData(configHelper: ConfigHelper): ReferenceData =
-    ReferenceData.load(configHelper.mustGetConfigString("lcc.table"), configHelper.mustGetConfigString("lcc.counties"))
+    ReferenceData.load(configHelper.mustGetConfigString("lcc.table"))
 }

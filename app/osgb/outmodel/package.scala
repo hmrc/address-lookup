@@ -28,11 +28,4 @@ package object outmodel {
     else if (t.endsWith(",")) t.init.trim
     else t
   }
-
-//  def stripQuotes(s: String): String = {
-//    if (s.startsWith("\"") && s.endsWith("\""))
-//      s.substring(1, s.length - 1).trim
-//    else
-//      s.trim
-//  }
 }

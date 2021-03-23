@@ -30,7 +30,7 @@ class AddressReadWriteTest extends WordSpec {
 
   val addrLike = AddressRecord("GB0123456789", Some(12345678L),
     Address(List("AHouse", "AStreet", "ARoad"),
-      Some("ATown"), Some("ACounty"), "FX1 5XD", Some("GB-ENG"), UK),
+      "ATown", "FX1 5XD", Some("GB-ENG"), UK),
     Some(LocalCustodian(4510, "Tyne & Wear")),
     "en")
 

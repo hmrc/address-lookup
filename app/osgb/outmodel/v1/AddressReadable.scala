@@ -29,8 +29,7 @@ object AddressReadable {
 
   implicit val AddressReads: Reads[Address] = (
     (JsPath \ "lines").read[List[String]] and
-      (JsPath \ "town").readNullable[String] and
-      (JsPath \ "county").readNullable[String] and
+      (JsPath \ "town").read[String] and
       (JsPath \ "postcode").read[String] and
       (JsPath \ "subdivision").readNullable[String] and
       (JsPath \ "country").read[Country]) (Address.apply _)
