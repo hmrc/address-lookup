@@ -19,16 +19,12 @@ package address.v2
 import address.osgb.DbAddress
 
 
-case class ReferenceItem(code: Int, localCustodian: String, county: Option[String])
+case class ReferenceItem(code: Int, localCustodian: String)
 
 
 object AddressRecordConverter {
 
   def convert(d: DbAddress, refItem: Option[ReferenceItem]): AddressRecord = {
-    // blank the county if it is the same name as the city
-    val optCounty = if (refItem.isEmpty || refItem.get.county.isEmpty || d.town.contains(refItem.get.county.get))
-      None else refItem.get.county
-
     val optLC = refItem.map(it => LocalCustodian(it.code, it.localCustodian))
 
     val optSubdivision = d.subdivision.flatMap(code => Countries.find(code))
@@ -39,7 +35,7 @@ object AddressRecordConverter {
 
     val location = d.location.map(latlong => Location(latlong).toSeq)
 
-    val a = new Address(d.lines, d.town, optCounty, d.postcode, optSubdivision, country)
+    val a = new Address(d.lines, d.town, d.postcode, optSubdivision, country)
 
     new AddressRecord(d.id, Some(d.uprn), a, language, optLC, location, d.administrativeArea)
   }

@@ -109,8 +109,8 @@ class AddressLookupRepository @Inject()(transactor: Transactor[IO], queryConfig:
         sqlDbAddress.line1.map(normaliseAddressLine(_)),
         sqlDbAddress.line2.map(normaliseAddressLine(_)),
         sqlDbAddress.line3.map(normaliseAddressLine(_))
-      ).collect { case l if l.isDefined & !l.get.isEmpty => l.get }.toList,
-      sqlDbAddress.posttown.map(normaliseAddressLine(_)),
+      ).collect { case l if l.isDefined & l.get.nonEmpty => l.get }.toList,
+      sqlDbAddress.posttown.map(normaliseAddressLine(_)).getOrElse(""),
       sqlDbAddress.postcode.getOrElse(""), //This should not be a problem as we are searching on a provided postcode so in practice this should exist.
       sqlDbAddress.subdivision,
       sqlDbAddress.countrycode,

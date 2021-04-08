@@ -26,23 +26,23 @@ class AddressTest extends FunSuite {
   import Countries.UK
 
   test(
-    """Given an address with only one line and no town
+    """Given an address with only one line and a town
        then 'printable' with newline should generate the correct string""") {
-    val a = Address(List("ATown"), None, None, "FX1 1XX", Some("GB-ENG"), UK)
-    assert(a.printable("\n") === "ATown\nFX1 1XX")
+    val a = Address(List("ATown"), "some-town", "FX1 1XX", Some("GB-ENG"), UK)
+    assert(a.printable("\n") === "ATown\nsome-town\nFX1 1XX")
   }
 
   test(
-    """An address with only one line and no town is valid""") {
-    val a = Address(List("ATown"), None, None, "FX1 1XX", Some("GB-ENG"), UK)
+    """An address with only one line and a town is valid""") {
+    val a = Address(List("ATown"), "some-town", "FX1 1XX", Some("GB-ENG"), UK)
     assert(a.isValid)
   }
 
   test(
-    """Given an address with three lines, a town and a county,
+    """Given an address with three lines, and a town,
        then 'printable' should generate the correct string""") {
-    val a = Address(List("Line1", "Line2", "Line3"), Some("ATown"), Some("ACounty"), "FX1 1XX", Some("GB-WLS"), UK)
-    assert(a.printable === "Line1, Line2, Line3, ATown, ACounty, FX1 1XX")
+    val a = Address(List("Line1", "Line2", "Line3"), "ATown", "FX1 1XX", Some("GB-WLS"), UK)
+    assert(a.printable === "Line1, Line2, Line3, ATown, FX1 1XX")
   }
 
   test(
@@ -56,7 +56,7 @@ class AddressTest extends FunSuite {
       "This is Line1 and is very long so long that it is more than 35 chars",
       "This is Line2 and is very long so long that it is more than 35 chars",
       "This is Line3 and is very long so long that it is more than 35 chars"),
-      Some("Llanfairpwllgwyngyllgogerychwyrndrobwllllantysiliogogogoch"), Some("ACounty"), "FX1 1XX", Some("GB-ENG"), UK).truncatedAddress()
+      "Llanfairpwllgwyngyllgogerychwyrndrobwllllantysiliogogogoch", "FX1 1XX", Some("GB-ENG"), UK).truncatedAddress()
     val expected = List(
       //23456789-123456789-123456789-12345
       "This is Line1 and is very long so l",
@@ -67,37 +67,37 @@ class AddressTest extends FunSuite {
       assert(a.lines(i).length <= 35, a.lines(i))
       assert(a.lines(i) === expected(i))
     }
-    assert(a.town.get.length === 35, a.town.get)
+    assert(a.town.length === 35, a.town)
   }
 
   test(
     """An address with three lines and a town is valid""") {
-    val a = Address(List("Line1", "Line2", "Line3"), Some("ATown"), Some("ACounty"), "FX1 1XX", Some("GB-WLS"), UK)
+    val a = Address(List("Line1", "Line2", "Line3"), "ATown", "FX1 1XX", Some("GB-WLS"), UK)
     assert(a.isValid)
   }
 
   test(
     """An address with no lines and a town is not valid""") {
-    val a = Address(Nil, Some("ATown"), Some("ACounty"), "FX1 1XX", Some("GB-WLS"), UK)
+    val a = Address(Nil, "ATown", "FX1 1XX", Some("GB-WLS"), UK)
     assert(!a.isValid)
   }
 
   test(
     """An address with four lines and a town is not valid""") {
-    val a = Address(List("a", "b", "c", "d"), Some("ATown"), Some("ACounty"), "FX1 1XX", Some("GB-WLS"), UK)
+    val a = Address(List("a", "b", "c", "d"), "ATown", "FX1 1XX", Some("GB-WLS"), UK)
     assert(!a.isValid)
   }
 
   test(
-    """An address with five lines and no townor county is not valid""") {
-    val a = Address(List("a", "b", "c", "d", "e"), None, None, "FX1 1XX", Some("GB-WLS"), UK)
+    """An address with five lines is not valid""") {
+    val a = Address(List("a", "b", "c", "d", "e"), "some-town", "FX1 1XX", Some("GB-WLS"), UK)
     assert(!a.isValid)
   }
 
   test(
     """Given a valid address in a record with a two-letter language,
        then the record should be valid""") {
-    val a = Address(List("Line1", "Line2", "Line3"), Some("ATown"), Some("ACounty"), "FX1 1XX", Some("GB-WLS"), UK)
+    val a = Address(List("Line1", "Line2", "Line3"), "ATown", "FX1 1XX", Some("GB-WLS"), UK)
     val ar = AddressRecord("abc123", None, a, None, "en")
     assert(ar.isValid)
   }
@@ -105,7 +105,7 @@ class AddressTest extends FunSuite {
   test(
     """Given a valid address in a record that does not have a two-letter language,
        then the record should be invalid""") {
-    val a = Address(List("Line1", "Line2", "Line3"), Some("ATown"), Some("ACounty"), "FX1 1XX", Some("GB-WLS"), UK)
+    val a = Address(List("Line1", "Line2", "Line3"), "ATown", "FX1 1XX", Some("GB-WLS"), UK)
     val ar = AddressRecord("abc123", None, a, None, "")
     assert(!ar.isValid)
   }

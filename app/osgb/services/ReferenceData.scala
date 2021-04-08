@@ -37,16 +37,14 @@ case class ReferenceData(mappings: Map[Int, ReferenceItem]) {
 object ReferenceData {
   val empty = new ReferenceData(Map())
 
-  def load(localCustodians: String, lccCounties: String): ReferenceData = {
+  def load(localCustodians: String): ReferenceData = {
     try {
       val lccFileList = localCustodians.qsplit(',').map(_.trim)
-      val countiesFileList = lccCounties.qsplit(',').map(_.trim)
 
       val custodians = lccFileList.flatMap(loadResource(_, 0, 1)).toMap
-      val counties = countiesFileList.flatMap(loadResource(_, 0, 2)).toMap
 
       val joined = for ((k, v) <- custodians) yield {
-        val ri = ReferenceItem(k, v, counties.get(k))
+        val ri = ReferenceItem(k, v)
         k -> ri
       }
 

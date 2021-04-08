@@ -1,18 +1,12 @@
 # Updating the Reference Data Files
 
 There are several reference tables, all supplied as CSV files. They are in pairs covering the local custodian
-names and the corresponding ceremonial counties.
+names.
 
 They are keyed on the Local Custodian Code. For each pair of files, there must be the same number of codes,
 and the codes must match between the two files.
 
 Both files may contain one or more header lines.
-
-## local_custodian_ceremonial_counties.csv
-
-This file was supplied by Ordnance Survey.
-
-If it includes 7666,OSGB, delete this entry.
 
 ## local_custodian_table.csv
 

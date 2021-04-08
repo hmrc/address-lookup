@@ -7,7 +7,6 @@
                 "2 The Test Close"
             ],
             "town": "Test Town",
-            "county": "Test County",
             "postcode": "BB00 0BB",
             "subdivision": {
                 "code": "GB-ENG",
@@ -32,7 +31,6 @@
                 "4 Test Close"
             ],
             "town": "Test Town",
-            "county": "Test County",
             "postcode": "BB00 0BB",
             "subdivision": {
                 "code": "GB-ENG",
@@ -57,7 +55,6 @@
                 "6 Test Close"
             ],
             "town": "Test Town",
-            "county": "Test County",
             "postcode": "BB00 0BB",
             "subdivision": {
                 "code": "GB-ENG",
@@ -82,7 +79,6 @@
                 "8 Test Close"
             ],
             "town": "Test Town",
-            "county": "Test County",
             "postcode": "BB00 0BB",
             "subdivision": {
                 "code": "GB-ENG",
@@ -108,7 +104,6 @@
                 "Test Close"
             ],
             "town": "Test Town",
-            "county": "Test County",
             "postcode": "BB00 0BB",
             "subdivision": {
                 "code": "GB-ENG",
@@ -134,7 +129,6 @@
                 "Test Close"
             ],
             "town": "Test Town",
-            "county": "Test County",
             "postcode": "BB00 0BB",
             "subdivision": {
                 "code": "GB-ENG",

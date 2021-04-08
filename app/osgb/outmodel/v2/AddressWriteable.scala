@@ -28,8 +28,7 @@ object AddressWriteable {
 
   implicit val AddressWrites: Writes[Address] = (
     (JsPath \ "lines").write[Seq[String]] and
-      (JsPath \ "town").writeNullable[String] and
-      (JsPath \ "county").writeNullable[String] and
+      (JsPath \ "town").write[String] and
       (JsPath \ "postcode").write[String] and
       (JsPath \ "subdivision").writeNullable[Country] and
       (JsPath \ "country").write[Country]) (unlift(Address.unapply))

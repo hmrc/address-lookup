@@ -42,7 +42,7 @@ trait Document {
 case class DbAddress(
                       id: String,
                       lines: List[String],
-                      town: Option[String],
+                      town: String,
                       postcode: String,
                       subdivision: Option[String],
                       country: Option[String],
@@ -94,8 +94,7 @@ case class DbAddress(
 
     def optLine3 = if (lines.size > 2) List(lines(2)) else Nil
 
-    List(
-      "postcode" -> postcode) ++
+    List("postcode" -> postcode) ++
       optLine1.map("line1" -> _) ++
       optLine2.map("line2" -> _) ++
       optLine3.map("line3" -> _) ++

@@ -24,14 +24,14 @@ import address.v2.ReferenceItem
 @RunWith(classOf[JUnitRunner])
 class ReferenceDataTest extends FunSuite {
 
-  val refData = ReferenceData.load("sample_local_custodian_table.csv", "sample_local_custodian_ceremonial_counties.csv")
+  val refData = ReferenceData.load("sample_local_custodian_table.csv")
 
   test("should load counties data file and api should find county by outcode or postcode") {
-    assert(refData.get(114) === Some(ReferenceItem(114, "Bath and North East Somerset", Some("Somerset"))))
-    assert(refData.get(240) === Some(ReferenceItem(240, "Central Bedfordshire", Some("Bedfordshire"))))
-    assert(refData.get(340) === Some(ReferenceItem(340, "West Berkshire", Some("Berkshire"))))
-    assert(refData.get(6925) === Some(ReferenceItem(6925, "Merthyr Tydfil UA", Some("Mid Glamorgan"))))
-    assert(refData.get(7655) === Some(ReferenceItem(7655, "Ordnance Survey", None)))
-    assert(refData.get(9055) === Some(ReferenceItem(9055, "Scottish Borders", Some("Roxburgh, Ettrick and Lauderdale"))))
+    assert(refData.get(114) === Some(ReferenceItem(114, "Bath and North East Somerset")))
+    assert(refData.get(240) === Some(ReferenceItem(240, "Central Bedfordshire")))
+    assert(refData.get(340) === Some(ReferenceItem(340, "West Berkshire")))
+    assert(refData.get(6925) === Some(ReferenceItem(6925, "Merthyr Tydfil UA")))
+    assert(refData.get(7655) === Some(ReferenceItem(7655, "Ordnance Survey")))
+    assert(refData.get(9055) === Some(ReferenceItem(9055, "Scottish Borders")))
   }
 }
