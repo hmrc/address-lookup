@@ -64,13 +64,6 @@ class IdLookupSuiteV2()
         address1.town mustBe fx2_2tb.address.town.substring(0, 35)
       }
 
-      "give an address record for a known id without a county" in {
-        val response = get("/v2/uk/addresses/GB11111")
-        val body = response.body
-        val json = Json.parse(body)
-        Json.fromJson[AddressRecord](json).get mustBe fx9_9py_terse
-      }
-
       "set the content type to application/json" in {
         val response = get("/v2/uk/addresses/GB11111")
         val contentType = response.header("Content-Type").get

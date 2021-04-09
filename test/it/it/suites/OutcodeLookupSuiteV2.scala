@@ -52,17 +52,6 @@ class OutcodeLookupSuiteV2()
         assert(response.status === OK, dump(response))
       }
 
-      "give an array for at least one item for a known outcode without a county" in {
-        val response = get("/v2/uk/addresses?outcode=fx9&filter=House")
-        val body = response.body
-        assert(body.startsWith("[{"), dump(response))
-        assert(body.endsWith("}]"), dump(response))
-        val json = Json.parse(body)
-        val seq = Json.fromJson[Seq[AddressRecord]](json).get
-        seq.size mustBe 1
-        seq.head mustBe fx9_9py_terse
-      }
-
       "set the content type to application/json" in {
         val response = get("/v2/uk/addresses?outcode=FX1&filter=Dorset")
         val contentType = response.header("Content-Type").get

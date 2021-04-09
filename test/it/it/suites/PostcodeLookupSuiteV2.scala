@@ -70,17 +70,6 @@ class PostcodeLookupSuiteV2 ()
         address1.town mustBe fx2_2tb.address.town.substring(0, 35)
       }
 
-      "give an array for at least one item for a known postcode without a county" in {
-        val response = get("/v2/uk/addresses?postcode=fx9+9py")
-        val body = response.body
-        assert(body.startsWith("[{"), dump(response))
-        assert(body.endsWith("}]"), dump(response))
-        val json = Json.parse(body)
-        val seq = Json.fromJson[Seq[AddressRecord]](json).get
-        seq.size mustBe 1
-        seq.head mustBe fx9_9py_terse
-      }
-
       "give a successful response for a known v.large postcode - uk route" in {
         val response = get("/v2/uk/addresses?postcode=fx47al")
         assert(response.status === OK, dump(response))
