@@ -82,7 +82,6 @@ class ResponseProcessorTest extends FunSuite {
 
   val refData: ReferenceData = ReferenceData.load("sample_local_custodian_table.csv")
 
-
   test(
     """given a single DbAddress,
        convertAddressList will convert the data correctly

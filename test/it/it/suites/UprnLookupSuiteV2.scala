@@ -70,17 +70,6 @@ class UprnLookupSuiteV2()
         address1.town mustBe fx2_2tb.address.town.substring(0, 35)
       }
 
-      "give an array for at least one item for a known uprn without a county" in {
-        val response = get("/v2/uk/addresses?uprn=11111")
-        val body = response.body
-        assert(body.startsWith("[{"), dump(response))
-        assert(body.endsWith("}]"), dump(response))
-        val json = Json.parse(body)
-        val arr = json.asInstanceOf[JsArray].value
-        arr.size mustBe 1
-        Json.fromJson[AddressRecord](arr.head).get mustBe fx9_9py_terse
-      }
-
       "set the content type to application/json" in {
         val response = get("/v2/uk/addresses?uprn=9999999999")
         val contentType = response.header("Content-Type").get
