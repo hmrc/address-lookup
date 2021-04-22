@@ -25,19 +25,14 @@ import doobie.Transactor
 import javax.inject.Singleton
 import osgb.services._
 import play.api.inject.ApplicationLifecycle
-import play.api.{Configuration, Environment}
+import play.api.{Configuration, Environment, Logger}
 import repositories.{AddressLookupRepository, InMemoryAddressLookupRepository, RdsQueryConfig, TransactorProvider}
-import uk.gov.hmrc.logging.{LoggerFacade, SimpleLogger}
 
 import scala.concurrent.ExecutionContext
 
 class Module(environment: Environment, configuration: Configuration) extends AbstractModule {
 
   def configure(): Unit = {}
-
-  @Provides
-  @Singleton
-  def provideLogger: SimpleLogger = new LoggerFacade(play.api.Logger.logger)
 
   @Provides
   @Singleton
@@ -63,7 +58,7 @@ class Module(environment: Environment, configuration: Configuration) extends Abs
   @Provides
   @Singleton
   def provideAddressSearcher(metrics: Metrics, configuration: Configuration,
-                             configHelper: ConfigHelper, rdsQueryConfig: RdsQueryConfig, executionContext: ExecutionContext, applicationLifecycle: ApplicationLifecycle, logger: SimpleLogger): AddressSearcher = {
+                             configHelper: ConfigHelper, rdsQueryConfig: RdsQueryConfig, executionContext: ExecutionContext, applicationLifecycle: ApplicationLifecycle): AddressSearcher = {
     val dbEnabled = isDbEnabled(configHelper)
 
     val searcher = if (dbEnabled) {

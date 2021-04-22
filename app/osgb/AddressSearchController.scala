@@ -22,13 +22,13 @@ import osgb.services._
 import play.api.libs.json.JsValue
 import play.api.mvc.{Action, AnyContent, ControllerComponents, Request, Result}
 import address.v2.AddressRecord
-import uk.gov.hmrc.logging.SimpleLogger
+import play.api.Logger
 
 import scala.concurrent.{ExecutionContext, Future}
 
 class AddressSearchController @Inject() (addressSearch: AddressSearcher, responseProcessor: ResponseProcessor,
-                                         logger: SimpleLogger, ec: ExecutionContext, cc: ControllerComponents)
-  extends AddressController(logger, cc) {
+                                         ec: ExecutionContext, cc: ControllerComponents)
+  extends AddressController(cc) {
 
   implicit private val xec = ec
 

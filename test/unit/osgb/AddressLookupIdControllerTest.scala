@@ -29,8 +29,8 @@ import play.api.test.Helpers._
 import repositories.AddressLookupRepository
 import address.osgb.DbAddress
 import address.v2._
+import play.api.Logger
 import uk.gov.hmrc.http.UpstreamErrorResponse
-import uk.gov.hmrc.logging.StubLogger
 import util.Utils._
 
 import scala.concurrent.Future
@@ -75,15 +75,13 @@ class AddressLookupIdControllerTest extends WordSpec with ScalaFutures with Mock
        it should give a 'bad request' response via the appropriate exception
        and not log any error
       """ in new Context {
-        val logger = new StubLogger
-        val addressLookupController = new AddressLookupIdController(searcher, new ResponseStub(Nil), logger, ec, cc)
+        val addressLookupController = new AddressLookupIdController(searcher, new ResponseStub(Nil), ec, cc)
         val request = FakeRequest("GET", "http://localhost:9000/v2/uk/addresses/123456")
 
         val e = intercept[UpstreamErrorResponse] {
           addressLookupController.findByIdRequest(request, "123456", Marshall.marshallV2Address)
         }
         assert(e.reportAs === 400)
-        assert(logger.isEmpty)
       }
     }
 
@@ -95,14 +93,11 @@ class AddressLookupIdControllerTest extends WordSpec with ScalaFutures with Mock
        and log the lookup including the size=1
       """ in new Context {
         when(searcher.findID("GB123456")) thenReturn Future(Some(addr1Db))
-        val logger = new StubLogger
-        val addressLookupController = new AddressLookupIdController(searcher, new ResponseStub(List(addr1Ar)), logger, ec, cc)
+        val addressLookupController = new AddressLookupIdController(searcher, new ResponseStub(List(addr1Ar)), ec, cc)
         val request = FakeRequest("GET", "http://localhost:9000/v2/uk/addresses/GB123456").withHeadersOrigin
 
         val result = await(addressLookupController.findByIdRequest(request, "GB123456", Marshall.marshallV2Address))
         assert(result.header.status === play.api.http.Status.OK)
-        assert(logger.size === 1)
-        assert(logger.infos.head.message === "LOOKUP origin=xyz id=GB123456 matches=1")
       }
 
       """when search is called with correct parameters but an unknown id
@@ -110,14 +105,11 @@ class AddressLookupIdControllerTest extends WordSpec with ScalaFutures with Mock
        and log the lookup including the size=0
       """ in new Context {
         when(searcher.findID("GB1010101010")) thenReturn Future(None)
-        val logger = new StubLogger
-        val addressLookupController = new AddressLookupIdController(searcher, new ResponseStub(Nil), logger, ec, cc)
+        val addressLookupController = new AddressLookupIdController(searcher, new ResponseStub(Nil), ec, cc)
         val request = FakeRequest("GET", "http://localhost:9000/v2/uk/addresses/GB1010101010").withHeadersOrigin
 
         val result = await(addressLookupController.findByIdRequest(request, "GB1010101010", Marshall.marshallV2Address))
         assert(result.header.status === play.api.http.Status.NOT_FOUND)
-        assert(logger.size === 1)
-        assert(logger.infos.head.message === "LOOKUP origin=xyz id=GB1010101010 matches=0")
       }
     }
   }

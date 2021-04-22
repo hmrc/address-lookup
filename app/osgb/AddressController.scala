@@ -17,12 +17,14 @@
 package osgb
 
 import com.typesafe.config.ConfigFactory
+import play.api.Logger
 import play.api.mvc.{ControllerComponents, Headers, Result}
-import uk.gov.hmrc.logging.SimpleLogger
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.http.UpstreamErrorResponse
 
-abstract class AddressController(logger: SimpleLogger, cc: ControllerComponents) extends BackendController(cc) {
+abstract class AddressController(cc: ControllerComponents) extends BackendController(cc) {
+
+  private val logger = Logger(this.getClass.getSimpleName)
 
   lazy private val headerOrigin:String =  ConfigFactory.load().getString("header.x-origin")
 

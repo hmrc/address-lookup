@@ -18,18 +18,20 @@ package bfpo
 
 import address.uk.Postcode
 import bfpo.outmodel.{BFPO, BFPOReadWrite}
+import play.api.Logger
 
 import javax.inject.Inject
 import play.api.libs.json.Json
 import play.api.mvc.{ControllerComponents, Headers, Request, Result}
 import uk.gov.hmrc.http.UpstreamErrorResponse
-import uk.gov.hmrc.logging.SimpleLogger
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
-class BFPOLookupController @Inject()(bfpoData: List[BFPO], logger: SimpleLogger, cc: ControllerComponents)
+class BFPOLookupController @Inject()(bfpoData: List[BFPO], cc: ControllerComponents)
   extends BackendController(cc) {
 
   import BFPOReadWrite._
+
+  private val logger = Logger(this.getClass.getSimpleName)
 
   def findByPostCode() = Action {
     request =>
