@@ -27,7 +27,7 @@ object Utils {
 
   implicit class FakeRequestWithOrigin[T](fake: FakeRequest[T]) {
     def withHeadersOrigin: FakeRequest[T] =
-      fake.copyFakeRequest(headers = fake.headers.replace(headerOrigin -> "xyz"))
+      fake.withHeaders(fake.headers.replace(headerOrigin -> "xyz"))
   }
 
 }

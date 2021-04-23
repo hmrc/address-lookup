@@ -16,11 +16,9 @@
 
 package osgb
 
-import org.junit.runner.RunWith
 import org.mockito.Mockito._
 import org.scalatest.WordSpec
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatestplus.junit.JUnitRunner
 import org.scalatestplus.mockito.MockitoSugar
 import osgb.outmodel.Marshall
 import osgb.services.{ReferenceData, ResponseProcessor}
@@ -35,7 +33,6 @@ import util.Utils._
 
 import scala.concurrent.Future
 
-@RunWith(classOf[JUnitRunner])
 class AddressLookupIdControllerTest extends WordSpec with ScalaFutures with MockitoSugar {
 
   implicit val ec = scala.concurrent.ExecutionContext.Implicits.global

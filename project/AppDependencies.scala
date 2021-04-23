@@ -6,16 +6,15 @@ object AppDependencies {
   import play.sbt.PlayImport._
   import play.core.PlayVersion
 
-  private val hmrcTestVersion   = "3.5.0-play-26"
-  private val scalaTestVersion  = "3.0.8"
+  private val scalaTestVersion  = "3.1.3"
   private val pegdownVersion    = "1.6.0"
   private val jacksonVersion    = "2.8.9"
   private val doobieVersion     = "0.7.1"
 
   val compile = Seq(
     ws,
-    "uk.gov.hmrc"                   %% "bootstrap-backend-play-26"  % "3.0.0",
-    "uk.gov.hmrc"                   %% "domain"                     % "5.10.0-play-26",
+    "uk.gov.hmrc"                   %% "bootstrap-backend-play-27"  % "4.3.0",
+    "uk.gov.hmrc"                   %% "domain"                     % "5.11.0-play-27",
     "com.univocity"                 %  "univocity-parsers"          % "1.5.6",
     "com.fasterxml.jackson.core"    %  "jackson-core"               % jacksonVersion,
     "com.fasterxml.jackson.core"    %  "jackson-databind"           % jacksonVersion,
@@ -29,19 +28,17 @@ object AppDependencies {
     jdbc
   )
 
-  object Test {
-    def apply(): Seq[ModuleID] = Seq(
-      "uk.gov.hmrc"             %% "hmrctest"                     % hmrcTestVersion     % "test, it",
+  val test = Seq(
       "org.scalatest"           %% "scalatest"                    % scalaTestVersion    % "test, it",
+      "com.vladsch.flexmark"    %  "flexmark-all"                 % "0.36.8"            % "test, it",
       "org.pegdown"             %  "pegdown"                      % pegdownVersion      % "test, it",
       "com.typesafe.play"       %% "play-test"                    % PlayVersion.current % "test, it",
-      "org.scalatestplus.play"  %% "scalatestplus-play"           % "3.1.3"             % "test, it",
+      "org.scalatestplus.play"  %% "scalatestplus-play"           % "4.0.3"             % "test, it",
+      "org.scalatestplus"       %% "mockito-3-4"                  % "3.1.4.0"           % "test, it",
       "org.jsoup"               %  "jsoup"                        % "1.7.3"             % "test, it",
-      "org.mockito"             %  "mockito-all"                  % "1.10.19"           % "test, it",
       "org.tpolecat"            %% "doobie-scalatest"             % doobieVersion       % "test, it"
     )
-  }
 
-  def apply(): Seq[ModuleID] = compile ++ Test()
+  def apply(): Seq[ModuleID] = compile ++ test
 }
 

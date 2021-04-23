@@ -32,7 +32,7 @@ import scala.concurrent.ExecutionContext
 
 class Module(environment: Environment, configuration: Configuration) extends AbstractModule {
 
-  def configure(): Unit = {}
+  override def configure(): Unit = {}
 
   @Provides
   @Singleton

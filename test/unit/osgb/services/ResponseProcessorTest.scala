@@ -16,13 +16,10 @@
 
 package osgb.services
 
-import org.junit.runner.RunWith
 import org.scalatest.FunSuite
-import org.scalatestplus.junit.JUnitRunner
 import address.osgb.DbAddress
 import address.v2._
 
-@RunWith(classOf[JUnitRunner])
 class ResponseProcessorTest extends FunSuite {
 
   import Countries._

@@ -17,12 +17,9 @@
 package bfpo
 
 import bfpo.outmodel.BFPO
-import org.junit.runner.RunWith
-import org.scalatest.FunSuite
-import org.scalatestplus.junit.JUnitRunner
+import org.scalatest.funsuite.AnyFunSuite
 
-@RunWith(classOf[JUnitRunner])
-class BFPOFileParserTest extends FunSuite {
+class BFPOFileParserTest extends AnyFunSuite {
 
   val exp = List(
     BFPO(None, List("Washington", "USA"), "BF1 3AA", "2"),
