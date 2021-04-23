@@ -17,13 +17,12 @@
 package osgb
 
 import java.net.URLDecoder
-
 import javax.inject.Inject
 import osgb.services.{AddressSearcher, ResponseProcessor}
 import play.api.libs.json._
 import play.api.mvc.{Action, AnyContent, ControllerComponents, Request, Result}
 import address.uk.Postcode
-import uk.gov.hmrc.logging.SimpleLogger
+import play.api.Logger
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -35,10 +34,12 @@ object PostcodeResponseReadWrite {
 }
 
 class PostcodesController @Inject()(addressSearch: AddressSearcher, responseProcessor: ResponseProcessor,
-                                    logger: SimpleLogger, ec: ExecutionContext, cc: ControllerComponents)
-  extends AddressController(logger, cc) {
+                                    ec: ExecutionContext, cc: ControllerComponents)
+  extends AddressController(cc) {
 
   import PostcodeResponseReadWrite._
+
+  private val logger = Logger(this.getClass.getSimpleName)
 
   implicit private val xec = ec
 

@@ -30,8 +30,8 @@ import repositories.AddressLookupRepository
 import address.osgb.DbAddress
 import address.uk.{Outcode, Postcode}
 import address.v2._
+import play.api.Logger
 import uk.gov.hmrc.http.UpstreamErrorResponse
-import uk.gov.hmrc.logging.StubLogger
 import util.Utils._
 
 import scala.concurrent.Future
@@ -82,43 +82,35 @@ class AddressSearchControllerTest extends WordSpec with ScalaFutures with Mockit
        it should give a 'bad request' response via the appropriate exception
        and not log any error
       """ in new Context {
-        val logger = new StubLogger
-        val controller = new AddressSearchController(searcher, new ResponseStub(Nil), logger, ec, cc)
+        val controller = new AddressSearchController(searcher, new ResponseStub(Nil), ec, cc)
         val request = FakeRequest("GET", "http://localhost:9000/v2/uk/addresses?SOMETHING=FX114HG")
 
         val e = intercept[UpstreamErrorResponse] {
           controller.searchRequest(request, Marshall.marshallV2List)
         }
         assert(e.reportAs === 400)
-        assert(logger.isEmpty)
       }
 
       """when search is called with unwanted parameters
        it should give a 'bad request' response
        and log the error
       """ in new Context {
-        val logger = new StubLogger
-        val controller = new AddressSearchController(searcher, new ResponseStub(Nil), logger, ec, cc)
+        val controller = new AddressSearchController(searcher, new ResponseStub(Nil), ec, cc)
         val request = FakeRequest("GET", "http://localhost:9000/v2/uk/addresses?SOMETHING=FX114HG").withHeadersOrigin
 
         val result = await(controller.searchRequest(request, Marshall.marshallV2List))
         assert(result.header.status === play.api.http.Status.BAD_REQUEST)
-        assert(logger.size === 1)
-        assert(logger.infos.head.message === "BAD-PARAMETER origin=xyz postcode=None error=unexpected query parameter(s): SOMETHING")
       }
 
       """when search is called without the postcode parameter
        it should give a 'bad request' response
        and log the error
       """ in new Context {
-        val logger = new StubLogger
-        val controller = new AddressSearchController(searcher, new ResponseStub(Nil), logger, ec, cc)
+        val controller = new AddressSearchController(searcher, new ResponseStub(Nil), ec, cc)
         val request = FakeRequest("GET", "http://localhost:9000/v2/uk/addresses?filter=FX114HG").withHeadersOrigin
 
         val result = await(controller.searchRequest(request, Marshall.marshallV2List))
         assert(result.header.status === play.api.http.Status.BAD_REQUEST)
-        assert(logger.size === 1)
-        assert(logger.infos.head.message === "BAD-POSTCODE origin=xyz error=missing or badly-formed postcode parameter")
       }
     }
 
@@ -131,14 +123,11 @@ class AddressSearchControllerTest extends WordSpec with ScalaFutures with Mockit
        and log the lookup including the size of the result list
       """ in new Context {
         when(searcher.findPostcode(Postcode("FX11 4HG"), Some("FOO"))) thenReturn Future(List(addr1Db))
-        val logger = new StubLogger
-        val controller = new AddressSearchController(searcher, new ResponseStub(List(addr1Ar)), logger, ec, cc)
+        val controller = new AddressSearchController(searcher, new ResponseStub(List(addr1Ar)), ec, cc)
         val request = FakeRequest("GET", "http://localhost:9000/v2/uk/addresses?postcode=FX114HG&filter=FOO").withHeadersOrigin
 
         val result = await(controller.searchRequest(request, Marshall.marshallV2List))
         assert(result.header.status === play.api.http.Status.OK)
-        assert(logger.size === 1)
-        assert(logger.infos.head.message === "LOOKUP origin=xyz matches=1 postcode=FX11+4HG filter=FOO")
       }
 
       """when search is called with blank filter
@@ -147,14 +136,11 @@ class AddressSearchControllerTest extends WordSpec with ScalaFutures with Mockit
        and log the lookup including the size of the result list
       """ in new Context {
         when(searcher.findPostcode(Postcode("FX11 4HG"), None)) thenReturn Future(List(addr1Db))
-        val logger = new StubLogger
-        val controller = new AddressSearchController(searcher, new ResponseStub(List(addr1Ar)), logger, ec, cc)
+        val controller = new AddressSearchController(searcher, new ResponseStub(List(addr1Ar)), ec, cc)
         val request = FakeRequest("GET", "http://localhost:9000/v2/uk/addresses?postcode=FX114HG&filter=").withHeadersOrigin
 
         val result = await(controller.searchRequest(request, Marshall.marshallV2List))
         assert(result.header.status === play.api.http.Status.OK)
-        assert(logger.size === 1)
-        assert(logger.infos.head.message === "LOOKUP origin=xyz matches=1 postcode=FX11+4HG")
       }
 
       """when search is called with a postcode that will give several results
@@ -162,14 +148,11 @@ class AddressSearchControllerTest extends WordSpec with ScalaFutures with Mockit
        and log the lookup including the size of the result list
       """ in new Context {
         when(searcher.findPostcode(Postcode("FX11 4HG"), None)) thenReturn Future(List(dx1A, dx1B, dx1C))
-        val logger = new StubLogger
-        val controller = new AddressSearchController(searcher, new ResponseStub(List(fx1A, fx1B, fx1C)), logger, ec, cc)
+        val controller = new AddressSearchController(searcher, new ResponseStub(List(fx1A, fx1B, fx1C)), ec, cc)
         val request = FakeRequest("GET", "http://localhost:9000/v2/uk/addresses?postcode=fx114hg").withHeadersOrigin
 
         val result = await(controller.searchRequest(request, Marshall.marshallV2List))
         assert(result.header.status === play.api.http.Status.OK)
-        assert(logger.size === 1)
-        assert(logger.infos.head.message === "LOOKUP origin=xyz matches=3 postcode=FX11+4HG")
       }
     }
 
@@ -182,14 +165,11 @@ class AddressSearchControllerTest extends WordSpec with ScalaFutures with Mockit
        and log the lookup including the size of the result list
       """ in new Context {
         when(searcher.findOutcode(Outcode("FX11"), "FOO")) thenReturn Future(List(addr1Db))
-        val logger = new StubLogger
-        val controller = new AddressSearchController(searcher, new ResponseStub(List(addr1Ar)), logger, ec, cc)
+        val controller = new AddressSearchController(searcher, new ResponseStub(List(addr1Ar)), ec, cc)
         val request = FakeRequest("GET", "http://localhost:9000/v2/uk/addresses?outcode=FX11&filter=FOO").withHeadersOrigin
 
         val result = await(controller.searchRequest(request, Marshall.marshallV2List))
         assert(result.header.status === play.api.http.Status.OK)
-        assert(logger.size === 1)
-        assert(logger.infos.head.message === "LOOKUP origin=xyz matches=1 outcode=FX11 filter=FOO")
       }
 
       """when search is called with a outcode that will give several results
@@ -197,28 +177,22 @@ class AddressSearchControllerTest extends WordSpec with ScalaFutures with Mockit
        and log the lookup including the size of the result list
       """ in new Context {
         when(searcher.findOutcode(Outcode("FX11"), "FOO")) thenReturn Future(List(dx1A, dx1B, dx1C))
-        val logger = new StubLogger
-        val controller = new AddressSearchController(searcher, new ResponseStub(List(fx1A, fx1B, fx1C)), logger, ec, cc)
+        val controller = new AddressSearchController(searcher, new ResponseStub(List(fx1A, fx1B, fx1C)), ec, cc)
         val request = FakeRequest("GET", "http://localhost:9000/v2/uk/addresses?outcode=fx11&filter=FOO").withHeadersOrigin
 
         val result = await(controller.searchRequest(request, Marshall.marshallV2List))
         assert(result.header.status === play.api.http.Status.OK)
-        assert(logger.size === 1)
-        assert(logger.infos.head.message === "LOOKUP origin=xyz matches=3 outcode=FX11 filter=FOO")
       }
 
       """when search is called with the outcode parameter but no filter
        it should give a 'bad request' response
        and log the error
       """ in new Context {
-        val logger = new StubLogger
-        val controller = new AddressSearchController(searcher, new ResponseStub(Nil), logger, ec, cc)
+        val controller = new AddressSearchController(searcher, new ResponseStub(Nil), ec, cc)
         val request = FakeRequest("GET", "http://localhost:9000/v2/uk/addresses?outcode=FX11").withHeadersOrigin
 
         val result = await(controller.searchRequest(request, Marshall.marshallV2List))
         assert(result.header.status === play.api.http.Status.BAD_REQUEST)
-        assert(logger.size === 1)
-        assert(logger.infos.head.message === "BAD-FILTER origin=xyz error=missing filter parameter")
       }
     }
 
@@ -230,14 +204,11 @@ class AddressSearchControllerTest extends WordSpec with ScalaFutures with Mockit
        and log the lookup including the size of the list
       """ in new Context {
         when(searcher.findUprn("100001")) thenReturn Future(List(addr1Db))
-        val logger = new StubLogger
-        val controller = new AddressSearchController(searcher, new ResponseStub(List(addr1Ar)), logger, ec, cc)
+        val controller = new AddressSearchController(searcher, new ResponseStub(List(addr1Ar)), ec, cc)
         val request = FakeRequest("GET", "http://localhost:9000/v2/uk/addresses?uprn=100001").withHeadersOrigin
 
         val result = await(controller.searchRequest(request, Marshall.marshallV2List))
         assert(result.header.status === play.api.http.Status.OK)
-        assert(logger.size === 1)
-        assert(logger.infos.head.message === "LOOKUP origin=xyz uprn=100001 matches=1")
       }
     }
 
@@ -250,14 +221,11 @@ class AddressSearchControllerTest extends WordSpec with ScalaFutures with Mockit
       """ in new Context {
         val sp = SearchParameters(fuzzy = Some("ATown"))
         when(searcher.searchFuzzy(sp)) thenReturn Future(List(addressDb1, addressDb2))
-        val logger = new StubLogger
-        val addressLookupController = new AddressSearchController(searcher, new ResponseStub(List(addressAr1, addressAr2)), logger, ec, cc)
+        val addressLookupController = new AddressSearchController(searcher, new ResponseStub(List(addressAr1, addressAr2)), ec, cc)
         val request = FakeRequest("GET", "http://localhost:9000/v2/uk/addresses?fuzzy=ATown").withHeadersOrigin
 
         val result = await(addressLookupController.searchRequest(request, Marshall.marshallV2List))
         assert(result.header.status === play.api.http.Status.OK)
-        assert(logger.size === 1)
-        assert(logger.infos.head.message === "LOOKUP origin=xyz matches=2 fuzzy=ATown")
       }
 
       """when search is called with a fuzzy term, postcode and filter
@@ -266,14 +234,11 @@ class AddressSearchControllerTest extends WordSpec with ScalaFutures with Mockit
       """ in new Context {
         val sp = SearchParameters(fuzzy = Some("ATown"), postcode = Postcode.cleanupPostcode("FX11 7LA"), filter = Some("AStreet"))
         when(searcher.searchFuzzy(sp)) thenReturn Future(List(addressDb2))
-        val logger = new StubLogger
-        val controller = new AddressSearchController(searcher, new ResponseStub(List(addressAr2)), logger, ec, cc)
+        val controller = new AddressSearchController(searcher, new ResponseStub(List(addressAr2)), ec, cc)
         val request = FakeRequest("GET", "http://localhost:9000/v2/uk/addresses?fuzzy=ATown&postcode=FX11+7LA&filter=AStreet").withHeadersOrigin
 
         val result = await(controller.searchRequest(request, Marshall.marshallV2List))
         assert(result.header.status === play.api.http.Status.OK)
-        assert(logger.size === 1)
-        assert(logger.infos.head.message === "LOOKUP origin=xyz matches=1 postcode=FX11+7LA fuzzy=ATown filter=AStreet")
       }
 
       """when search is called with line1 and postcode
@@ -282,14 +247,11 @@ class AddressSearchControllerTest extends WordSpec with ScalaFutures with Mockit
       """ in new Context {
         val sp = SearchParameters(postcode = Postcode.cleanupPostcode("FX11 7LA"), lines = List("AStreet", "ATown"))
         when(searcher.searchFuzzy(sp)) thenReturn Future(List(addressDb2))
-        val logger = new StubLogger
-        val controller = new AddressSearchController(searcher, new ResponseStub(List(addressAr2)), logger, ec, cc)
+        val controller = new AddressSearchController(searcher, new ResponseStub(List(addressAr2)), ec, cc)
         val request = FakeRequest("GET", "http://localhost:9000/v2/uk/addresses?line1=AStreet&line2=ATown&postcode=FX11+7LA").withHeadersOrigin
 
         val result = await(controller.searchRequest(request, Marshall.marshallV2List))
         assert(result.header.status === play.api.http.Status.OK)
-        assert(logger.size === 1)
-        assert(logger.infos.head.message === "LOOKUP origin=xyz matches=1 postcode=FX11+7LA line1=AStreet line2=ATown")
       }
     }
   }
