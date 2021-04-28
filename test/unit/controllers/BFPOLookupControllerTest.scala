@@ -17,14 +17,13 @@
 package controllers
 
 import bfpo.{BFPOFileParser, BFPOLookupController}
-import org.scalatest.FunSuite
 import org.scalatest.concurrent.ScalaFutures
-import play.api.Logger
+import org.scalatest.funsuite.AnyFunSuite
 import play.api.http.Status._
 import play.api.test.FakeRequest
 import uk.gov.hmrc.http.UpstreamErrorResponse
 
-class BFPOLookupControllerTest extends FunSuite with ScalaFutures {
+class BFPOLookupControllerTest extends AnyFunSuite with ScalaFutures {
 
   val bfpoList = BFPOFileParser.loadResource("bfpo-test-sample.txt")
 

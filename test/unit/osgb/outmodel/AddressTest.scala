@@ -16,10 +16,10 @@
 
 package osgb.outmodel
 
-import org.scalatest.FunSuite
 import address.v1.{Address, AddressRecord, Countries}
+import org.scalatest.funsuite.AnyFunSuite
 
-class AddressTest extends FunSuite {
+class AddressTest extends AnyFunSuite {
   import Countries.UK
 
   test(

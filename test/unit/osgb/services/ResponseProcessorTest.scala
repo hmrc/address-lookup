@@ -16,11 +16,11 @@
 
 package osgb.services
 
-import org.scalatest.FunSuite
 import address.osgb.DbAddress
 import address.v2._
+import org.scalatest.funsuite.AnyFunSuite
 
-class ResponseProcessorTest extends FunSuite {
+class ResponseProcessorTest extends AnyFunSuite {
 
   import Countries._
 
