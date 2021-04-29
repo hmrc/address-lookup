@@ -16,21 +16,21 @@
 
 package osgb.services
 
-import com.codahale.metrics.MetricRegistry
-import org.scalatest.FunSuite
-import org.scalatestplus.mockito.MockitoSugar
-import org.mockito.Mockito._
-import org.mockito.Matchers._
-import play.api.test.Helpers._
 import address.osgb.DbAddress
-import com.codahale.metrics.Timer
-import com.codahale.metrics.Timer.Context
-import osgb.SearchParameters
 import address.uk.{Outcode, Postcode}
+import com.codahale.metrics.Timer.Context
+import com.codahale.metrics.{MetricRegistry, Timer}
+import org.mockito.ArgumentMatchers.{any, anyString}
+import org.mockito.Mockito.{verify, when}
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.matchers.should.Matchers
+import org.scalatestplus.mockito.MockitoSugar
+import osgb.SearchParameters
+import play.api.test.Helpers._
 
 import scala.concurrent.Future
 
-class AddressSearcherMetricsTest extends FunSuite with MockitoSugar {
+class AddressSearcherMetricsTest extends AnyFunSuite with Matchers with MockitoSugar {
 
   val dummyGBDbAddr1 = DbAddress("GB123456", List("Line1", "Line2", "Line3"), "ATOWN", "FX30 4HG",
     Some("GB-ENG"), Some("UK"), Some(4510), Some("en"), None, Some("12.34567,-12.34567"))
@@ -45,7 +45,7 @@ class AddressSearcherMetricsTest extends FunSuite with MockitoSugar {
     when(timer.time()) thenReturn context
 
     val registry = mock[MetricRegistry]
-    when(registry.timer(anyString)) thenReturn timer
+    when(registry.timer(anyString())) thenReturn timer
 
     val asm = new AddressSearcherMetrics(peer, registry, ec)
   }
@@ -100,5 +100,4 @@ class AddressSearcherMetricsTest extends FunSuite with MockitoSugar {
       verify(context).stop()
     }
   }
-
 }

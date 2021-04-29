@@ -16,27 +16,23 @@
 
 package osgb
 
-import org.junit.runner.RunWith
+import address.osgb.DbAddress
+import address.v2._
 import org.mockito.Mockito._
-import org.scalatest.WordSpec
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatestplus.junit.JUnitRunner
+import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.mockito.MockitoSugar
 import osgb.outmodel.Marshall
 import osgb.services.{ReferenceData, ResponseProcessor}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import repositories.AddressLookupRepository
-import address.osgb.DbAddress
-import address.v2._
-import play.api.Logger
 import uk.gov.hmrc.http.UpstreamErrorResponse
 import util.Utils._
 
 import scala.concurrent.Future
 
-@RunWith(classOf[JUnitRunner])
-class AddressLookupIdControllerTest extends WordSpec with ScalaFutures with MockitoSugar {
+class AddressLookupIdControllerTest extends AnyWordSpec with ScalaFutures with MockitoSugar {
 
   implicit val ec = scala.concurrent.ExecutionContext.Implicits.global
 

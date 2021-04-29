@@ -16,16 +16,13 @@
 
 package osgb.outmodel
 
-import org.junit.runner.RunWith
-import org.scalatest.WordSpec
-import org.scalatestplus.junit.JUnitRunner
+import address.v1.{Address, AddressRecord, Countries, LocalCustodian}
+import org.scalatest.wordspec.AnyWordSpec
 import osgb.outmodel.v1.AddressReadable._
 import osgb.outmodel.v1.AddressWriteable._
 import play.api.libs.json.{JsError, JsSuccess, Json}
-import address.v1.{Address, AddressRecord, Countries, LocalCustodian}
 
-@RunWith(classOf[JUnitRunner])
-class AddressReadWriteTest extends WordSpec {
+class AddressReadWriteTest extends AnyWordSpec {
   import Countries.UK
 
   val addrLike = AddressRecord("GB0123456789", Some(12345678L),

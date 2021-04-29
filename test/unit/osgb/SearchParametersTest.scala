@@ -16,10 +16,10 @@
 
 package osgb
 
-import org.scalatest.FunSuite
 import address.uk.Postcode
+import org.scalatest.funsuite.AnyFunSuite
 
-class SearchParametersTest extends FunSuite {
+class SearchParametersTest extends AnyFunSuite {
 
   test("fromRequest") {
     val sp = SearchParameters.fromRequest(Map(

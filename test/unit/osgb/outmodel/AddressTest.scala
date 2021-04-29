@@ -16,13 +16,10 @@
 
 package osgb.outmodel
 
-import org.junit.runner.RunWith
-import org.scalatest.FunSuite
-import org.scalatestplus.junit.JUnitRunner
 import address.v1.{Address, AddressRecord, Countries}
+import org.scalatest.funsuite.AnyFunSuite
 
-@RunWith(classOf[JUnitRunner])
-class AddressTest extends FunSuite {
+class AddressTest extends AnyFunSuite {
   import Countries.UK
 
   test(
