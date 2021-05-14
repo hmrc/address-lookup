@@ -17,7 +17,7 @@
 package it.suites
 
 import address.osgb.DbAddress
-import address.v2._
+import address.model._
 
 // Please keep FixturesV1 and FixturesV2 as similar as possible.
 

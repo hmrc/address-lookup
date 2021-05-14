@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package address.v1
+package address.model
 
 import java.util.regex.Pattern
 
@@ -28,13 +28,15 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 case class Address(lines: List[String],
                    town: String,
                    postcode: String,
-                   subdivision: Option[String],
+                   subdivision: Option[Country],
                    country: Country) {
+
+  import Address._
 
   @JsonIgnore // needed because the name starts 'is...'
   def isValid: Boolean = lines.nonEmpty && lines.size <= (if (town.isEmpty) 4 else 3)
 
-  def nonEmptyFields: List[String] = lines ::: List(town) :::  List(postcode)
+  def nonEmptyFields: List[String] = lines ::: List(town) ::: List(postcode)
 
   /** Gets a conjoined representation, excluding the country. */
   def printable(separator: String): String = nonEmptyFields.mkString(separator)
@@ -53,7 +55,16 @@ case class Address(lines: List[String],
 
   def longestLineLength: Int = nonEmptyFields.map(_.length).max
 
-  private def limit(str: String, max: Int): String = {
+  def truncatedAddress(maxLen: Int = maxLineLength): Address =
+    Address(lines.map(limit(_, maxLen)), limit(town, maxLen), postcode, subdivision, country)
+}
+
+
+object Address {
+  val maxLineLength = 35
+  val danglingLetter: Pattern = Pattern.compile(".* [A-Z0-9]$")
+
+  private[model] def limit(str: String, max: Int): String = {
     var s = str
     while (s.length > max && s.indexOf(", ") > 0) {
       s = s.replaceFirst(", ", ",")
@@ -67,13 +78,4 @@ case class Address(lines: List[String],
     }
     else s
   }
-
-  def truncatedAddress(maxLen: Int = Address.maxLineLength): Address =
-    Address(lines.map(limit(_, maxLen)), limit(town, maxLen), postcode, subdivision, country)
-}
-
-
-object Address {
-  val maxLineLength = 35
-  val danglingLetter: Pattern = Pattern.compile(".* [A-Z0-9]$")
 }

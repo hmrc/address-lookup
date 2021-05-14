@@ -14,9 +14,7 @@
  * limitations under the License.
  */
 
-package address.v2
-
-import address.v1
+package address.model
 
 /** Represents a country as per ISO3166. */
 case class Country(
@@ -27,8 +25,6 @@ case class Country(
                     code: String,
                     // The printable name for the country, e.g. "United Kingdom"
                     name: String) {
-
-  def asV1 = v1.Country(code, name)
 }
 
 

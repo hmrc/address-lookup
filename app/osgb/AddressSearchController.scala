@@ -21,7 +21,7 @@ import osgb.outmodel.Marshall
 import osgb.services._
 import play.api.libs.json.JsValue
 import play.api.mvc.{Action, AnyContent, ControllerComponents, Request, Result}
-import address.v2.AddressRecord
+import address.model.AddressRecord
 import play.api.Logger
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -34,12 +34,7 @@ class AddressSearchController @Inject() (addressSearch: AddressSearcher, respons
 
   import SearchParameters._
 
-  def searchV1(): Action[AnyContent] = Action.async {
-    request =>
-      searchRequest(request, Marshall.marshallV1List)
-  }
-
-  def searchV2(): Action[AnyContent] = Action.async {
+  def search(): Action[AnyContent] = Action.async {
     request =>
       searchRequest(request, Marshall.marshallV2List)
   }

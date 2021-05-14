@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package address.v2
+package address.model
 
 import address.osgb.DbAddress
 

@@ -19,11 +19,11 @@ package it.suites
 import it.helper.AppServerTestApi
 import org.scalatest.{MustMatchers, WordSpec}
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
-import osgb.outmodel.v2.AddressReadable._
+import osgb.outmodel.AddressReadable._
 import play.api.libs.json.{JsArray, Json}
 import play.api.libs.ws.WSClient
 import play.api.test.Helpers._
-import address.v2.AddressRecord
+import address.model.AddressRecord
 
 class FuzzySearchSuiteV2()
   extends WordSpec with GuiceOneServerPerSuite with MustMatchers with AppServerTestApi {
