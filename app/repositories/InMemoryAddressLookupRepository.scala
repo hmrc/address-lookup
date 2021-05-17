@@ -19,7 +19,7 @@ package repositories
 import address.osgb.DbAddress
 import address.services.CsvLineSplitter
 import address.uk.{Outcode, Postcode}
-import address.v2.Location
+import address.model.Location
 import osgb.SearchParameters
 import osgb.services.{AddressSearcher, CSV}
 import play.api.Environment

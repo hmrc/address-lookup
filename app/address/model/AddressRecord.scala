@@ -14,16 +14,13 @@
  * limitations under the License.
  */
 
-package address.v2
+package address.model
 
-import address.v1
+import address.model
 import com.fasterxml.jackson.annotation.JsonIgnore
 
 
-case class LocalCustodian(code: Int, name: String) {
-
-  def asV1 = v1.LocalCustodian(code, name)
-}
+case class LocalCustodian(code: Int, name: String)
 
 
 /**
@@ -48,8 +45,6 @@ case class AddressRecord(
   def truncatedAddress(maxLen: Int = Address.maxLineLength): AddressRecord =
     if (address.longestLineLength <= maxLen) this
     else copy(address = address.truncatedAddress(maxLen))
-
-  def asV1 = v1.AddressRecord(id, uprn, address.asV1, localCustodian.map(_.asV1), language)
 
   def locationValue: Option[Location] = location.map(loc => Location(loc.head, loc(1)))
 }

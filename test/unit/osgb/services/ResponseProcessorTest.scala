@@ -17,7 +17,7 @@
 package osgb.services
 
 import address.osgb.DbAddress
-import address.v2._
+import address.model._
 import org.scalatest.funsuite.AnyFunSuite
 
 class ResponseProcessorTest extends AnyFunSuite {

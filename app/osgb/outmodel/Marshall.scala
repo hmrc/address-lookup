@@ -16,28 +16,18 @@
 
 package osgb.outmodel
 
-import address.v2._
+import address.model._
 import play.api.libs.json.{JsValue, Json}
 
 object Marshall {
 
-  def marshallV1Address(address: AddressRecord): JsValue = {
-    import osgb.outmodel.v1.AddressWriteable._
-    Json.toJson(address.asV1)
-  }
-
   def marshallV2Address(address: AddressRecord): JsValue = {
-    import osgb.outmodel.v2.AddressWriteable._
+    import AddressWriteable._
     Json.toJson(address)
   }
 
-  def marshallV1List(addresses: List[AddressRecord]): JsValue = {
-    import osgb.outmodel.v1.AddressWriteable._
-    Json.toJson(addresses.map(_.asV1))
-  }
-
   def marshallV2List(addresses: List[AddressRecord]): JsValue = {
-    import osgb.outmodel.v2.AddressWriteable._
+    import AddressWriteable._
     Json.toJson(addresses)
   }
 }

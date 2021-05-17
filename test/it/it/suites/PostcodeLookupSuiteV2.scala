@@ -20,11 +20,11 @@ import it.helper.AppServerTestApi
 import it.tools.Utils.headerOrigin
 import org.scalatest.{MustMatchers, WordSpec}
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
-import osgb.outmodel.v2.AddressReadable._
+import osgb.outmodel.AddressReadable._
 import play.api.libs.json.{JsArray, Json}
 import play.api.libs.ws.WSClient
 import play.api.test.Helpers._
-import address.v2.AddressRecord
+import address.model.AddressRecord
 
 class PostcodeLookupSuiteV2 ()
   extends WordSpec with GuiceOneServerPerSuite with MustMatchers with AppServerTestApi {
@@ -176,29 +176,6 @@ class PostcodeLookupSuiteV2 ()
           Seq("R1test, Abuilding", "31 Astreet"),
           Seq("R2test, Floor 5, Abuilding", "31 Astreet"),
           Seq("T1test", "44 Astreet")
-        )
-        for (i <- expected.indices) {
-          seq(i).lines mustBe expected(i)
-          seq(i).town mustBe "Acity"
-          seq(i).postcode mustBe "FX1 1PG"
-        }
-      }
-
-      "filter results" in {
-        val body = get("/uk/addresses?postcode=FX1+1PG&filter=Floor+1").body
-        body must startWith("[{")
-        body must endWith("}]")
-        val json = Json.parse(body)
-        val seq = Json.fromJson[Seq[AddressRecord]](json).get.map(_.address)
-        seq.size mustBe 7
-        val expected = Seq(
-          Seq("A2test Floor 1, Abuilding", "31 Astreet"),
-          Seq("Floor 1", "48 Astreet"),
-          Seq("Floor 1", "52 Astreet"),
-          Seq("Floor 1, Abuilding", "31 Astreet"),
-          Seq("Floor 1, Acourt", "22-28 Astreet"),
-          Seq("Ground Floor", "52 Astreet", "Floor 1"),
-          Seq("H1test Floor 1, Abuilding", "31 Astreet")
         )
         for (i <- expected.indices) {
           seq(i).lines mustBe expected(i)

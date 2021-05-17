@@ -21,7 +21,7 @@ import osgb.outmodel.Marshall
 import osgb.services.{AddressSearcher, ResponseProcessor}
 import play.api.libs.json.JsValue
 import play.api.mvc.{Action, AnyContent, ControllerComponents, Request, Result}
-import address.v2.AddressRecord
+import address.model.AddressRecord
 import play.api.Logger
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -35,12 +35,7 @@ class AddressLookupIdController @Inject()(addressSearch: AddressSearcher, respon
 
   implicit private val xec: ExecutionContext = ec
 
-  def findByIdV1(id: String): Action[AnyContent] = Action.async {
-    request =>
-      findByIdRequest(request, id, Marshall.marshallV1Address)
-  }
-
-  def findByIdV2(id: String): Action[AnyContent] = Action.async {
+  def findById(id: String): Action[AnyContent] = Action.async {
     request =>
       findByIdRequest(request, id, Marshall.marshallV2Address)
   }

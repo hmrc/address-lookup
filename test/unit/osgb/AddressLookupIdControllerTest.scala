@@ -17,7 +17,7 @@
 package osgb
 
 import address.osgb.DbAddress
-import address.v2._
+import address.model._
 import org.mockito.Mockito._
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.wordspec.AnyWordSpec

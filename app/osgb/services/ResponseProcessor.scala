@@ -19,7 +19,7 @@ package osgb.services
 import javax.inject.Inject
 
 import address.osgb.DbAddress
-import address.v2.{AddressRecord, AddressRecordConverter}
+import address.model.{AddressRecord, AddressRecordConverter}
 
 class ResponseProcessor @Inject()(referenceData: ReferenceData) {
 

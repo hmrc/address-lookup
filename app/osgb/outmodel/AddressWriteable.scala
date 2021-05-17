@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 
-package osgb.outmodel.v2
+package osgb.outmodel
 
+import address.model.{Address, AddressRecord, Country, LocalCustodian}
 import play.api.libs.functional.syntax._
-import play.api.libs.json._
-import address.v2._
-
+import play.api.libs.json.{Json, JsPath, Writes}
 object AddressWriteable {
 
   // https://www.playframework.com/documentation/2.3.x/ScalaJsonCombinators
@@ -27,24 +26,24 @@ object AddressWriteable {
   implicit val CountryWrites: Writes[Country] = Json.writes[Country]
 
   implicit val AddressWrites: Writes[Address] = (
-    (JsPath \ "lines").write[Seq[String]] and
-      (JsPath \ "town").write[String] and
-      (JsPath \ "postcode").write[String] and
-      (JsPath \ "subdivision").writeNullable[Country] and
-      (JsPath \ "country").write[Country]) (unlift(Address.unapply))
+      (JsPath \ "lines").write[Seq[String]] and
+          (JsPath \ "town").write[String] and
+          (JsPath \ "postcode").write[String] and
+          (JsPath \ "subdivision").writeNullable[Country] and
+          (JsPath \ "country").write[Country]) (unlift(Address.unapply))
 
   implicit val LocalCustodianWrites: Writes[LocalCustodian] = (
-    (JsPath \ "code").write[Int] and
-      (JsPath \ "name").write[String]) (unlift(LocalCustodian.unapply))
+      (JsPath \ "code").write[Int] and
+          (JsPath \ "name").write[String]) (unlift(LocalCustodian.unapply))
 
   implicit val AddressRecordWrites: Writes[AddressRecord] = (
-    (JsPath \ "id").write[String] and
-      (JsPath \ "uprn").writeNullable[Long] and
-      (JsPath \ "address").write[Address] and
-      (JsPath \ "language").write[String] and
-      (JsPath \ "localCustodian").writeNullable[LocalCustodian] and
-      (JsPath \ "location").writeNullable[Seq[BigDecimal]] and
-      (JsPath \ "administrativeArea").writeNullable[String]
-    ) (unlift(AddressRecord.unapply))
+      (JsPath \ "id").write[String] and
+          (JsPath \ "uprn").writeNullable[Long] and
+          (JsPath \ "address").write[Address] and
+          (JsPath \ "language").write[String] and
+          (JsPath \ "localCustodian").writeNullable[LocalCustodian] and
+          (JsPath \ "location").writeNullable[Seq[BigDecimal]] and
+          (JsPath \ "administrativeArea").writeNullable[String]
+      ) (unlift(AddressRecord.unapply))
 
 }

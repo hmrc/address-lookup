@@ -22,7 +22,7 @@ import java.util.zip.GZIPInputStream
 import com.github.tototoshi.csv.CSVReader
 import config._
 import address.services.Capitalisation
-import address.v2.ReferenceItem
+import address.model.ReferenceItem
 
 import scala.collection.mutable.ListBuffer
 import scala.io.{Codec, Source}
