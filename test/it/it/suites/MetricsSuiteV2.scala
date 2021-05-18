@@ -31,7 +31,7 @@ class MetricsSuiteV2()
   "metrics" when {
     "successful" must {
       "give a timer for the findId search case" in {
-        assert(get("/v2/gb/addresses/GB11111").status === OK)
+        assert(get("/v2/uk/addresses/GB11111").status === OK)
 
         val response = get("/admin/metrics")
         assert(response.status === OK, dump(response))
@@ -39,7 +39,7 @@ class MetricsSuiteV2()
       }
 
       "give a timer for the findUprn search case" in {
-        assert(get("/v2/gb/addresses?uprn=9999999999").status === OK)
+        assert(get("/v2/uk/addresses?uprn=9999999999").status === OK)
 
         val response = get("/admin/metrics")
         assert(response.status === OK, dump(response))
@@ -47,7 +47,7 @@ class MetricsSuiteV2()
       }
 
       "give a timer for the findPostcode search case" in {
-        assert(get("/v2/gb/addresses?postcode=FX1+9PY").status === OK)
+        assert(get("/v2/uk/addresses?postcode=FX1+9PY").status === OK)
 
         val response = get("/admin/metrics")
         assert(response.status === OK, dump(response))
@@ -55,7 +55,7 @@ class MetricsSuiteV2()
       }
 
       "give a timer for the findPostcodeFilter search case" in {
-        assert(get("/v2/gb/addresses?postcode=SE1+9PY&filter=10").status === OK)
+        assert(get("/v2/uk/addresses?postcode=SE1+9PY&filter=10").status === OK)
 
         val response = get("/admin/metrics")
         assert(response.status === OK, dump(response))
@@ -63,7 +63,7 @@ class MetricsSuiteV2()
       }
 
       "give a timer for the searchFuzzy search case" in {
-        assert(get("/v2/gb/addresses?fuzzy=FX1+9PY").status === OK)
+        assert(get("/v2/uk/addresses?fuzzy=FX1+9PY").status === OK)
 
         val response = get("/admin/metrics")
         assert(response.status === OK, dump(response))
@@ -71,7 +71,7 @@ class MetricsSuiteV2()
       }
 
       "give a timer for the searchFuzzyFilter search case" in {
-        assert(get("/v2/gb/addresses?fuzzy=SE1+9PY&filter=2").status === OK)
+        assert(get("/v2/uk/addresses?fuzzy=SE1+9PY&filter=2").status === OK)
 
         val response = get("/admin/metrics")
         assert(response.status === OK, dump(response))

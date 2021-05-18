@@ -44,30 +44,9 @@ class PostcodeLookupSuiteV2 ()
         assert(response.status === OK, dump(response))
       }
 
-      "give a successful response for a known postcode - gb route" in {
-        val response = get("/v2/gb/addresses?postcode=fx1++9py")
-        assert(response.status === OK, dump(response))
-      }
-
       "give a successful response for a known postcode - old style 'X-Origin'" in {
         val response = request("GET", "/v2/uk/addresses?postcode=fx1++9py", headerOrigin -> "xxx")
         assert(response.status === OK, dump(response))
-      }
-
-      "give a successfully truncated response for a long address" in {
-        val response = get("/v2/gb/addresses?postcode=fx22tb")
-        assert(response.status === OK, dump(response))
-        val body = response.body
-        assert(body.startsWith("[{"), dump(response))
-        assert(body.endsWith("}]"), dump(response))
-        val json = Json.parse(body)
-        val seq = Json.fromJson[Seq[AddressRecord]](json).get
-        seq.size mustBe 1
-        val address1 = seq.head.address
-        address1.line1 mustBe "An address with a very long first l"
-        address1.line2 mustBe "Second line of address is just as l"
-        address1.line3 mustBe "Third line is not the longest but i"
-        address1.town mustBe fx2_2tb.address.town.substring(0, 35)
       }
 
       "give a successful response for a known v.large postcode - uk route" in {
