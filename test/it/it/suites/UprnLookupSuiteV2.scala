@@ -49,27 +49,6 @@ class UprnLookupSuiteV2()
         assert(address1 === fx9_9py_terse, body)
       }
 
-      "give a successful response for a known uprn - gb route" in {
-        val response = get("/v2/gb/addresses?uprn=9999999999")
-        assert(response.status === OK, dump(response))
-      }
-
-      "give a successfully truncated response for a long address" in {
-        val response = get("/v2/gb/addresses?uprn=44444")
-        assert(response.status === OK, dump(response))
-        val body = response.body
-        assert(body.startsWith("[{"), dump(response))
-        assert(body.endsWith("}]"), dump(response))
-        val json = Json.parse(body)
-        val arr = json.asInstanceOf[JsArray].value
-        arr.size mustBe 1
-        val address1 = Json.fromJson[AddressRecord](arr.head).get.address
-        address1.line1 mustBe "An address with a very long first l"
-        address1.line2 mustBe "Second line of address is just as l"
-        address1.line3 mustBe "Third line is not the longest but i"
-        address1.town mustBe fx2_2tb.address.town.substring(0, 35)
-      }
-
       "set the content type to application/json" in {
         val response = get("/v2/uk/addresses?uprn=9999999999")
         val contentType = response.header("Content-Type").get

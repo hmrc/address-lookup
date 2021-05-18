@@ -47,23 +47,6 @@ class IdLookupSuiteV2()
         assert(address1 === fx1_6jn_a_terse, body)
       }
 
-      "give a successful response for a known id - gb route" in {
-        val response = get("/v2/gb/addresses/GB22222")
-        assert(response.status === OK, dump(response))
-      }
-
-      "give a successfully truncated response for a long address" in {
-        val response = get("/v2/gb/addresses/GB44444")
-        assert(response.status === OK, dump(response))
-        val body = response.body
-        val json = Json.parse(body)
-        val address1 = Json.fromJson[AddressRecord](json).get.address
-        address1.line1 mustBe "An address with a very long first l"
-        address1.line2 mustBe "Second line of address is just as l"
-        address1.line3 mustBe "Third line is not the longest but i"
-        address1.town mustBe fx2_2tb.address.town.substring(0, 35)
-      }
-
       "set the content type to application/json" in {
         val response = get("/v2/uk/addresses/GB11111")
         val contentType = response.header("Content-Type").get

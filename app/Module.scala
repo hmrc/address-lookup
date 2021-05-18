@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-import bfpo.BFPOFileParser
-import bfpo.outmodel.BFPO
 import cats.effect.IO
 import com.google.inject.{AbstractModule, Provides}
 import com.kenshoo.play.metrics.Metrics
@@ -73,11 +71,6 @@ class Module(environment: Environment, configuration: Configuration) extends Abs
 
   private def isDbEnabled(configHelper: ConfigHelper): Boolean =
     configHelper.getConfigString("address-lookup-rds.enabled").getOrElse("false").toBoolean
-
-  @Provides
-  @Singleton
-  def provideBFPOList(configHelper: ConfigHelper): List[BFPO] = BFPOFileParser.loadResource(configHelper
-    .mustGetConfigString("bfpo.data"))
 
   @Provides
   @Singleton

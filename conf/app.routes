@@ -9,21 +9,13 @@ GET           /admin/metrics                    com.kenshoo.play.metrics.Metrics
 
 # Note that these resources take up to four query parameters: postcode, filter, fuzzy, uprn
 # and the tests are more explicit as a result.
-GET           /v2/gb/addresses                  osgb.AddressSearchController.search()
 GET           /v2/uk/addresses                  osgb.AddressSearchController.search()
 
 GET           /lookup                           osgb.AddressSearchController.search()
 
 # ----- OSGB AddressBase lookup-by-ID search service -----
-GET           /v2/gb/addresses/:id              osgb.AddressLookupIdController.findById(id)
 GET           /v2/uk/addresses/:id              osgb.AddressLookupIdController.findById(id)
 
-# ----- British Forces Postal Office lookup service -----
-### This route is now obsolete ###
-GET           /bfpo/addresses                   bfpo.BFPOLookupController.findByPostCode()
-
 # ----- Postcodes endppint -----
-GET           /v1/gb/postcodes/:pc                    osgb.PostcodesController.lookup(pc)
-GET           /v1/gb/postcodes                        osgb.PostcodesController.missing
 GET           /v1/uk/postcodes/:pc                    osgb.PostcodesController.lookup(pc)
 GET           /v1/uk/postcodes                        osgb.PostcodesController.missing

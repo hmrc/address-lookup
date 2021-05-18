@@ -42,11 +42,6 @@ class OutcodeLookupSuiteV2()
         assert(response.status === OK, dump(response))
       }
 
-      "give a successful response for a known outcode - gb route" in {
-        val response = get("/v2/gb/addresses?outcode=fx1&filter=House")
-        assert(response.status === OK, dump(response))
-      }
-
       "give a successful response for a known outcode - old style 'X-Origin'" in {
         val response = request("GET", "/v2/uk/addresses?outcode=fx1&filter=House", headerOrigin -> "xxx")
         assert(response.status === OK, dump(response))
