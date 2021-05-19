@@ -38,11 +38,7 @@ lazy val root = Project("address-lookup", file("."))
     publishArtifact in(Test, packageSrc) := true,
     publishArtifact in(Compile, packageBin) := true
   )
-  .settings(resolvers ++= Seq(
-    Resolver.bintrayRepo("hmrc", "releases"),
-    Resolver.bintrayRepo("hmrc", "release-candidates"),
-    Resolver.jcenterRepo
-  ))
+  .settings(resolvers ++= Seq(Resolver.jcenterRepo))
   .settings(evictionWarningOptions in update :=
     EvictionWarningOptions.default.withWarnTransitiveEvictions(false)
       .withWarnDirectEvictions(false).withWarnScalaVersionEviction(false))
