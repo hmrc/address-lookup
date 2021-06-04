@@ -23,8 +23,10 @@ import org.mockito.Mockito._
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.mockito.MockitoSugar
+import osgb.inmodel.LookupRequest
 import osgb.outmodel.Marshall
 import osgb.services.{ReferenceData, ResponseProcessor}
+import play.api.mvc.{AnyContentAsEmpty, Headers}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import repositories.AddressLookupRepository
@@ -70,7 +72,7 @@ class AddressSearchControllerTest extends AnyWordSpec with ScalaFutures with Moc
     val searcher = mock[AddressLookupRepository]
   }
 
-  "postcode lookup" must {
+  "postcode lookup with GET requests" must {
 
     "give bad request" when {
 
@@ -82,7 +84,8 @@ class AddressSearchControllerTest extends AnyWordSpec with ScalaFutures with Moc
         val request = FakeRequest("GET", "http://localhost:9000/v2/uk/addresses?SOMETHING=FX114HG")
 
         val e = intercept[UpstreamErrorResponse] {
-          controller.searchRequest(request, Marshall.marshallV2List)
+          val sp = SearchParameters.fromRequest(request.queryString)
+          controller.processSearch(request, sp, Marshall.marshallV2List)
         }
         assert(e.reportAs === 400)
       }
@@ -94,7 +97,8 @@ class AddressSearchControllerTest extends AnyWordSpec with ScalaFutures with Moc
         val controller = new AddressSearchController(searcher, new ResponseStub(Nil), ec, cc)
         val request = FakeRequest("GET", "http://localhost:9000/v2/uk/addresses?SOMETHING=FX114HG").withHeadersOrigin
 
-        val result = await(controller.searchRequest(request, Marshall.marshallV2List))
+        val sp = SearchParameters.fromRequest(request.queryString)
+        val result = await(controller.processSearch(request, sp, Marshall.marshallV2List))
         assert(result.header.status === play.api.http.Status.BAD_REQUEST)
       }
 
@@ -105,7 +109,8 @@ class AddressSearchControllerTest extends AnyWordSpec with ScalaFutures with Moc
         val controller = new AddressSearchController(searcher, new ResponseStub(Nil), ec, cc)
         val request = FakeRequest("GET", "http://localhost:9000/v2/uk/addresses?filter=FX114HG").withHeadersOrigin
 
-        val result = await(controller.searchRequest(request, Marshall.marshallV2List))
+        val sp = SearchParameters.fromRequest(request.queryString)
+        val result = await(controller.processSearch(request, sp, Marshall.marshallV2List))
         assert(result.header.status === play.api.http.Status.BAD_REQUEST)
       }
     }
@@ -122,7 +127,8 @@ class AddressSearchControllerTest extends AnyWordSpec with ScalaFutures with Moc
         val controller = new AddressSearchController(searcher, new ResponseStub(List(addr1Ar)), ec, cc)
         val request = FakeRequest("GET", "http://localhost:9000/v2/uk/addresses?postcode=FX114HG&filter=FOO").withHeadersOrigin
 
-        val result = await(controller.searchRequest(request, Marshall.marshallV2List))
+        val sp = SearchParameters.fromRequest(request.queryString)
+        val result = await(controller.processSearch(request, sp, Marshall.marshallV2List))
         assert(result.header.status === play.api.http.Status.OK)
       }
 
@@ -135,7 +141,8 @@ class AddressSearchControllerTest extends AnyWordSpec with ScalaFutures with Moc
         val controller = new AddressSearchController(searcher, new ResponseStub(List(addr1Ar)), ec, cc)
         val request = FakeRequest("GET", "http://localhost:9000/v2/uk/addresses?postcode=FX114HG&filter=").withHeadersOrigin
 
-        val result = await(controller.searchRequest(request, Marshall.marshallV2List))
+        val sp = SearchParameters.fromRequest(request.queryString)
+        val result = await(controller.processSearch(request, sp, Marshall.marshallV2List))
         assert(result.header.status === play.api.http.Status.OK)
       }
 
@@ -147,7 +154,8 @@ class AddressSearchControllerTest extends AnyWordSpec with ScalaFutures with Moc
         val controller = new AddressSearchController(searcher, new ResponseStub(List(fx1A, fx1B, fx1C)), ec, cc)
         val request = FakeRequest("GET", "http://localhost:9000/v2/uk/addresses?postcode=fx114hg").withHeadersOrigin
 
-        val result = await(controller.searchRequest(request, Marshall.marshallV2List))
+        val sp = SearchParameters.fromRequest(request.queryString)
+        val result = await(controller.processSearch(request, sp, Marshall.marshallV2List))
         assert(result.header.status === play.api.http.Status.OK)
       }
     }
@@ -164,7 +172,8 @@ class AddressSearchControllerTest extends AnyWordSpec with ScalaFutures with Moc
         val controller = new AddressSearchController(searcher, new ResponseStub(List(addr1Ar)), ec, cc)
         val request = FakeRequest("GET", "http://localhost:9000/v2/uk/addresses?outcode=FX11&filter=FOO").withHeadersOrigin
 
-        val result = await(controller.searchRequest(request, Marshall.marshallV2List))
+        val sp = SearchParameters.fromRequest(request.queryString)
+        val result = await(controller.processSearch(request, sp, Marshall.marshallV2List))
         assert(result.header.status === play.api.http.Status.OK)
       }
 
@@ -176,7 +185,8 @@ class AddressSearchControllerTest extends AnyWordSpec with ScalaFutures with Moc
         val controller = new AddressSearchController(searcher, new ResponseStub(List(fx1A, fx1B, fx1C)), ec, cc)
         val request = FakeRequest("GET", "http://localhost:9000/v2/uk/addresses?outcode=fx11&filter=FOO").withHeadersOrigin
 
-        val result = await(controller.searchRequest(request, Marshall.marshallV2List))
+        val sp = SearchParameters.fromRequest(request.queryString)
+        val result = await(controller.processSearch(request, sp, Marshall.marshallV2List))
         assert(result.header.status === play.api.http.Status.OK)
       }
 
@@ -187,7 +197,8 @@ class AddressSearchControllerTest extends AnyWordSpec with ScalaFutures with Moc
         val controller = new AddressSearchController(searcher, new ResponseStub(Nil), ec, cc)
         val request = FakeRequest("GET", "http://localhost:9000/v2/uk/addresses?outcode=FX11").withHeadersOrigin
 
-        val result = await(controller.searchRequest(request, Marshall.marshallV2List))
+        val sp = SearchParameters.fromRequest(request.queryString)
+        val result = await(controller.processSearch(request, sp, Marshall.marshallV2List))
         assert(result.header.status === play.api.http.Status.BAD_REQUEST)
       }
     }
@@ -203,7 +214,8 @@ class AddressSearchControllerTest extends AnyWordSpec with ScalaFutures with Moc
         val controller = new AddressSearchController(searcher, new ResponseStub(List(addr1Ar)), ec, cc)
         val request = FakeRequest("GET", "http://localhost:9000/v2/uk/addresses?uprn=100001").withHeadersOrigin
 
-        val result = await(controller.searchRequest(request, Marshall.marshallV2List))
+        val sp = SearchParameters.fromRequest(request.queryString)
+        val result = await(controller.processSearch(request, sp, Marshall.marshallV2List))
         assert(result.header.status === play.api.http.Status.OK)
       }
     }
@@ -220,7 +232,7 @@ class AddressSearchControllerTest extends AnyWordSpec with ScalaFutures with Moc
         val addressLookupController = new AddressSearchController(searcher, new ResponseStub(List(addressAr1, addressAr2)), ec, cc)
         val request = FakeRequest("GET", "http://localhost:9000/v2/uk/addresses?fuzzy=ATown").withHeadersOrigin
 
-        val result = await(addressLookupController.searchRequest(request, Marshall.marshallV2List))
+        val result = await(addressLookupController.processSearch(request, sp, Marshall.marshallV2List))
         assert(result.header.status === play.api.http.Status.OK)
       }
 
@@ -233,7 +245,7 @@ class AddressSearchControllerTest extends AnyWordSpec with ScalaFutures with Moc
         val controller = new AddressSearchController(searcher, new ResponseStub(List(addressAr2)), ec, cc)
         val request = FakeRequest("GET", "http://localhost:9000/v2/uk/addresses?fuzzy=ATown&postcode=FX11+7LA&filter=AStreet").withHeadersOrigin
 
-        val result = await(controller.searchRequest(request, Marshall.marshallV2List))
+        val result = await(controller.processSearch(request, sp, Marshall.marshallV2List))
         assert(result.header.status === play.api.http.Status.OK)
       }
 
@@ -246,7 +258,211 @@ class AddressSearchControllerTest extends AnyWordSpec with ScalaFutures with Moc
         val controller = new AddressSearchController(searcher, new ResponseStub(List(addressAr2)), ec, cc)
         val request = FakeRequest("GET", "http://localhost:9000/v2/uk/addresses?line1=AStreet&line2=ATown&postcode=FX11+7LA").withHeadersOrigin
 
-        val result = await(controller.searchRequest(request, Marshall.marshallV2List))
+        val result = await(controller.processSearch(request, sp, Marshall.marshallV2List))
+        assert(result.header.status === play.api.http.Status.OK)
+      }
+    }
+  }
+
+  "postcode lookup with POST requests" must {
+
+    "give bad request" when {
+
+      """when search is called without 'X-Origin' header
+       it should give a 'bad request' response via the appropriate exception
+       and not log any error
+      """ in new Context {
+        val controller = new AddressSearchController(searcher, new ResponseStub(Nil), ec, cc)
+        val request: FakeRequest[LookupRequest] = FakeRequest[LookupRequest](
+          method = "POST", uri = "http://localhost:9000/v2/uk/addresses", body = LookupRequest(postcode = Some("FX114HG")),
+          headers = Headers())
+
+        val e = intercept[UpstreamErrorResponse] {
+          val sp = SearchParameters.fromRequest(request.body)
+          controller.processSearch(request, sp, Marshall.marshallV2List)
+        }
+        assert(e.reportAs === 400)
+      }
+
+      """when search is called without the postcode parameter
+       it should give a 'bad request' response
+       and log the error
+      """ in new Context {
+        val controller = new AddressSearchController(searcher, new ResponseStub(Nil), ec, cc)
+        val request = FakeRequest(
+          method = "POST", uri = "http://localhost:9000/v2/uk/addresses", body = LookupRequest(filter=Some("FX114HG")), headers = Headers()
+        ).withHeadersOrigin
+
+        val sp = SearchParameters.fromRequest(request.body)
+        val result = await(controller.processSearch(request, sp, Marshall.marshallV2List))
+        assert(result.header.status === play.api.http.Status.BAD_REQUEST)
+      }
+    }
+
+
+    "successful findPostcode" when {
+
+      """when search is called with correct parameters
+       it should clean up the postcode parameter
+       and give an 'ok' response
+       and log the lookup including the size of the result list
+      """ in new Context {
+        when(searcher.findPostcode(Postcode("FX11 4HG"), Some("FOO"))) thenReturn Future(List(addr1Db))
+        val controller = new AddressSearchController(searcher, new ResponseStub(List(addr1Ar)), ec, cc)
+        val request: FakeRequest[LookupRequest] = FakeRequest[LookupRequest](
+          method = "POST", uri = "http://localhost:9000/v2/uk/addresses", body = LookupRequest(postcode = Some("FX114HG"), filter = Some("FOO")),
+          headers = Headers()).withHeadersOrigin
+
+        val sp = SearchParameters.fromRequest(request.body)
+        val result = await(controller.processSearch(request, sp, Marshall.marshallV2List))
+        assert(result.header.status === play.api.http.Status.OK)
+      }
+
+      """when search is called with blank filter
+       it should clean up the postcode parameter
+       and give an 'ok' response as if the filter parameter wass absent
+       and log the lookup including the size of the result list
+      """ in new Context {
+        when(searcher.findPostcode(Postcode("FX11 4HG"), None)) thenReturn Future(List(addr1Db))
+        val controller = new AddressSearchController(searcher, new ResponseStub(List(addr1Ar)), ec, cc)
+        val request: FakeRequest[LookupRequest] = FakeRequest[LookupRequest](
+          method = "POST", uri = "http://localhost:9000/v2/uk/addresses", body = LookupRequest(postcode = Some("FX114HG"), filter = None),
+          headers = Headers()).withHeadersOrigin
+
+        val sp = SearchParameters.fromRequest(request.body)
+        val result = await(controller.processSearch(request, sp, Marshall.marshallV2List))
+        assert(result.header.status === play.api.http.Status.OK)
+      }
+
+      """when search is called with a postcode that will give several results
+       it should give an 'ok' response containing the result list
+       and log the lookup including the size of the result list
+      """ in new Context {
+        when(searcher.findPostcode(Postcode("FX11 4HG"), None)) thenReturn Future(List(dx1A, dx1B, dx1C))
+        val controller = new AddressSearchController(searcher, new ResponseStub(List(fx1A, fx1B, fx1C)), ec, cc)
+        val request = FakeRequest(
+          method = "POST", uri = "http://localhost:9000/v2/uk/addresses", body = LookupRequest(postcode = Some("fx114hg")),
+          headers = Headers()).withHeadersOrigin
+
+        val sp = SearchParameters.fromRequest(request.body)
+        val result = await(controller.processSearch(request, sp, Marshall.marshallV2List))
+        assert(result.header.status === play.api.http.Status.OK)
+      }
+    }
+
+
+    "findOutcode" when {
+
+      """when search is called with correct parameters
+       it should clean up the outcode parameter
+       and give an 'ok' response
+       and log the lookup including the size of the result list
+      """ in new Context {
+        when(searcher.findOutcode(Outcode("FX11"), "FOO")) thenReturn Future(List(addr1Db))
+        val controller = new AddressSearchController(searcher, new ResponseStub(List(addr1Ar)), ec, cc)
+        val request: FakeRequest[LookupRequest] = FakeRequest[LookupRequest](
+          method = "POST", uri = "http://localhost:9000/v2/uk/addresses", body = LookupRequest(outcode = Some("FX11"), filter = Some("FOO")),
+          headers = Headers()).withHeadersOrigin
+
+        val sp = SearchParameters.fromRequest(request.body)
+        val result = await(controller.processSearch(request, sp, Marshall.marshallV2List))
+        assert(result.header.status === play.api.http.Status.OK)
+      }
+
+      """when search is called with a outcode that will give several results
+       it should give an 'ok' response containing the result list
+       and log the lookup including the size of the result list
+      """ in new Context {
+        when(searcher.findOutcode(Outcode("FX11"), "FOO")) thenReturn Future(List(dx1A, dx1B, dx1C))
+        val controller = new AddressSearchController(searcher, new ResponseStub(List(fx1A, fx1B, fx1C)), ec, cc)
+        val request: FakeRequest[LookupRequest] = FakeRequest[LookupRequest](
+          method = "POST", uri = "http://localhost:9000/v2/uk/addresses", body = LookupRequest(outcode = Some("fx11"), filter = Some("FOO")),
+          headers = Headers()).withHeadersOrigin
+
+        val sp = SearchParameters.fromRequest(request.body)
+        val result = await(controller.processSearch(request, sp, Marshall.marshallV2List))
+        assert(result.header.status === play.api.http.Status.OK)
+      }
+
+      """when search is called with the outcode parameter but no filter
+       it should give a 'bad request' response
+       and log the error
+      """ in new Context {
+        val controller = new AddressSearchController(searcher, new ResponseStub(Nil), ec, cc)
+        val request: FakeRequest[LookupRequest] = FakeRequest[LookupRequest](
+          method = "POST", uri = "http://localhost:9000/v2/uk/addresses", body = LookupRequest(outcode = Some("FX11")),
+          headers = Headers()).withHeadersOrigin
+
+        val sp = SearchParameters.fromRequest(request.body)
+        val result = await(controller.processSearch(request, sp, Marshall.marshallV2List))
+        assert(result.header.status === play.api.http.Status.BAD_REQUEST)
+      }
+    }
+
+
+    "successful findUprn" when {
+
+      """when search is called with a uprn
+       it should give an 'ok' response containing a list of one address
+       and log the lookup including the size of the list
+      """ in new Context {
+        when(searcher.findUprn("100001")) thenReturn Future(List(addr1Db))
+        val controller = new AddressSearchController(searcher, new ResponseStub(List(addr1Ar)), ec, cc)
+        val request: FakeRequest[LookupRequest] = FakeRequest[LookupRequest](
+          method = "POST", uri = "http://localhost:9000/v2/uk/addresses", body = LookupRequest(uprn = Some("100001")),
+          headers = Headers()).withHeadersOrigin
+
+        val sp = SearchParameters.fromRequest(request.body)
+        val result = await(controller.processSearch(request, sp, Marshall.marshallV2List))
+        assert(result.header.status === play.api.http.Status.OK)
+      }
+    }
+
+
+    "successful searchFuzzy" when {
+
+      """when search is called with a fuzzy term but without postcode/filter
+       it should give an 'ok' response containing a list of two addresses
+       and log the lookup including the size of the list
+      """ in new Context {
+        val sp = SearchParameters.fromRequest(LookupRequest(fuzzy = Some("ATown")))
+        when(searcher.searchFuzzy(sp)) thenReturn Future(List(addressDb1, addressDb2))
+        val addressLookupController = new AddressSearchController(searcher, new ResponseStub(List(addressAr1, addressAr2)), ec, cc)
+        val request: FakeRequest[LookupRequest] = FakeRequest[LookupRequest](
+          method = "POST", uri = "http://localhost:9000/v2/uk/addresses", body = LookupRequest(fuzzy = Some("ATown")),
+          headers = Headers()).withHeadersOrigin
+
+        val result = await(addressLookupController.processSearch(request, sp, Marshall.marshallV2List))
+        assert(result.header.status === play.api.http.Status.OK)
+      }
+
+      """when search is called with a fuzzy term, postcode and filter
+       it should give an 'ok' response containing a list of one address
+       and log the lookup including the size of the list
+      """ in new Context {
+        val sp = SearchParameters.fromRequest(LookupRequest(fuzzy = Some("ATown"), postcode = Some("FX11 7LA"), filter = Some("AStreet")))
+        when(searcher.searchFuzzy(sp)) thenReturn Future(List(addressDb2))
+        val controller = new AddressSearchController(searcher, new ResponseStub(List(addressAr2)), ec, cc)
+        val request: FakeRequest[LookupRequest] = FakeRequest[LookupRequest](
+          method = "POST", uri = "http://localhost:9000/v2/uk/addresses", body = LookupRequest(fuzzy = Some("ATown"), postcode = Some("FX11 7LA"), filter = Some("AStreet")),
+          headers = Headers()).withHeadersOrigin
+
+        val result = await(controller.processSearch(request, sp, Marshall.marshallV2List))
+        assert(result.header.status === play.api.http.Status.OK)
+      }
+
+      """when search is called with line1 and postcode
+       it should give an 'ok' response containing a list of one address
+       and log the lookup including the size of the list
+      """ in new Context {
+        val sp = SearchParameters.fromRequest(LookupRequest(postcode = Some("FX11 7LA"), line1 = Some("AStreet"), line2 = Some("ATown")))
+        when(searcher.searchFuzzy(sp)) thenReturn Future(List(addressDb2))
+        val controller = new AddressSearchController(searcher, new ResponseStub(List(addressAr2)), ec, cc)
+        val request: FakeRequest[LookupRequest] = FakeRequest[LookupRequest](
+          method = "POST", uri = "http://localhost:9000/v2/uk/addresses", body = LookupRequest(line1 = Some("AStreet"), line2 = Some("ATown"), postcode = Some("FX11 7LA")),
+          headers = Headers()).withHeadersOrigin
+
+        val result = await(controller.processSearch(request, sp, Marshall.marshallV2List))
         assert(result.header.status === play.api.http.Status.OK)
       }
     }

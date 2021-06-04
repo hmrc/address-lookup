@@ -22,6 +22,7 @@ import osgb.services.{AddressSearcher, ResponseProcessor}
 import play.api.libs.json._
 import play.api.mvc.{Action, AnyContent, ControllerComponents, Request, Result}
 import address.uk.Postcode
+import osgb.inmodel.LookupPostcode
 import play.api.Logger
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -43,36 +44,50 @@ class PostcodesController @Inject()(addressSearch: AddressSearcher, responseProc
 
   implicit private val xec = ec
 
-  def lookup(postcode: String): Action[AnyContent] = Action.async {
+  @deprecated
+  def lookupWithGet(postcode: String): Action[AnyContent] = Action.async {
     (request: Request[AnyContent]) =>
       val origin = getOriginHeaderIfSatisfactory(request.headers)
       if (request.rawQueryString.nonEmpty) {
         Future.successful {
-          badRequest(request, "Query String supplied but not supported")
+          badRequest(request.uri, "Query String supplied but not supported")
         }
       } else {
-        processPostcode(origin, request, postcode)
+        processPostcode(origin, request.uri, postcode)
       }
   }
 
-  private def processPostcode(origin: String, request: Request[AnyContent], postcode: String): Future[Result] = {
+  @deprecated
+  def lookup(): Action[LookupPostcode] = Action.async(parse.json[LookupPostcode]) {
+    (request: Request[LookupPostcode]) =>
+      val origin = getOriginHeaderIfSatisfactory(request.headers)
+      if (request.rawQueryString.nonEmpty) {
+        Future.successful {
+          badRequest(request.uri, "Query String supplied but not supported")
+        }
+      } else {
+        processPostcode(origin, request.uri, request.body.postcode)
+      }
+  }
+
+  private def processPostcode(origin: String, requestUri: String, postcode: String): Future[Result] = {
     val cleanPostcode = Postcode.cleanupPostcode(URLDecoder.decode(postcode, "UTF-8"))
     if (cleanPostcode.isDefined) {
-      findPostcode(origin, request, cleanPostcode)
+      findPostcode(origin, requestUri, cleanPostcode)
     } else {
       Future.successful {
-        badRequest(request, "Invalid postcode")
+        badRequest(requestUri, "Invalid postcode")
       }
     }
   }
 
-  private def findPostcode(origin: String, request: Request[AnyContent], cleanPostcode: Option[Postcode]) = {
+  private def findPostcode(origin: String, requestUri: String, cleanPostcode: Option[Postcode]) = {
     addressSearch.findPostcode(cleanPostcode.get, None).map {
       addressList =>
         logEvent("LOOKUP", "origin" -> origin, "postcode" -> cleanPostcode.get.toString, "matches" -> addressList.size.toString)
 
         if (addressList.isEmpty) {
-          notFound(request, "Unknown postcode")
+          notFound(requestUri, "Unknown postcode")
         } else {
           val poBox = addressList.exists(_.poBox.isDefined)
           Ok(Json.toJson(PostcodeResponse(poBox)))
@@ -80,15 +95,16 @@ class PostcodesController @Inject()(addressSearch: AddressSearcher, responseProc
     }
   }
 
+  // Do we need this???
   def missing: Action[AnyContent] = Action {
     BadRequest("Missing postcode")
   }
 
-  private def badRequest(request: Request[AnyContent], msg: String): Result = {
-    BadRequest(Json.obj("statusCode" -> BAD_REQUEST, "message" -> msg, "requested" -> request.uri))
+  private def badRequest(requestUri: String, msg: String): Result = {
+    BadRequest(Json.obj("statusCode" -> BAD_REQUEST, "message" -> msg, "requested" -> requestUri))
   }
 
-  private def notFound(request: Request[AnyContent], msg: String): Result = {
-    NotFound(Json.obj("statusCode" -> NOT_FOUND, "message" -> msg, "requested" -> request.uri))
+  private def notFound(requestUri: String, msg: String): Result = {
+    NotFound(Json.obj("statusCode" -> NOT_FOUND, "message" -> msg, "requested" -> requestUri))
   }
 }
