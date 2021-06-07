@@ -17,15 +17,16 @@
 package osgb
 
 import address.uk.{Outcode, Postcode}
+import osgb.inmodel.LookupRequest
 
 case class SearchParameters(
-                             uprn: Option[String] = None,
-                             outcode: Option[Outcode] = None,
-                             postcode: Option[Postcode] = None,
-                             fuzzy: Option[String] = None,
-                             filter: Option[String] = None,
-                             town: Option[String] = None,
-                             lines: List[String] = Nil
+                               uprn: Option[String] = None,
+                               outcode: Option[Outcode] = None,
+                               postcode: Option[Postcode] = None,
+                               fuzzy: Option[String] = None,
+                               filter: Option[String] = None,
+                               town: Option[String] = None,
+                               lines: List[String] = Nil
                            ) {
 
   private def nonBlank(s: Option[String]) = if (s.map(_.trim).contains("")) None else s
@@ -44,11 +45,11 @@ case class SearchParameters(
   // For use in logging/auditing
   def tupled: List[(String, String)] = {
     uprn.toList.map("uprn" -> _) ++
-      outcode.toList.map("outcode" -> _.toString) ++
-      postcode.toList.map("postcode" -> _.urlSafe) ++
-      town.toList.map("town" -> _) ++
-      fuzzy.toList.map("fuzzy" -> _) ++
-      filter.toList.map("filter" -> _) ++ linesTupled
+        outcode.toList.map("outcode" -> _.toString) ++
+        postcode.toList.map("postcode" -> _.urlSafe) ++
+        town.toList.map("town" -> _) ++
+        fuzzy.toList.map("fuzzy" -> _) ++
+        filter.toList.map("filter" -> _) ++ linesTupled
   }
 
   private def linesTupled = lines.size match {
@@ -70,8 +71,32 @@ object SearchParameters {
   private[osgb] val FILTER = "filter"
   private[osgb] val TOWN = "town"
 
+  private[osgb] val LINE1 = "line1"
+  private[osgb] val LINE2 = "line2"
+  private[osgb] val LINE3 = "line3"
+  private[osgb] val LINE4 = "line4"
+  private[osgb] val LIMIT = "limit"
+
   def fromRequest(queryString: Map[String, Seq[String]]): SearchParameters = {
     apply(queryString.map(kv => kv._1 -> kv._2.head))
+  }
+
+  def fromRequest(lookupRequest: LookupRequest): SearchParameters = {
+    val lookupRequestMap: Map[String, String] = Seq[(String, Option[String])](
+      POSTCODE -> lookupRequest.postcode,
+      LINE1 -> lookupRequest.line1,
+      LINE2 -> lookupRequest.line2,
+      LINE3 -> lookupRequest.line3,
+      LINE4 -> lookupRequest.line4,
+      UPRN -> lookupRequest.uprn,
+      OUTCODE -> lookupRequest.outcode,
+      FUZZY -> lookupRequest.fuzzy,
+      FILTER -> lookupRequest.filter,
+      TOWN -> lookupRequest.town,
+      LIMIT -> lookupRequest.limit.map(_.toString)
+    ).collect { case (k, Some(v)) => k -> v }.toMap
+
+    apply(lookupRequestMap)
   }
 
   def apply(queryString: Map[String, String]): SearchParameters = {
@@ -84,7 +109,10 @@ object SearchParameters {
       queryString.get(OUTCODE).flatMap(Outcode.cleanupOutcode),
       queryString.get(POSTCODE).flatMap(Postcode.cleanupPostcode),
       queryString.get(FUZZY),
-      queryString.get(FILTER),
+      queryString.get(FILTER) match {
+        case Some(f) if f.trim.isEmpty => None
+        case o                         => o
+      },
       queryString.get(TOWN),
       line1 ++ line2 ++ line3 ++ line4)
   }

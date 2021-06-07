@@ -22,39 +22,47 @@ import osgb.services._
 import play.api.libs.json.JsValue
 import play.api.mvc.{Action, AnyContent, ControllerComponents, Request, Result}
 import address.model.AddressRecord
+import osgb.inmodel.LookupRequest
 import play.api.Logger
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class AddressSearchController @Inject() (addressSearch: AddressSearcher, responseProcessor: ResponseProcessor,
-                                         ec: ExecutionContext, cc: ControllerComponents)
-  extends AddressController(cc) {
+class AddressSearchController @Inject()(addressSearch: AddressSearcher, responseProcessor: ResponseProcessor,
+                                        ec: ExecutionContext, cc: ControllerComponents)
+    extends AddressController(cc) {
 
   implicit private val xec = ec
 
   import SearchParameters._
 
-  def search(): Action[AnyContent] = Action.async {
+  def search(): Action[LookupRequest] = Action.async(parse.json[LookupRequest]) {
     request =>
-      searchRequest(request, Marshall.marshallV2List)
+      val lookupRequest = request.body
+      val sp = SearchParameters.fromRequest(lookupRequest).clean
+      processSearch(request, sp, Marshall.marshallV2List)
   }
 
-  private[osgb] def searchRequest[A](request: Request[A], marshall: List[AddressRecord] => JsValue): Future[Result] = {
+  @deprecated
+  def searchWithGet(): Action[AnyContent] = Action.async {
+    request =>
+      val sp = SearchParameters.fromRequest(request.queryString).clean
+      processSearch(request, sp, Marshall.marshallV2List)
+  }
+
+  private[osgb] def processSearch[A](request: Request[A], sp: SearchParameters, marshall: List[AddressRecord] => JsValue): Future[Result] = {
     val origin = getOriginHeaderIfSatisfactory(request.headers)
-    val sp = SearchParameters.fromRequest(request.queryString).clean
-    if (sp.uprn.isDefined) searchUprnRequest(request, sp.uprn.get, origin, marshall)
-    else if (sp.outcode.isDefined) searchOutcodeRequest(request, sp, origin, marshall)
-    else if (sp.isFuzzy) searchFuzzyRequest(request, sp, origin, marshall)
-    else searchPostcodeRequest(request, sp, origin, marshall)
+    if (sp.uprn.isDefined) searchByUprn(request, sp.uprn.get, origin, marshall)
+    else if (sp.outcode.isDefined) searchByOutcode(request, sp, origin, marshall)
+    else if (sp.isFuzzy) searchByFuzzy(request, sp, origin, marshall)
+    else searchByPostcode(request, sp, origin, marshall)
   }
 
-  private[osgb] def searchUprnRequest[A](request: Request[A], uprn: String, origin: String, marshall: List[AddressRecord] => JsValue): Future[Result] = {
+  private[osgb] def searchByUprn[A](request: Request[A], uprn: String, origin: String, marshall: List[AddressRecord] => JsValue): Future[Result] = {
     val unwantedQueryParams = request.queryString.filterKeys(k => k != UPRN).keys.toSeq
 
     if (unwantedQueryParams.nonEmpty) Future.successful {
       val paramList = unwantedQueryParams.mkString(", ")
       badRequest("BAD-PARAMETER", "origin" -> origin, "uprn" -> uprn, "error" -> s"unexpected query parameter(s): $paramList")
-
     } else
       addressSearch.findUprn(uprn).map {
         a =>
@@ -64,7 +72,7 @@ class AddressSearchController @Inject() (addressSearch: AddressSearcher, respons
       }
   }
 
-  private[osgb] def searchPostcodeRequest[A](request: Request[A], sp: SearchParameters, origin: String, marshall: List[AddressRecord] => JsValue): Future[Result] = {
+  private[osgb] def searchByPostcode[A](request: Request[A], sp: SearchParameters, origin: String, marshall: List[AddressRecord] => JsValue): Future[Result] = {
     val unwantedQueryParams = request.queryString.filterKeys(k => k != POSTCODE && k != FILTER).keys.toSeq
 
     if (unwantedQueryParams.nonEmpty) Future.successful {
@@ -84,7 +92,7 @@ class AddressSearchController @Inject() (addressSearch: AddressSearcher, respons
     }
   }
 
-  private[osgb] def searchOutcodeRequest[A](request: Request[A], sp: SearchParameters, origin: String, marshall: List[AddressRecord] => JsValue): Future[Result] = {
+  private[osgb] def searchByOutcode[A](request: Request[A], sp: SearchParameters, origin: String, marshall: List[AddressRecord] => JsValue): Future[Result] = {
     val unwantedQueryParams = request.queryString.filterKeys(k => k != OUTCODE && k != FILTER).keys.toSeq
 
     if (unwantedQueryParams.nonEmpty) Future.successful {
@@ -107,7 +115,7 @@ class AddressSearchController @Inject() (addressSearch: AddressSearcher, respons
     }
   }
 
-  private[osgb] def searchFuzzyRequest[A](request: Request[A], sp: SearchParameters, origin: String, marshall: List[AddressRecord] => JsValue): Future[Result] = {
+  private[osgb] def searchByFuzzy[A](request: Request[A], sp: SearchParameters, origin: String, marshall: List[AddressRecord] => JsValue): Future[Result] = {
     addressSearch.searchFuzzy(sp).map {
       a =>
         val a2 = responseProcessor.convertAddressList(a)
