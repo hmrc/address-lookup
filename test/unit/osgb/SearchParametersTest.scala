@@ -22,7 +22,7 @@ import org.scalatest.funsuite.AnyFunSuite
 class SearchParametersTest extends AnyFunSuite {
 
   test("fromRequest") {
-    val sp = SearchParameters.fromRequest(Map(
+    val sp = SearchParameters.fromQueryParameters(Map(
       "uprn" -> Seq("12345"),
       "postcode" -> Seq("FX1 1ZZ"),
       "filter" -> Seq("Quayside"),

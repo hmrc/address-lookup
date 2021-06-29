@@ -57,19 +57,6 @@ class PostcodesController @Inject()(addressSearch: AddressSearcher, responseProc
       }
   }
 
-  @deprecated
-  def lookup(): Action[LookupPostcode] = Action.async(parse.json[LookupPostcode]) {
-    (request: Request[LookupPostcode]) =>
-      val origin = getOriginHeaderIfSatisfactory(request.headers)
-      if (request.rawQueryString.nonEmpty) {
-        Future.successful {
-          badRequest(request.uri, "Query String supplied but not supported")
-        }
-      } else {
-        processPostcode(origin, request.uri, request.body.postcode)
-      }
-  }
-
   private def processPostcode(origin: String, requestUri: String, postcode: String): Future[Result] = {
     val cleanPostcode = Postcode.cleanupPostcode(URLDecoder.decode(postcode, "UTF-8"))
     if (cleanPostcode.isDefined) {

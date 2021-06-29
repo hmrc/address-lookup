@@ -77,23 +77,14 @@ object SearchParameters {
   private[osgb] val LINE4 = "line4"
   private[osgb] val LIMIT = "limit"
 
-  def fromRequest(queryString: Map[String, Seq[String]]): SearchParameters = {
+  def fromQueryParameters(queryString: Map[String, Seq[String]]): SearchParameters = {
     apply(queryString.map(kv => kv._1 -> kv._2.head))
   }
 
-  def fromRequest(lookupRequest: LookupRequest): SearchParameters = {
+  def fromLookupRequest(lookupRequest: LookupRequest): SearchParameters = {
     val lookupRequestMap: Map[String, String] = Seq[(String, Option[String])](
-      POSTCODE -> lookupRequest.postcode,
-      LINE1 -> lookupRequest.line1,
-      LINE2 -> lookupRequest.line2,
-      LINE3 -> lookupRequest.line3,
-      LINE4 -> lookupRequest.line4,
-      UPRN -> lookupRequest.uprn,
-      OUTCODE -> lookupRequest.outcode,
-      FUZZY -> lookupRequest.fuzzy,
+      POSTCODE -> Some(lookupRequest.postcode),
       FILTER -> lookupRequest.filter,
-      TOWN -> lookupRequest.town,
-      LIMIT -> lookupRequest.limit.map(_.toString)
     ).collect { case (k, Some(v)) => k -> v }.toMap
 
     apply(lookupRequestMap)
