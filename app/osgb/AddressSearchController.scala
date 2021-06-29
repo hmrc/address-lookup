@@ -38,7 +38,7 @@ class AddressSearchController @Inject()(addressSearch: AddressSearcher, response
   def search(): Action[LookupRequest] = Action.async(parse.json[LookupRequest]) {
     request =>
       val lookupRequest = request.body
-      val sp = SearchParameters.fromLookupRequest(lookupRequest).clean
+      val sp = SearchParameters(lookupRequest).clean
       processSearch(request, sp, Marshall.marshallV2List)
   }
 

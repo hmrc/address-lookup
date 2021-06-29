@@ -81,13 +81,13 @@ object SearchParameters {
     apply(queryString.map(kv => kv._1 -> kv._2.head))
   }
 
-  def fromLookupRequest(lookupRequest: LookupRequest): SearchParameters = {
-    val lookupRequestMap: Map[String, String] = Seq[(String, Option[String])](
-      POSTCODE -> Some(lookupRequest.postcode),
-      FILTER -> lookupRequest.filter,
-    ).collect { case (k, Some(v)) => k -> v }.toMap
-
-    apply(lookupRequestMap)
+  def apply(lookupRequest: LookupRequest): SearchParameters = {
+    new SearchParameters(
+      postcode = Postcode.cleanupPostcode(lookupRequest.postcode),
+      filter = lookupRequest.filter match {
+        case Some(f) if f.trim.isEmpty => None
+        case o                         => o
+      })
   }
 
   def apply(queryString: Map[String, String]): SearchParameters = {

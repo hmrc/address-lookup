@@ -279,7 +279,7 @@ class AddressSearchControllerTest extends AnyWordSpec with ScalaFutures with Moc
           headers = Headers())
 
         val e = intercept[UpstreamErrorResponse] {
-          val sp = SearchParameters.fromLookupRequest(request.body)
+          val sp = SearchParameters(request.body)
           controller.processSearch(request, sp, Marshall.marshallV2List)
         }
         assert(e.reportAs === 400)
@@ -302,7 +302,7 @@ class AddressSearchControllerTest extends AnyWordSpec with ScalaFutures with Moc
           body = LookupRequest(postcode = "FX114HG", filter = Some("FOO")),
           headers = Headers()).withHeadersOrigin
 
-        val sp = SearchParameters.fromLookupRequest(request.body)
+        val sp = SearchParameters(request.body)
         val result = await(controller.processSearch(request, sp, Marshall.marshallV2List))
         assert(result.header.status === play.api.http.Status.OK)
       }
@@ -320,7 +320,7 @@ class AddressSearchControllerTest extends AnyWordSpec with ScalaFutures with Moc
           body = LookupRequest(postcode = "FX114HG", filter = None),
           headers = Headers()).withHeadersOrigin
 
-        val sp = SearchParameters.fromLookupRequest(request.body)
+        val sp = SearchParameters(request.body)
         val result = await(controller.processSearch(request, sp, Marshall.marshallV2List))
         assert(result.header.status === play.api.http.Status.OK)
       }
@@ -337,7 +337,7 @@ class AddressSearchControllerTest extends AnyWordSpec with ScalaFutures with Moc
           body = LookupRequest(postcode = "fx114hg"),
           headers = Headers()).withHeadersOrigin
 
-        val sp = SearchParameters.fromLookupRequest(request.body)
+        val sp = SearchParameters(request.body)
         val result = await(controller.processSearch(request, sp, Marshall.marshallV2List))
         assert(result.header.status === play.api.http.Status.OK)
       }
