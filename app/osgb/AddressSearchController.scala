@@ -31,21 +31,21 @@ class AddressSearchController @Inject()(addressSearch: AddressSearcher, response
                                         ec: ExecutionContext, cc: ControllerComponents)
     extends AddressController(cc) {
 
-  implicit private val xec = ec
+  implicit private val xec: ExecutionContext = ec
 
   import SearchParameters._
 
   def search(): Action[LookupRequest] = Action.async(parse.json[LookupRequest]) {
     request =>
       val lookupRequest = request.body
-      val sp = SearchParameters.fromRequest(lookupRequest).clean
+      val sp = SearchParameters(lookupRequest).clean
       processSearch(request, sp, Marshall.marshallV2List)
   }
 
   @deprecated
   def searchWithGet(): Action[AnyContent] = Action.async {
     request =>
-      val sp = SearchParameters.fromRequest(request.queryString).clean
+      val sp = SearchParameters.fromQueryParameters(request.queryString).clean
       processSearch(request, sp, Marshall.marshallV2List)
   }
 

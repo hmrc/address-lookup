@@ -18,10 +18,7 @@ package osgb.inmodel
 
 import play.api.libs.json.{Format, Json}
 
-case class LookupRequest(postcode: Option[String] = None, line1: Option[String] = None, line2: Option[String] = None,
-                         line3: Option[String] = None, line4: Option[String] = None, uprn: Option[String] = None,
-                         outcode: Option[String] = None, fuzzy: Option[String] = None, town: Option[String] = None,
-                         filter: Option[String] = None, limit: Option[Int] = None)
+case class LookupRequest(postcode: String, filter: Option[String] = None)
 
 object LookupRequest {
   implicit val formats: Format[LookupRequest] = Json.format[LookupRequest]
