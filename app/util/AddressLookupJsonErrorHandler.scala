@@ -34,7 +34,7 @@ class AddressLookupJsonErrorHandler @Inject()(auditConnector: AuditConnector,
   override def onClientError(request: RequestHeader, statusCode: Int, message: String): Future[Result] = {
     (statusCode, message) match {
       case (BAD_REQUEST, msg) if msg.startsWith("Json validation error") =>
-        Future.successful(BadRequest("error=missing or badly-formed postcode parameter"))
+        Future.successful(BadRequest(s"""{"statusCode": $BAD_REQUEST, "message": "missing or badly-formed postcode parameter"}"""))
       case _ => super.onClientError(request, statusCode, message)
     }
   }
