@@ -16,15 +16,14 @@
 
 package osgb
 
-import javax.inject.Inject
+import address.model.AddressRecord
+import osgb.inmodel.LookupRequest
 import osgb.outmodel.Marshall
 import osgb.services._
 import play.api.libs.json.JsValue
-import play.api.mvc.{Action, AnyContent, ControllerComponents, Request, Result}
-import address.model.AddressRecord
-import osgb.inmodel.LookupRequest
-import play.api.Logger
+import play.api.mvc._
 
+import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 class AddressSearchController @Inject()(addressSearch: AddressSearcher, responseProcessor: ResponseProcessor,

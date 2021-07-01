@@ -83,7 +83,7 @@ object SearchParameters {
 
   def apply(lookupRequest: LookupRequest): SearchParameters = {
     new SearchParameters(
-      postcode = Postcode.cleanupPostcode(lookupRequest.postcode),
+      postcode = Some(lookupRequest.postcode),
       filter = lookupRequest.filter match {
         case Some(f) if f.trim.isEmpty => None
         case o                         => o

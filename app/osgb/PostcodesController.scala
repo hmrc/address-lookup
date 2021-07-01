@@ -16,15 +16,14 @@
 
 package osgb
 
+import address.uk.Postcode
+import osgb.services.{AddressSearcher, ResponseProcessor}
+import play.api.Logger
+import play.api.libs.json._
+import play.api.mvc._
+
 import java.net.URLDecoder
 import javax.inject.Inject
-import osgb.services.{AddressSearcher, ResponseProcessor}
-import play.api.libs.json._
-import play.api.mvc.{Action, AnyContent, ControllerComponents, Request, Result}
-import address.uk.Postcode
-import osgb.inmodel.LookupPostcode
-import play.api.Logger
-
 import scala.concurrent.{ExecutionContext, Future}
 
 case class PostcodeResponse(isPOBox: Boolean)

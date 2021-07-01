@@ -16,10 +16,9 @@
 
 package services
 
-import play.api.mvc.Result
-import repositories.AddressLookupRepository
 import address.osgb.DbAddress
 import address.uk.Postcode
+import repositories.AddressLookupRepository
 
 import javax.inject.Inject
 import scala.concurrent.Future

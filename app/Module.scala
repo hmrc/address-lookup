@@ -19,13 +19,12 @@ import com.google.inject.{AbstractModule, Provides}
 import com.kenshoo.play.metrics.Metrics
 import config.ConfigHelper
 import doobie.Transactor
-
-import javax.inject.Singleton
 import osgb.services._
 import play.api.inject.ApplicationLifecycle
-import play.api.{Configuration, Environment, Logger}
+import play.api.{Configuration, Environment}
 import repositories.{AddressLookupRepository, InMemoryAddressLookupRepository, RdsQueryConfig, TransactorProvider}
 
+import javax.inject.Singleton
 import scala.concurrent.ExecutionContext
 
 class Module(environment: Environment, configuration: Configuration) extends AbstractModule {

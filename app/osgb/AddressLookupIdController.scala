@@ -16,22 +16,20 @@
 
 package osgb
 
-import javax.inject.Inject
+import address.model.AddressRecord
 import osgb.outmodel.Marshall
 import osgb.services.{AddressSearcher, ResponseProcessor}
-import play.api.libs.json.JsValue
-import play.api.mvc.{Action, AnyContent, ControllerComponents, Request, Result}
-import address.model.AddressRecord
 import play.api.Logger
+import play.api.libs.json.JsValue
+import play.api.mvc._
 
+import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
 class AddressLookupIdController @Inject()(addressSearch: AddressSearcher, responseProcessor: ResponseProcessor,
                                           ec: ExecutionContext, cc: ControllerComponents)
   extends AddressController(cc) {
-
-  private val logger = Logger(this.getClass.getSimpleName)
 
   implicit private val xec: ExecutionContext = ec
 
