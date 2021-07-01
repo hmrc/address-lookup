@@ -166,7 +166,6 @@ class PostcodeLookupSuiteV2 ()
 
 
     "client error" must {
-
       "give a bad request when the origin header is absent" in {
         val path = "/v2/uk/addresses?postcode=FX1+4AB"
         val response = await(wsClient.url(appEndpoint + path).withMethod("GET").execute())
@@ -204,7 +203,6 @@ class PostcodeLookupSuiteV2 ()
         val response = request("POST", "/v2/uk/addresses?postcode=FX1+9PY", headerOrigin -> "xxx")
         assert(response.status === METHOD_NOT_ALLOWED, dump(response))
       }
-
     }
   }
 }
