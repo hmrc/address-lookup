@@ -16,7 +16,6 @@
 
 package address.model
 
-import address.model
 import com.fasterxml.jackson.annotation.JsonIgnore
 
 

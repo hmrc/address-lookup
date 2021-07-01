@@ -13,7 +13,7 @@ object AppDependencies {
 
   val compile = Seq(
     ws,
-    "uk.gov.hmrc"                   %% "bootstrap-backend-play-28"  % "4.3.0",
+    "uk.gov.hmrc"                   %% "bootstrap-backend-play-28"  % "5.6.0",
     "com.univocity"                 %  "univocity-parsers"          % "1.5.6",
     "com.fasterxml.jackson.core"    %  "jackson-core"               % jacksonVersion,
     "com.fasterxml.jackson.core"    %  "jackson-databind"           % jacksonVersion,

@@ -16,12 +16,31 @@
 
 package osgb.inmodel
 
-import play.api.libs.json.{Format, Json}
+import address.uk.Postcode
+import play.api.libs.functional.syntax._
+import play.api.libs.json.Reads._
+import play.api.libs.json._
 
-case class LookupRequest(postcode: String, filter: Option[String] = None)
+
+case class LookupRequest(postcode: Postcode, filter: Option[String] = None)
 
 object LookupRequest {
-  implicit val formats: Format[LookupRequest] = Json.format[LookupRequest]
+  implicit val postcodeReads: Reads[Postcode] = Reads[Postcode] { json =>
+    json.validate[String] match {
+      case e: JsError => e
+      case s: JsSuccess[String] =>
+        Postcode.cleanupPostcode(s.get) match {
+          case pc if pc.isDefined => JsSuccess(pc.get)
+          case _ => JsError("error.invalid")
+        }
+    }
+  }
+
+  implicit val reads: Reads[LookupRequest] = (
+    (JsPath \ "postcode").read[Postcode] and
+      (JsPath \ "filter").readNullable[String]
+    ) (
+    (pc, fo) => LookupRequest.apply(pc, fo))
 }
 
 case class LookupPostcode(postcode: String)
@@ -29,3 +48,5 @@ case class LookupPostcode(postcode: String)
 object LookupPostcode {
   implicit val formats: Format[LookupPostcode] = Json.format[LookupPostcode]
 }
+
+

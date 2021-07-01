@@ -34,7 +34,6 @@ object Outcode {
 
   private def doCleanupOutcode(p: String): Option[Outcode] = {
     val norm = p.trim.toUpperCase
-    val space = norm.indexOf(' ')
     checkSyntax(norm)
   }
 

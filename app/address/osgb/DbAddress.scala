@@ -16,14 +16,11 @@
 
 package address.osgb
 
-import java.util
-import java.lang.{Integer => JInteger}
-import java.lang.{Short => JShort}
-
 import address.uk.Postcode
 
+import java.lang.{Integer => JInteger, Short => JShort}
+import java.util
 import scala.annotation.tailrec
-import scala.collection.mutable
 
 trait Document {
   def tupled: List[(String, Any)]

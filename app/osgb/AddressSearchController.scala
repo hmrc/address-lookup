@@ -16,16 +16,16 @@
 
 package osgb
 
-import javax.inject.Inject
-import osgb.outmodel.Marshall
-import osgb.services._
-import play.api.libs.json.JsValue
-import play.api.mvc.{Action, AnyContent, ControllerComponents, Request, Result}
 import address.model.AddressRecord
 import osgb.inmodel.LookupRequest
-import play.api.Logger
+import osgb.outmodel.Marshall
+import osgb.services._
+import play.api.libs.json.{JsError, JsResultException, JsSuccess, JsValue, Json}
+import play.api.mvc._
 
+import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success, Try}
 
 class AddressSearchController @Inject()(addressSearch: AddressSearcher, responseProcessor: ResponseProcessor,
                                         ec: ExecutionContext, cc: ControllerComponents)
@@ -35,11 +35,15 @@ class AddressSearchController @Inject()(addressSearch: AddressSearcher, response
 
   import SearchParameters._
 
-  def search(): Action[LookupRequest] = Action.async(parse.json[LookupRequest]) {
+  def search(): Action[String] = Action.async(parse.tolerantText) {
     request =>
-      val lookupRequest = request.body
-      val sp = SearchParameters(lookupRequest).clean
-      processSearch(request, sp, Marshall.marshallV2List)
+      Json.parse(request.body).validate[LookupRequest] match {
+        case JsSuccess(lookupRequest, _) =>
+          val sp = SearchParameters(lookupRequest).clean
+          processSearch(request, sp, Marshall.marshallV2List)
+        case JsError(errors) =>
+          Future.successful(BadRequest(JsError.toJson(errors)))
+      }
   }
 
   @deprecated

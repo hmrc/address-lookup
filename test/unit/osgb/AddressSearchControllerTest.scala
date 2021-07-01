@@ -275,7 +275,7 @@ class AddressSearchControllerTest extends AnyWordSpec with ScalaFutures with Moc
       """ in new Context {
         val controller = new AddressSearchController(searcher, new ResponseStub(Nil), ec, cc)
         val request: FakeRequest[LookupRequest] = FakeRequest[LookupRequest](
-          method = "POST", uri = "http://localhost:9000/v2/uk/addresses", body = LookupRequest(postcode = "FX114HG"),
+          method = "POST", uri = "http://localhost:9000/v2/uk/addresses", body = LookupRequest(postcode = Postcode("FX11 4HG")),
           headers = Headers())
 
         val e = intercept[UpstreamErrorResponse] {
@@ -299,7 +299,7 @@ class AddressSearchControllerTest extends AnyWordSpec with ScalaFutures with Moc
         val request: FakeRequest[LookupRequest] = FakeRequest[LookupRequest](
           method = "POST",
           uri = "http://localhost:9000/v2/uk/addresses",
-          body = LookupRequest(postcode = "FX114HG", filter = Some("FOO")),
+          body = LookupRequest(postcode = Postcode("FX11 4HG"), filter = Some("FOO")),
           headers = Headers()).withHeadersOrigin
 
         val sp = SearchParameters(request.body)
@@ -317,7 +317,7 @@ class AddressSearchControllerTest extends AnyWordSpec with ScalaFutures with Moc
         val request: FakeRequest[LookupRequest] = FakeRequest[LookupRequest](
           method = "POST",
           uri = "http://localhost:9000/v2/uk/addresses",
-          body = LookupRequest(postcode = "FX114HG", filter = None),
+          body = LookupRequest(postcode = Postcode("FX11 4HG"), filter = None),
           headers = Headers()).withHeadersOrigin
 
         val sp = SearchParameters(request.body)
@@ -334,7 +334,7 @@ class AddressSearchControllerTest extends AnyWordSpec with ScalaFutures with Moc
         val request = FakeRequest(
           method = "POST",
           uri = "http://localhost:9000/v2/uk/addresses",
-          body = LookupRequest(postcode = "fx114hg"),
+          body = LookupRequest(postcode = Postcode("FX11 4HG")),
           headers = Headers()).withHeadersOrigin
 
         val sp = SearchParameters(request.body)
