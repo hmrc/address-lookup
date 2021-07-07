@@ -25,9 +25,11 @@ import play.api.libs.json.Json
 import play.api.libs.ws.WSClient
 import play.api.test.Helpers._
 import address.model.AddressRecord
+import org.scalatest.matchers.must.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 
 class OutcodeLookupSuiteV2()
-  extends WordSpec with GuiceOneServerPerSuite with MustMatchers with AppServerTestApi {
+  extends AnyWordSpec with GuiceOneServerPerSuite with Matchers with AppServerTestApi {
 
   import FixturesV2._
   override val appEndpoint: String = s"http://localhost:$port"
