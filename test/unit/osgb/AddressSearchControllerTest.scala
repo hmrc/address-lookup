@@ -24,7 +24,7 @@ import org.mockito.Mockito._
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.mockito.MockitoSugar
-import osgb.inmodel.LookupRequest
+import osgb.inmodel.LookupByPostcodeRequest
 import osgb.outmodel.Marshall
 import osgb.services.{ReferenceData, ResponseProcessor}
 import play.api.mvc.{AnyContentAsEmpty, Headers}
@@ -274,8 +274,8 @@ class AddressSearchControllerTest extends AnyWordSpec with ScalaFutures with Moc
        and not log any error
       """ in new Context {
         val controller = new AddressSearchController(searcher, new ResponseStub(Nil), ec, cc)
-        val request: FakeRequest[LookupRequest] = FakeRequest[LookupRequest](
-          method = "POST", uri = "http://localhost:9000/v2/uk/addresses", body = LookupRequest(postcode = Postcode("FX11 4HG")),
+        val request: FakeRequest[LookupByPostcodeRequest] = FakeRequest[LookupByPostcodeRequest](
+          method = "POST", uri = "http://localhost:9000/v2/uk/addresses", body = LookupByPostcodeRequest(postcode = Postcode("FX11 4HG")),
           headers = Headers())
 
         val e = intercept[UpstreamErrorResponse] {
@@ -296,10 +296,10 @@ class AddressSearchControllerTest extends AnyWordSpec with ScalaFutures with Moc
       """ in new Context {
         when(searcher.findPostcode(Postcode("FX11 4HG"), Some("FOO"))) thenReturn Future(List(addr1Db))
         val controller = new AddressSearchController(searcher, new ResponseStub(List(addr1Ar)), ec, cc)
-        val request: FakeRequest[LookupRequest] = FakeRequest[LookupRequest](
+        val request: FakeRequest[LookupByPostcodeRequest] = FakeRequest[LookupByPostcodeRequest](
           method = "POST",
           uri = "http://localhost:9000/v2/uk/addresses",
-          body = LookupRequest(postcode = Postcode("FX11 4HG"), filter = Some("FOO")),
+          body = LookupByPostcodeRequest(postcode = Postcode("FX11 4HG"), filter = Some("FOO")),
           headers = Headers()).withHeadersOrigin
 
         val sp = SearchParameters(request.body)
@@ -314,10 +314,10 @@ class AddressSearchControllerTest extends AnyWordSpec with ScalaFutures with Moc
       """ in new Context {
         when(searcher.findPostcode(Postcode("FX11 4HG"), None)) thenReturn Future(List(addr1Db))
         val controller = new AddressSearchController(searcher, new ResponseStub(List(addr1Ar)), ec, cc)
-        val request: FakeRequest[LookupRequest] = FakeRequest[LookupRequest](
+        val request: FakeRequest[LookupByPostcodeRequest] = FakeRequest[LookupByPostcodeRequest](
           method = "POST",
           uri = "http://localhost:9000/v2/uk/addresses",
-          body = LookupRequest(postcode = Postcode("FX11 4HG"), filter = None),
+          body = LookupByPostcodeRequest(postcode = Postcode("FX11 4HG"), filter = None),
           headers = Headers()).withHeadersOrigin
 
         val sp = SearchParameters(request.body)
@@ -334,7 +334,7 @@ class AddressSearchControllerTest extends AnyWordSpec with ScalaFutures with Moc
         val request = FakeRequest(
           method = "POST",
           uri = "http://localhost:9000/v2/uk/addresses",
-          body = LookupRequest(postcode = Postcode("FX11 4HG")),
+          body = LookupByPostcodeRequest(postcode = Postcode("FX11 4HG")),
           headers = Headers()).withHeadersOrigin
 
         val sp = SearchParameters(request.body)

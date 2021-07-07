@@ -19,7 +19,8 @@ package it.suites
 import address.model.AddressRecord
 import it.helper.AppServerTestApi
 import it.tools.Utils.headerOrigin
-import org.scalatest.{MustMatchers, WordSpec}
+import org.scalatest.matchers.must.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import osgb.outmodel.AddressReadable._
 import play.api.libs.json.{JsArray, Json}
@@ -27,9 +28,7 @@ import play.api.libs.ws.WSClient
 import play.api.test.Helpers._
 
 class LookupPostSuite()
-  extends WordSpec with GuiceOneServerPerSuite with MustMatchers with AppServerTestApi {
-
-  import FixturesV2._
+  extends AnyWordSpec with GuiceOneServerPerSuite with Matchers with AppServerTestApi {
 
   private val largePostcodeExampleSize = 2517
   override val appEndpoint: String = s"http://localhost:$port"

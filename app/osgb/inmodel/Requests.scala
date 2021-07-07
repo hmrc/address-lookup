@@ -22,9 +22,9 @@ import play.api.libs.json.Reads._
 import play.api.libs.json._
 
 
-case class LookupRequest(postcode: Postcode, filter: Option[String] = None)
+case class LookupByPostcodeRequest(postcode: Postcode, filter: Option[String] = None)
 
-object LookupRequest {
+object LookupByPostcodeRequest {
   implicit val postcodeReads: Reads[Postcode] = Reads[Postcode] { json =>
     json.validate[String] match {
       case e: JsError => e
@@ -36,17 +36,14 @@ object LookupRequest {
     }
   }
 
-  implicit val reads: Reads[LookupRequest] = (
+  implicit val reads: Reads[LookupByPostcodeRequest] = (
     (JsPath \ "postcode").read[Postcode] and
       (JsPath \ "filter").readNullable[String]
     ) (
-    (pc, fo) => LookupRequest.apply(pc, fo))
+    (pc, fo) => LookupByPostcodeRequest.apply(pc, fo))
 }
 
-case class LookupPostcode(postcode: String)
-
-object LookupPostcode {
-  implicit val formats: Format[LookupPostcode] = Json.format[LookupPostcode]
+case class LookupByUprnRequest(uprn: String)
+object LookupByUprnRequest {
+  implicit val reads: Reads[LookupByUprnRequest] = Json.reads[LookupByUprnRequest]
 }
-
-

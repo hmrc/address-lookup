@@ -22,53 +22,56 @@ import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import osgb.outmodel.AddressReadable._
-import play.api.libs.json.Json
+import play.api.libs.json.{JsArray, Json}
 import play.api.libs.ws.WSClient
 import play.api.test.Helpers._
 
-// Please keep IdLookupSuiteV1 and IdLookupSuiteV2 as similar as appropriate.
+// Please keep UprnLookupSuiteV2 and UprnLookupSuiteV2 as similar as appropriate.
 
-class IdLookupSuiteV2()
+class UprnLookupPostSuite()
   extends AnyWordSpec with GuiceOneServerPerSuite with Matchers with AppServerTestApi {
 
   import FixturesV2._
   override val appEndpoint: String = s"http://localhost:$port"
   override val wsClient: WSClient = app.injector.instanceOf[WSClient]
 
-  "id lookup" when {
+  "uprn lookup" when {
 
     "successful" must {
 
-      "give a successful response for a known id - uk route" in {
-        val response = get("/v2/uk/addresses/GB22222")
+      "give a successful response for a known uprn - uk route" in {
+        val response = post("/lookup/uprn", """{"uprn": "11111"}""")
         assert(response.status === OK, dump(response))
         val body = response.body
         val json = Json.parse(body)
-        val address1 = Json.fromJson[AddressRecord](json).get
-        assert(address1 === fx1_6jn_a_terse, body)
+        val arr = json.asInstanceOf[JsArray].value
+        assert(arr.size === 1, body)
+        val address1 = Json.fromJson[AddressRecord](arr.head).get
+        assert(address1 === fx9_9py_terse, body)
       }
 
       "set the content type to application/json" in {
-        val response = get("/v2/uk/addresses/GB11111")
+        val response = post("/lookup/uprn", """{"uprn":"9999999999"}""")
         val contentType = response.header("Content-Type").get
         assert(contentType.startsWith("application/json"), dump(response))
       }
 
       "set the cache-control header and include a positive max-age ignore it" ignore {
-        val response = get("/v2/uk/addresses/GB0001")
+        val response = post("/lookup/uprn", """{"uprn":"9999999999"}""")
         val h = response.header("Cache-Control")
         assert(h.nonEmpty && h.get.contains("max-age="), dump(response))
       }
 
       "set the etag header" ignore {
-        val response = get("/v2/uk/addresses/GB0001")
+        val response = post("/lookup/uprn", """{"uprn":"9999999999"}""")
         val h = response.header("ETag")
         assert(h.nonEmpty === true, dump(response))
       }
 
-      "give a 404 response for an unknown id" in {
-        val response = get("/v2/uk/addresses/X0")
-        assert(response.status === NOT_FOUND, dump(response))
+      "give a successful response with an empty array for an unknown uprn" in {
+        val response = post("/lookup/uprn", """{"uprn":"0"}""")
+        assert(response.status === OK, dump(response))
+        assert(response.body === "[]", dump(response))
       }
     }
 
@@ -76,8 +79,18 @@ class IdLookupSuiteV2()
     "client error" must {
 
       "give a bad request when the origin header is absent" in {
-        val path = "/v2/uk/addresses/GB0001"
-        val response = await(wsClient.url(appEndpoint + path).withMethod("GET").execute())
+        val path = "/lookup/uprn"
+        val response = await(wsClient.url(appEndpoint + path).withMethod("POST").withBody("""{"uprn":"9999999999"}""").execute())
+        assert(response.status === BAD_REQUEST, dump(response))
+      }
+
+      "give a bad request when the uprn parameter is absent" in {
+        val response = post("/lookup/uprn", "{}")
+        assert(response.status === BAD_REQUEST, dump(response))
+      }
+
+      "give a bad request when the payload is missing" in {
+        val response = post("/lookup/uprn", "")
         assert(response.status === BAD_REQUEST, dump(response))
       }
     }

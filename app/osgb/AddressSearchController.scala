@@ -17,10 +17,10 @@
 package osgb
 
 import address.model.AddressRecord
-import osgb.inmodel.LookupRequest
+import osgb.inmodel.{LookupByPostcodeRequest, LookupByUprnRequest}
 import osgb.outmodel.Marshall
 import osgb.services._
-import play.api.libs.json.{JsError, JsResultException, JsSuccess, JsValue, Json}
+import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
 import play.api.mvc._
 
 import javax.inject.Inject
@@ -37,12 +37,27 @@ class AddressSearchController @Inject()(addressSearch: AddressSearcher, response
 
   def search(): Action[String] = Action.async(parse.tolerantText) {
     request =>
-      Json.parse(request.body).validate[LookupRequest] match {
+      Json.parse(request.body).validate[LookupByPostcodeRequest] match {
         case JsSuccess(lookupRequest, _) =>
           val sp = SearchParameters(lookupRequest).clean
           processSearch(request, sp, Marshall.marshallV2List)
         case JsError(errors) =>
           Future.successful(BadRequest(JsError.toJson(errors)))
+      }
+  }
+
+  def searchByUprn(): Action[String] = Action.async(parse.tolerantText) {
+    request =>
+      val maybeJson = Try(Json.parse(request.body))
+      maybeJson match {
+        case Success(json) => json.validate[LookupByUprnRequest] match {
+          case JsSuccess(lookupByUprnRequest, _) =>
+            val sp = SearchParameters.fromLookupByUprnRequest(lookupByUprnRequest).clean
+            processSearch(request, sp, Marshall.marshallV2List)
+          case JsError(errors) =>
+            Future.successful(BadRequest(JsError.toJson(errors)))
+        }
+        case Failure(exception) => Future.successful(BadRequest("""{"obj":[{"msg":["error.payload.missing"],"args":[]}]}"""))
       }
   }
 
