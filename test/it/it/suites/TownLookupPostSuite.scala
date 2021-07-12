@@ -76,6 +76,33 @@ class TownLookupPostSuite()
         address1.postcode mustBe "FX4 7AJ"
       }
 
+      "give a successful filtered response for a known v.large town - uk route" in {
+        val payload =
+          """{
+            |  "town": "ATown",
+            |  "filter": "10"
+            |}""".stripMargin
+
+        val response = post("/lookup/by-town", payload)
+        assert(response.status === OK, dump(response))
+        val json = Json.parse(response.body)
+        val arr = json.asInstanceOf[JsArray].value
+        println(s""">>> arr.toString: ${arr.toString}""")
+        arr.size mustBe 2
+        val address1 = Json.fromJson[AddressRecord](arr.head).get.address
+        address1.line1 mustBe "10 Bankside"
+        address1.line2 mustBe ""
+        address1.line3 mustBe ""
+        address1.town mustBe "ATown"
+        address1.postcode mustBe "FX4 7AJ"
+        val address2 = Json.fromJson[AddressRecord](arr.tail.head).get.address
+        address2.line1 mustBe "Flat 10"
+        address2.line2 mustBe "A Apartments"
+        address2.line3 mustBe "ARoad"
+        address2.town mustBe "ATown"
+        address2.postcode mustBe "FX4 7AL"
+      }
+
       "set the content type to application/json" in {
         val payload =
         """{

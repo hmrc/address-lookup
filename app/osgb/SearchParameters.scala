@@ -86,7 +86,7 @@ object SearchParameters {
   }
 
   def fromLookupByTownRequest(lookupByTownRequest: LookupByTownRequest): SearchParameters = {
-    new SearchParameters(town = Some(lookupByTownRequest.town))
+    new SearchParameters(town = Some(lookupByTownRequest.town), filter = lookupByTownRequest.filter)
   }
 
   def apply(lookupRequest: LookupByPostcodeRequest): SearchParameters = {
