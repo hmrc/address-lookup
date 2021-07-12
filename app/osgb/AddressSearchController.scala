@@ -38,9 +38,10 @@ class AddressSearchController @Inject()(addressSearch: AddressSearcher, response
   def search(): Action[String] = Action.async(parse.tolerantText) {
     request =>
       Json.parse(request.body).validate[LookupByPostcodeRequest] match {
-        case JsSuccess(lookupRequest, _) =>
-          val sp = SearchParameters(lookupRequest).clean
-          processSearch(request, sp, Marshall.marshallV2List)
+        case JsSuccess(lookupByPostcodeRequest, _) =>
+          val origin = getOriginHeaderIfSatisfactory(request.headers)
+          val sp = SearchParameters(lookupByPostcodeRequest).clean
+          searchByPostcode(request, sp, origin, Marshall.marshallV2List)
         case JsError(errors) =>
           Future.successful(BadRequest(JsError.toJson(errors)))
       }
