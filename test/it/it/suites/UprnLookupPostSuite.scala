@@ -40,7 +40,7 @@ class UprnLookupPostSuite()
     "successful" must {
 
       "give a successful response for a known uprn - uk route" in {
-        val response = post("/lookup/uprn", """{"uprn": "11111"}""")
+        val response = post("/lookup/by-uprn", """{"uprn": "11111"}""")
         assert(response.status === OK, dump(response))
         val body = response.body
         val json = Json.parse(body)
@@ -51,25 +51,25 @@ class UprnLookupPostSuite()
       }
 
       "set the content type to application/json" in {
-        val response = post("/lookup/uprn", """{"uprn":"9999999999"}""")
+        val response = post("/lookup/by-uprn", """{"uprn":"9999999999"}""")
         val contentType = response.header("Content-Type").get
         assert(contentType.startsWith("application/json"), dump(response))
       }
 
       "set the cache-control header and include a positive max-age ignore it" ignore {
-        val response = post("/lookup/uprn", """{"uprn":"9999999999"}""")
+        val response = post("/lookup/by-uprn", """{"uprn":"9999999999"}""")
         val h = response.header("Cache-Control")
         assert(h.nonEmpty && h.get.contains("max-age="), dump(response))
       }
 
       "set the etag header" ignore {
-        val response = post("/lookup/uprn", """{"uprn":"9999999999"}""")
+        val response = post("/lookup/by-uprn", """{"uprn":"9999999999"}""")
         val h = response.header("ETag")
         assert(h.nonEmpty === true, dump(response))
       }
 
       "give a successful response with an empty array for an unknown uprn" in {
-        val response = post("/lookup/uprn", """{"uprn":"0"}""")
+        val response = post("/lookup/by-uprn", """{"uprn":"0"}""")
         assert(response.status === OK, dump(response))
         assert(response.body === "[]", dump(response))
       }
@@ -79,18 +79,18 @@ class UprnLookupPostSuite()
     "client error" must {
 
       "give a bad request when the origin header is absent" in {
-        val path = "/lookup/uprn"
+        val path = "/lookup/by-uprn"
         val response = await(wsClient.url(appEndpoint + path).withMethod("POST").withBody("""{"uprn":"9999999999"}""").execute())
         assert(response.status === BAD_REQUEST, dump(response))
       }
 
       "give a bad request when the uprn parameter is absent" in {
-        val response = post("/lookup/uprn", "{}")
+        val response = post("/lookup/by-uprn", "{}")
         assert(response.status === BAD_REQUEST, dump(response))
       }
 
       "give a bad request when the payload is missing" in {
-        val response = post("/lookup/uprn", "")
+        val response = post("/lookup/by-uprn", "")
         assert(response.status === BAD_REQUEST, dump(response))
       }
     }

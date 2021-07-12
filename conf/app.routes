@@ -13,7 +13,7 @@ GET         /v2/uk/addresses            osgb.AddressSearchController.searchWithG
 
 GET         /lookup                     osgb.AddressSearchController.searchWithGet()
 POST        /lookup                     osgb.AddressSearchController.search()
-POST        /lookup/uprn                osgb.AddressSearchController.searchByUprn()
+POST        /lookup/by-uprn             osgb.AddressSearchController.searchByUprn()
 
 # ----- OSGB AddressBase lookup-by-ID search service -----
 GET         /v2/uk/addresses/:id        osgb.AddressLookupIdController.findById(id)

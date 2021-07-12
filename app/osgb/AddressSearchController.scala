@@ -52,8 +52,8 @@ class AddressSearchController @Inject()(addressSearch: AddressSearcher, response
       maybeJson match {
         case Success(json) => json.validate[LookupByUprnRequest] match {
           case JsSuccess(lookupByUprnRequest, _) =>
-            val sp = SearchParameters.fromLookupByUprnRequest(lookupByUprnRequest).clean
-            processSearch(request, sp, Marshall.marshallV2List)
+            val origin = getOriginHeaderIfSatisfactory(request.headers)
+            searchByUprn(request, lookupByUprnRequest.uprn, origin, Marshall.marshallV2List)
           case JsError(errors) =>
             Future.successful(BadRequest(JsError.toJson(errors)))
         }
