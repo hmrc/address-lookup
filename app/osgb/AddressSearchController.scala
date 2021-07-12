@@ -17,7 +17,7 @@
 package osgb
 
 import address.model.AddressRecord
-import osgb.inmodel.{LookupByPostcodeRequest, LookupByUprnRequest}
+import osgb.inmodel.{LookupByPostcodeRequest, LookupByTownRequest, LookupByUprnRequest}
 import osgb.outmodel.Marshall
 import osgb.services._
 import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
@@ -55,6 +55,22 @@ class AddressSearchController @Inject()(addressSearch: AddressSearcher, response
             val origin = getOriginHeaderIfSatisfactory(request.headers)
             searchByUprn(request, lookupByUprnRequest.uprn, origin, Marshall.marshallV2List)
           case JsError(errors) =>
+            Future.successful(BadRequest(JsError.toJson(errors)))
+        }
+        case Failure(exception) => Future.successful(BadRequest("""{"obj":[{"msg":["error.payload.missing"],"args":[]}]}"""))
+      }
+  }
+
+  def searchByTown(): Action[String] = Action.async(parse.tolerantText) {
+    request =>
+      val maybeJson = Try(Json.parse(request.body))
+      maybeJson match {
+        case Success(json) => json.validate[LookupByTownRequest] match {
+          case JsSuccess(lookupByTownRequest, _) =>
+            val sp = SearchParameters.fromLookupByTownRequest(lookupByTownRequest).clean
+            val origin = getOriginHeaderIfSatisfactory(request.headers)
+            searchByTown(request, sp, origin, Marshall.marshallV2List)
+          case JsError(errors)                   =>
             Future.successful(BadRequest(JsError.toJson(errors)))
         }
         case Failure(exception) => Future.successful(BadRequest("""{"obj":[{"msg":["error.payload.missing"],"args":[]}]}"""))
@@ -103,6 +119,26 @@ class AddressSearchController @Inject()(addressSearch: AddressSearcher, response
 
     } else {
       addressSearch.findPostcode(sp.postcode.get, sp.filter).map {
+        a =>
+          val a2 = responseProcessor.convertAddressList(a)
+          logEvent("LOOKUP", origin, a2.size, sp.tupled)
+          Ok(marshall(a2))
+      }
+    }
+  }
+
+  private[osgb] def searchByTown[A](request: Request[A], sp: SearchParameters, origin: String, marshall: List[AddressRecord] => JsValue): Future[Result] = {
+    val unwantedQueryParams = request.queryString.filterKeys(k => k != TOWN && k != FILTER).keys.toSeq
+
+    if (unwantedQueryParams.nonEmpty) Future.successful {
+      val paramList = unwantedQueryParams.mkString(", ")
+      badRequest("BAD-PARAMETER", "origin" -> origin, "town" -> paramFromRequest(request, TOWN), "error" -> s"unexpected query parameter(s): $paramList")
+
+    } else if (sp.town.isEmpty) Future.successful {
+      badRequest("BAD-POSTCODE", "origin" -> origin, "error" -> s"missing or badly-formed $TOWN parameter")
+
+    } else {
+      addressSearch.findTown(sp.town.get, sp.filter).map {
         a =>
           val a2 = responseProcessor.convertAddressList(a)
           logEvent("LOOKUP", origin, a2.size, sp.tupled)

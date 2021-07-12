@@ -47,3 +47,8 @@ case class LookupByUprnRequest(uprn: String)
 object LookupByUprnRequest {
   implicit val reads: Reads[LookupByUprnRequest] = Json.reads[LookupByUprnRequest]
 }
+
+case class LookupByTownRequest(town: String)
+object LookupByTownRequest {
+  implicit val reads: Reads[LookupByTownRequest] = Json.reads[LookupByTownRequest]
+}

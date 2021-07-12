@@ -71,6 +71,9 @@ class InMemoryAddressLookupRepository @Inject()(env: Environment, ec: ExecutionC
   override def findPostcode(postcode: Postcode, filter: Option[String]): Future[List[DbAddress]] =
     Future.successful(doFilter(dbAddresses.filter(_.postcode == postcode.toString), filter).toList.take(3000))
 
+  override def findTown(town: String, filter: Option[String]): Future[List[DbAddress]] =
+    Future.successful(doFilter(dbAddresses.filter(_.town == town.toString), filter).toList.take(3000))
+
   override def findOutcode(outcode: Outcode, filter: String): Future[List[DbAddress]] =
     Future.successful(doFilter(dbAddresses.filter(_.postcode.startsWith(outcode.toString)), Some(filter)).toList)
 
