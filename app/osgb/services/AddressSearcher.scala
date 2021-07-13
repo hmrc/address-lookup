@@ -31,6 +31,8 @@ trait AddressSearcher {
 
   def findPostcode(postcode: Postcode, filter: Option[String] = None): Future[List[DbAddress]]
 
+  def findTown(town: String, filter: Option[String] = None): Future[List[DbAddress]]
+
   def findOutcode(outcode: Outcode, filter: String): Future[List[DbAddress]]
 
   def searchFuzzy(sp: SearchParameters): Future[List[DbAddress]]

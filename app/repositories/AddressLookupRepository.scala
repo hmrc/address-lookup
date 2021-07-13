@@ -55,6 +55,17 @@ class AddressLookupRepository @Inject()(transactor: Transactor[IO], queryConfig:
       .map(l => l.map(mapToDbAddress))
   }
 
+  override def findTown(town: String, filter: Option[String]): Future[List[DbAddress]] = {
+    val queryFragment = baseQuery ++ sql""" WHERE town = $town"""
+    val queryFragmentWithFilter =
+      filterOptToTsQueryOpt(filter).foldLeft(queryFragment) { case (a, f) =>
+        a ++ sql" AND " ++ f
+      }
+
+    queryFragmentWithFilter.query[SqlDbAddress].to[List].transact(transactor).unsafeToFuture()
+      .map(l => l.map(mapToDbAddress))
+  }
+
   override def findOutcode(outcode: Outcode, filter: String): Future[List[DbAddress]] = {
     val queryFragment =
       baseQuery ++ sql""" WHERE postcode like ${outcode.toString + "%"} AND """ ++ filterToTsQuery(filter)
@@ -156,4 +167,3 @@ case class SqlDbAddress(uprn: String,
                         postcode: Option[String],
                         poboxnumber: Option[String],
                         localauthority: Option[String])
-

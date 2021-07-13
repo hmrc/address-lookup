@@ -17,7 +17,7 @@
 package osgb
 
 import address.uk.{Outcode, Postcode}
-import osgb.inmodel.{LookupByPostcodeRequest, LookupByUprnRequest}
+import osgb.inmodel.{LookupByPostcodeRequest, LookupByTownRequest, LookupByUprnRequest}
 
 case class SearchParameters(
                                uprn: Option[String] = None,
@@ -83,6 +83,10 @@ object SearchParameters {
 
   def fromLookupByUprnRequest(lookupByUprnRequest: LookupByUprnRequest): SearchParameters = {
     new SearchParameters(uprn = Some(lookupByUprnRequest.uprn))
+  }
+
+  def fromLookupByTownRequest(lookupByTownRequest: LookupByTownRequest): SearchParameters = {
+    new SearchParameters(town = Some(lookupByTownRequest.town), filter = lookupByTownRequest.filter)
   }
 
   def apply(lookupRequest: LookupByPostcodeRequest): SearchParameters = {
