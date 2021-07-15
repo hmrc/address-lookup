@@ -56,7 +56,7 @@ class AddressLookupRepository @Inject()(transactor: Transactor[IO], queryConfig:
   }
 
   override def findTown(town: String, filter: Option[String]): Future[List[DbAddress]] = {
-    val queryFragment = baseQuery ++ sql""" WHERE town = $town"""
+    val queryFragment = baseQuery ++ sql""" WHERE posttown = ${town.toUpperCase}"""
     val queryFragmentWithFilter =
       filterOptToTsQueryOpt(filter).foldLeft(queryFragment) { case (a, f) =>
         a ++ sql" AND " ++ f
