@@ -41,29 +41,29 @@ class TownLookupPostSuite()
 
       "give a successful response for a known town - uk route" in {
         val payload =
-          """{"town": "some-town"}""".stripMargin
+          """{"posttown": "some-town"}""".stripMargin
 
-        val response = post("/lookup/by-town", payload)
+        val response = post("/lookup/by-post-town", payload)
         assert(response.status === OK, dump(response))
       }
 
       "give a successful response for a known town - old style 'X-Origin'" in {
         val payload =
           """{
-            |  "town": "some-town"
+            |  "posttown": "some-town"
             |}""".stripMargin
 
-        val response = request("POST", "/lookup/by-town", payload, headerOrigin -> "xxx")
+        val response = request("POST", "/lookup/by-post-town", payload, headerOrigin -> "xxx")
         assert(response.status === OK, dump(response))
       }
 
       "give a successful response for a known v.large town - uk route" in {
         val payload =
           """{
-            |  "town": "ATown"
+            |  "posttown": "ATown"
             |}""".stripMargin
 
-        val response = post("/lookup/by-town", payload)
+        val response = post("/lookup/by-post-town", payload)
         assert(response.status === OK, dump(response))
         val json = Json.parse(response.body)
         val arr = json.asInstanceOf[JsArray].value
@@ -79,11 +79,11 @@ class TownLookupPostSuite()
       "give a successful filtered response for a known v.large town - uk route" in {
         val payload =
           """{
-            |  "town": "ATown",
+            |  "posttown": "ATown",
             |  "filter": "10"
             |}""".stripMargin
 
-        val response = post("/lookup/by-town", payload)
+        val response = post("/lookup/by-post-town", payload)
         assert(response.status === OK, dump(response))
         val json = Json.parse(response.body)
         val arr = json.asInstanceOf[JsArray].value
@@ -106,10 +106,10 @@ class TownLookupPostSuite()
       "set the content type to application/json" in {
         val payload =
         """{
-          |  "town": "some-town"
+          |  "posttown": "some-town"
           |}""".stripMargin
 
-        val response = post("/lookup/by-town", payload)
+        val response = post("/lookup/by-post-town", payload)
         val contentType = response.header("Content-Type").get
         assert(contentType.startsWith("application/json"), dump(response))
       }
@@ -117,20 +117,20 @@ class TownLookupPostSuite()
       "set the cache-control header and include a positive max-age in it" ignore {
         val payload =
           """{
-            |  "town": "some-town"
+            |  "posttown": "some-town"
             |}""".stripMargin
 
-        val response = post("/lookup/by-town", payload)
+        val response = post("/lookup/by-post-town", payload)
         val h = response.header("Cache-Control")
         assert(h.nonEmpty && h.get.contains("max-age="), dump(response))
       }
 
       "set the etag header" ignore {val payload =
         """{
-          |  "town": "some-town"
+          |  "posttown": "some-town"
           |}""".stripMargin
 
-        val response = post("/lookup/by-town", payload)
+        val response = post("/lookup/by-post-town", payload)
         val h = response.header("ETag")
         assert(h.nonEmpty === true, dump(response))
       }
@@ -138,20 +138,20 @@ class TownLookupPostSuite()
       "give a successful response for an unknown town" in {
         val payload =
           """{
-            |  "town": "unknown-town"
+            |  "posttown": "unknown-town"
             |}""".stripMargin
 
-        val response = post("/lookup/by-town", payload)
+        val response = post("/lookup/by-post-town", payload)
         assert(response.status === OK, dump(response))
       }
 
       "give an empty array for an unknown town" in {
         val payload =
           """{
-            |  "town": "unknown-town"
+            |  "posttown": "unknown-town"
             |}""".stripMargin
 
-        val response = post("/lookup/by-town", payload)
+        val response = post("/lookup/by-post-town", payload)
         assert(response.body === "[]", dump(response))
       }
     }
@@ -161,10 +161,10 @@ class TownLookupPostSuite()
       "give a bad request when the origin header is absent" in {
         val payload =
           """{
-            |  "town": "some-town"
+            |  "posttown": "some-town"
             |}""".stripMargin
 
-        val path = "/lookup/by-town"
+        val path = "/lookup/by-post-town"
         val response = await(wsClient.url(appEndpoint + path)
           .withMethod("POST")
           .withHttpHeaders("content-type" -> "application/json")
@@ -174,20 +174,20 @@ class TownLookupPostSuite()
       }
 
       "give a bad request when the town parameter is absent" in {
-        val response = post("/lookup/by-town", "{}")
+        val response = post("/lookup/by-post-town", "{}")
         assert(response.status === BAD_REQUEST, dump(response))
-        assert(response.body == """{"obj.town":[{"msg":["error.path.missing"],"args":[]}]}""")
+        assert(response.body == """{"obj.posttown":[{"msg":["error.path.missing"],"args":[]}]}""")
       }
 
       "give a bad request when the town parameter is of the wrong type" in {
         val payload =
           """{
-            |  "town": 1234
+            |  "posttown": 1234
             |}""".stripMargin
 
-        val response = post("/lookup/by-town", payload)
+        val response = post("/lookup/by-post-town", payload)
         assert(response.status === BAD_REQUEST, dump(response))
-        assert(response.body == """{"obj.town":[{"msg":["error.expected.jsstring"],"args":[]}]}""")
+        assert(response.body == """{"obj.posttown":[{"msg":["error.expected.jsstring"],"args":[]}]}""")
       }
 
       "give a bad request when an unexpected parameter is sent on its own" in {
@@ -196,19 +196,19 @@ class TownLookupPostSuite()
             |  "foo": "some-town"
             |}""".stripMargin
 
-        val response = post("/lookup/by-town", payload)
+        val response = post("/lookup/by-post-town", payload)
         assert(response.status === BAD_REQUEST, dump(response))
-        assert(response.body == """{"obj.town":[{"msg":["error.path.missing"],"args":[]}]}""")
+        assert(response.body == """{"obj.posttown":[{"msg":["error.path.missing"],"args":[]}]}""")
       }
 
       "not give a bad request when an unexpected parameter is sent" in {
         val payload =
           """{
-            |  "town": "some-town",
+            |  "posttown": "some-town",
             |  "foo": "bar"
             |}""".stripMargin
 
-        val response = post("/lookup/by-town", payload)
+        val response = post("/lookup/by-post-town", payload)
         assert(response.status === OK, dump(response))
       }
 

@@ -17,7 +17,7 @@
 package osgb
 
 import address.model.AddressRecord
-import osgb.inmodel.{LookupByPostcodeRequest, LookupByTownRequest, LookupByUprnRequest}
+import osgb.inmodel.{LookupByPostcodeRequest, LookupByPostTownRequest, LookupByUprnRequest}
 import osgb.outmodel.Marshall
 import osgb.services._
 import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
@@ -62,11 +62,11 @@ class AddressSearchController @Inject()(addressSearch: AddressSearcher, response
       }
   }
 
-  def searchByTown(): Action[String] = Action.async(parse.tolerantText) {
+  def searchByPostTown(): Action[String] = Action.async(parse.tolerantText) {
     request =>
       val maybeJson = Try(Json.parse(request.body))
       maybeJson match {
-        case Success(json) => json.validate[LookupByTownRequest] match {
+        case Success(json) => json.validate[LookupByPostTownRequest] match {
           case JsSuccess(lookupByTownRequest, _) =>
             val sp = SearchParameters.fromLookupByTownRequest(lookupByTownRequest).clean
             val origin = getOriginHeaderIfSatisfactory(request.headers)
