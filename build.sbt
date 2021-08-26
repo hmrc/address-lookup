@@ -14,7 +14,7 @@ lazy val root = Project("address-lookup", file("."))
     targetJvm := "jvm-1.8",
     libraryDependencies ++= AppDependencies(),
     parallelExecution in Test := false,
-    fork in Test := false,
+    fork in Test := true,
     retrieveManaged := true
   )
   .configs(Test)
