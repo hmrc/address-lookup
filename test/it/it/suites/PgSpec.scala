@@ -17,39 +17,67 @@
 package it.suites
 
 import cats.effect._
-import com.dimafeng.testcontainers.{ForAllTestContainer, PostgreSQLContainer}
 import doobie._
 import doobie.implicits._
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpec
-import org.testcontainers.utility.DockerImageName
+import doobie.util.fragment.Fragment.{const => csql}
 
-import scala.concurrent.ExecutionContext
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.io.Source
 
 
-class PgSpec extends AnyWordSpec with Matchers with ForAllTestContainer {
-  implicit val cs: ContextShift[IO] = IO.contextShift(implicitly[ExecutionContext])
+class PgSpec extends DbBaseSpec {
+  implicit val cs: ContextShift[IO] = IO.contextShift(global)
+  implicit val timer: Timer[IO] = IO.timer(global)
 
-  override val container: PostgreSQLContainer = PostgreSQLContainer(
-    dockerImageNameOverride = DockerImageName.parse("postgres:10-alpine"),
-    databaseName = "addressbasepremium",
-    username = "root",
-    password = "Passw0rd123"
+  override val schemaName = "abp20210827T101010"
+  override val sqlFiles: List[String] = List(
+    "create_db_status_table.sql",
+    "create_db_schema.sql",
+    "create_db_schema_indexes.sql",
+    "create_db_lookup_view_and_indexes.sql",
+    "create_db_invoke_create_view_function.sql"
   )
+
+  override def createTransactor(): IO[Transactor[IO]] = {
+    val ptx = Transactor.fromDriverManager[IO](
+      driver = "org.postgresql.Driver",
+      url = container.jdbcUrl,
+      user = container.username,
+      pass = container.password
+    )
+
+    IO(ptx)
+  }
+
+  override def createTestData(t: Transactor[IO]): IO[Transactor[IO]] = {
+    val sqlMap = loadSqlFiles
+
+    (for {
+      _ <- csql(sqlMap("create_db_schema.sql")).update.run
+      _ <- csql(sqlMap("create_db_status_table.sql")).update.run
+      _ <- csql(sqlMap("create_db_schema_indexes.sql")).update.run
+      _ <- csql(sqlMap("create_db_lookup_view_and_indexes.sql")).update.run
+      x <- csql(sqlMap("create_db_invoke_create_view_function.sql")).update.run
+    } yield (x)).transact(t).unsafeRunSync()
+
+    IO(t)
+  }
+
+  override def loadTestData(t: Transactor[IO]): IO[Transactor[IO]] = {
+    // Load some test data here
+    IO(t)
+  }
 
   "PG Test" when {
     "connect" should {
-      "get conection" in {
-        val t = Transactor.fromDriverManager[IO](
-          "org.postgresql.Driver",
-          container.jdbcUrl,
-          container.username,
-          container.password
-        )
+      "be able to select current date time" in {
+        val now = sql"select now()".query[String].unique.transact(tx).unsafeRunSync()
+        now should fullyMatch regex """\p{Digit}{4}-\p{Digit}{2}-\p{Digit}{2} \p{Digit}{2}:\p{Digit}{2}:\p{Digit}{2}\..*"""
+      }
 
-        val now = sql"select now()".query[String].unique.transact(t).unsafeRunSync()
-        now should not be empty
+      "select from lookup view" in {
+        val rows = csql(s"select record_identifier from ${schemaName}.abp_classification").query[Int].to[List].transact(tx).unsafeRunSync()
+        rows shouldBe empty
       }
     }
   }
