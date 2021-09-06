@@ -1,0 +1,32 @@
+{
+  "definitions": {},
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://example.com/object1614266033.json",
+  "title": "Root",
+  "type": "object",
+  "required": [
+    "postcode"
+  ],
+  "properties": {
+    "postcode": {
+      "$id": "#root/postcode",
+      "title": "Postcode",
+      "description": "Full postcode to search for, all uppercase. The internal space may be omitted",
+      "type": "string",
+      "examples": [
+        "AA1 1ZZ",
+        "BB00 0BB"
+      ]
+    },
+    "filter": {
+      "$id": "#root/filter",
+      "title": "Filter",
+      "description": "Refine the search results further based on house number or street name",
+      "type": "string",
+      "examples": [
+        "The Rectory",
+        "1 High Street"
+      ]
+    }
+  }
+}

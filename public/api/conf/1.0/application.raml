@@ -24,7 +24,7 @@ uses:
 
 /misc/address-verification/lookup:
   get:
-    displayName: Lookup address
+    displayName: Lookup address (deprecated)
     description: |
       Lookup of postal and BFPO (British Forces Post Office) address details within the UK
     is: [headers.acceptHeader]
@@ -40,6 +40,22 @@ uses:
         type: string
         required: false
         example: 36+Test+Street
+    responses:
+      200:
+        body:
+          application/json:
+            type: !include docs/uk-address-object.json
+            example: !include docs/example-response.json
+  post:
+    displayName: Lookup address
+    description: |
+      Lookup of postal and BFPO (British Forces Post Office) address details within the UK
+    is: [headers.acceptHeader]
+    securedBy: [ sec.x-application ]
+    body:
+      application/json:
+          type: !include docs/post-request.json
+          example: !include docs/example-post-request.json
     responses:
       200:
         body:
