@@ -17,6 +17,7 @@
 package it.suites
 
 import address.model.AddressRecord
+import com.codahale.metrics.SharedMetricRegistries
 import it.helper.AppServerTestApi
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -28,6 +29,8 @@ import play.api.test.Helpers._
 
 class FuzzySearchSuiteV2()
   extends AnyWordSpec with GuiceOneServerPerSuite with Matchers with AppServerTestApi {
+
+  SharedMetricRegistries.clear()
 
   override val appEndpoint: String = s"http://localhost:$port"
   override val wsClient: WSClient = app.injector.instanceOf[WSClient]
@@ -49,7 +52,6 @@ class FuzzySearchSuiteV2()
       "give sorted results when multiple addresses are returned" in {
         val body = get("/v2/uk/addresses?fuzzy=bankside").body
         val json = Json.parse(body)
-        val seq = Json.fromJson[Seq[AddressRecord]](json).get
         val arr = json.asInstanceOf[JsArray].value
         arr.size mustBe 3000
         // TODO this sort order indicates a numbering problem with result sorting (see TXMNT-64)
@@ -62,7 +64,6 @@ class FuzzySearchSuiteV2()
       "filter results" in {
         val body = get("/v2/uk/addresses?fuzzy=bankside&filter=100").body
         val json = Json.parse(body)
-        val seq = Json.fromJson[Seq[AddressRecord]](json).get
         val arr = json.asInstanceOf[JsArray].value
         arr.size mustBe 1
         // TODO this sort order indicates a numbering problem with result sorting (see TXMNT-64)

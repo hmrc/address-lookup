@@ -14,15 +14,14 @@
  * limitations under the License.
  */
 
-import cats.effect.IO
 import com.google.inject.{AbstractModule, Provides}
 import com.kenshoo.play.metrics.Metrics
 import config.ConfigHelper
-import doobie.Transactor
 import osgb.services._
 import play.api.inject.ApplicationLifecycle
 import play.api.{Configuration, Environment}
 import repositories.{AddressLookupRepository, InMemoryAddressLookupRepository, RdsQueryConfig, TransactorProvider}
+import services.AddressLookupService
 
 import javax.inject.Singleton
 import scala.concurrent.ExecutionContext
@@ -44,16 +43,6 @@ class Module(environment: Environment, configuration: Configuration) extends Abs
 
   @Provides
   @Singleton
-  def provideTransactorOptional(configHelper: ConfigHelper, configuration: Configuration,
-                                applicationLifecycle: ApplicationLifecycle,
-                                executionContext: ExecutionContext): Option[Transactor[IO]] = {
-    if (isDbEnabled(configHelper))
-      Some(new TransactorProvider(configuration, applicationLifecycle).get(executionContext))
-    else None
-  }
-
-  @Provides
-  @Singleton
   def provideAddressSearcher(metrics: Metrics, configuration: Configuration,
                              configHelper: ConfigHelper, rdsQueryConfig: RdsQueryConfig, executionContext: ExecutionContext, applicationLifecycle: ApplicationLifecycle): AddressSearcher = {
     val dbEnabled = isDbEnabled(configHelper)
@@ -65,7 +54,7 @@ class Module(environment: Environment, configuration: Configuration) extends Abs
       new InMemoryAddressLookupRepository(environment, executionContext)
     }
 
-    new AddressSearcherMetrics(searcher, metrics.defaultRegistry, executionContext)
+    new AddressSearcherMetrics(new AddressLookupService(searcher), metrics.defaultRegistry, executionContext)
   }
 
   private def isDbEnabled(configHelper: ConfigHelper): Boolean =

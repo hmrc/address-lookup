@@ -16,10 +16,9 @@
 
 package osgb
 
+import address.model._
 import address.osgb.DbAddress
 import address.uk.{Outcode, Postcode}
-import address.model._
-import com.fasterxml.jackson.databind.ObjectMapper
 import org.mockito.Mockito._
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.wordspec.AnyWordSpec
@@ -27,7 +26,7 @@ import org.scalatestplus.mockito.MockitoSugar
 import osgb.inmodel.LookupByPostcodeRequest
 import osgb.outmodel.Marshall
 import osgb.services.{ReferenceData, ResponseProcessor}
-import play.api.mvc.{AnyContentAsEmpty, Headers}
+import play.api.mvc.Headers
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import repositories.AddressLookupRepository
@@ -42,9 +41,6 @@ class AddressSearchControllerTest extends AnyWordSpec with ScalaFutures with Moc
   val cc = play.api.test.Helpers.stubControllerComponents()
 
   private val en = "en"
-  private val InUse = Some("In_Use")
-  private val Approved = Some("Approved")
-  private val AllVehicles = Some("All_Vehicles")
 
   import Countries._
 

@@ -19,14 +19,13 @@ package it.suites
 import it.helper.AppServerTestApi
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import org.scalatest.{MustMatchers, WordSpec}
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.libs.ws.WSClient
 
 class MetricsSuiteV2()
   extends AnyWordSpec with GuiceOneServerPerSuite with Matchers with AppServerTestApi {
 
-  private val className = "InMemoryAddressLookupRepository"
+  private val className = "AddressLookupService"
   override val appEndpoint: String = s"http://localhost:$port"
   override val wsClient: WSClient = app.injector.instanceOf[WSClient]
 

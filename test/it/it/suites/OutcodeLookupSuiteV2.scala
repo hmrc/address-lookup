@@ -16,20 +16,22 @@
 
 package it.suites
 
+import address.model.AddressRecord
+import com.codahale.metrics.SharedMetricRegistries
 import it.helper.AppServerTestApi
 import it.tools.Utils.headerOrigin
-import org.scalatest.{MustMatchers, WordSpec}
+import org.scalatest.matchers.must.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import osgb.outmodel.AddressReadable._
 import play.api.libs.json.Json
 import play.api.libs.ws.WSClient
 import play.api.test.Helpers._
-import address.model.AddressRecord
-import org.scalatest.matchers.must.Matchers
-import org.scalatest.wordspec.AnyWordSpec
 
 class OutcodeLookupSuiteV2()
   extends AnyWordSpec with GuiceOneServerPerSuite with Matchers with AppServerTestApi {
+
+  SharedMetricRegistries.clear()
 
   import FixturesV2._
   override val appEndpoint: String = s"http://localhost:$port"

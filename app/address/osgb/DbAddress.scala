@@ -18,14 +18,12 @@ package address.osgb
 
 import address.uk.Postcode
 
-import java.lang.{Integer => JInteger, Short => JShort}
-import java.util
 import scala.annotation.tailrec
 
 trait Document {
   def tupled: List[(String, Any)]
 
-  final def toMap = tupled.toMap
+  final def toMap: Map[String, Any] = tupled.toMap
 
   def normalise: Document
 }
@@ -59,11 +57,11 @@ case class DbAddress(
     lines.map(_.toUpperCase).exists(_.contains(filter))
   }
 
-  def line1 = if (lines.nonEmpty) lines.head else ""
+  def line1: String = if (lines.nonEmpty) lines.head else ""
 
-  def line2 = if (lines.size > 1) lines(1) else ""
+  def line2: String = if (lines.size > 1) lines(1) else ""
 
-  def line3 = if (lines.size > 2) lines(2) else ""
+  def line3: String = if (lines.size > 2) lines(2) else ""
 
   def latLong: Option[LatLong] = LatLong(location)
 
@@ -108,39 +106,16 @@ case class DbAddress(
 
   def forMongoDb: List[(String, Any)] = tupled ++ List("_id" -> id)
 
-  def splitPostcode = Postcode(postcode)
+  def splitPostcode: Postcode = Postcode(postcode)
 
-  def normalise = this
+  def normalise: DbAddress = this
 }
 
 
 object DbAddress {
 
-  import scala.collection.JavaConverters._
-
   final val English = "en"
   final val Cymraeg = "cy"
-
-  private def toInteger(v: Any): Int =
-    v match {
-      case i: Int => i
-      case o: JInteger => o.toInt
-      case s: JShort => s.toInt
-      case _ => v.toString.toInt
-    }
-
-  private def toFloat(v: Any): Float =
-    v match {
-      case f: Float => f
-      case _ => v.toString.toFloat
-    }
-
-  private def convertLines(lines: AnyRef): List[String] = {
-    lines match {
-      case jl: util.List[_] => (List() ++ jl.asScala).map(_.toString)
-      case sl: List[_] => sl.map(_.toString)
-    }
-  }
 
   @tailrec
   private[osgb] def trimLeadingLetters(id: String): String = {

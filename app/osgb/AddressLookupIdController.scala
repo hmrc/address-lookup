@@ -19,7 +19,6 @@ package osgb
 import address.model.AddressRecord
 import osgb.outmodel.Marshall
 import osgb.services.{AddressSearcher, ResponseProcessor}
-import play.api.Logger
 import play.api.libs.json.JsValue
 import play.api.mvc._
 
