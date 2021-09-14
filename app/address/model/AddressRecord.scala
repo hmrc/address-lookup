@@ -34,7 +34,8 @@ case class AddressRecord(
                           language: String,
                           localCustodian: Option[LocalCustodian],
                           location: Option[Seq[BigDecimal]],
-                          administrativeArea: Option[String] = None) {
+                          administrativeArea: Option[String] = None,
+                          poBox: Option[String] = None) {
 
   require(location.isEmpty || location.get.size == 2, location.get)
 

@@ -45,7 +45,8 @@ object AddressReadable {
           (JsPath \ "language").read[String] and
           (JsPath \ "localCustodian").readNullable[LocalCustodian] and
           (JsPath \ "location").readNullable[Seq[BigDecimal]] and
-          (JsPath \ "administrativeArea").readNullable[String]
+          (JsPath \ "administrativeArea").readNullable[String] and
+          (JsPath \ "poBox").readNullable[String]
       ) (AddressRecord.apply _)
 
 }
