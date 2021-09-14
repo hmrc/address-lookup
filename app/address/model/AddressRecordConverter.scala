@@ -37,7 +37,7 @@ object AddressRecordConverter {
 
     val a = new Address(d.lines, d.town, d.postcode, optSubdivision, country)
 
-    new AddressRecord(d.id, Some(d.uprn), a, language, optLC, location, d.administrativeArea)
+    AddressRecord(d.id, Some(d.uprn), a, language, optLC, location, d.administrativeArea, d.poBox)
   }
 
   final val English = "en"

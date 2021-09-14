@@ -43,7 +43,8 @@ object AddressWriteable {
           (JsPath \ "language").write[String] and
           (JsPath \ "localCustodian").writeNullable[LocalCustodian] and
           (JsPath \ "location").writeNullable[Seq[BigDecimal]] and
-          (JsPath \ "administrativeArea").writeNullable[String]
+          (JsPath \ "administrativeArea").writeNullable[String] and
+          (JsPath \ "poBox").writeNullable[String]
       ) (unlift(AddressRecord.unapply))
 
 }

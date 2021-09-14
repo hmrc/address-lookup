@@ -64,6 +64,15 @@ class PostcodeLookupSuiteV2 ()
         address1.postcode mustBe "FX4 7AL"
       }
 
+      "give a successful response for a po box postcode" in {
+        val response = get("/v2/uk/addresses?postcode=PO11PO")
+        assert(response.status === OK, dump(response))
+        val json = Json.parse(response.body)
+        val arr = json.asInstanceOf[JsArray].value
+        val address1 = Json.fromJson[AddressRecord](arr.head).get
+        address1.poBox mustBe Some("1234")
+      }
+
       "set the content type to application/json" in {
         val response = get("/v2/uk/addresses?postcode=FX1+9PY")
         val contentType = response.header("Content-Type").get

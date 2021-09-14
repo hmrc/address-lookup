@@ -73,9 +73,16 @@ class ResponseProcessorTest extends AnyFunSuite {
   val dbNI2: DbAddress = DbAddress("GB10008", List("wxyz1", "wxyz2", "wxyz3"), "ATown", "FX11 4HG",
     Some("GB-NIR"), Some("UK"), Some(8132), Some("en"), None, Some(locNI2.toString))
 
-  val expNI1M: AddressRecord = AddressRecord("GB10007", Some(10007L), Address(List("Line1", "Line2", "Line3"), "ATown", "FX11 4HG", Some(NorthernIreland), UK), en, lc8132, Some(locNI1.toSeq))
+  val expNI1M: AddressRecord = AddressRecord("GB10007", Some(10007L), Address(List("Line1", "Line2", "Line3"),
+    "ATown", "FX11 4HG", Some(NorthernIreland), UK), en, lc8132, Some(locNI1.toSeq))
 
-  val expNI2M: AddressRecord = AddressRecord("GB10008", Some(10008L), Address(List("wxyz1", "wxyz2", "wxyz3"), "ATown", "FX11 4HG", Some(NorthernIreland), UK), en, lc8132, Some(locNI2.toSeq))
+  val expNI2M: AddressRecord = AddressRecord("GB10008", Some(10008L), Address(List("wxyz1", "wxyz2", "wxyz3"),
+    "ATown", "FX11 4HG", Some(NorthernIreland), UK), en, lc8132, Some(locNI2.toSeq))
+
+  val dbPoBox: DbAddress = DbAddress("GB10008", List("PO BOX 1234", "", ""), "", "PO1 1PO",
+    Some("GB-NIR"), Some("UK"), Some(8132), Some("en"), None, Some(locNI2.toString), Some("1234"))
+  val expPoBox: AddressRecord = AddressRecord("GB10008", Some(10008L), Address(List("PO BOX 1234", "", ""),
+    "", "PO1 1PO", Some(NorthernIreland), UK), en, lc8132, Some(locNI2.toSeq), None, Some("1234"))
 
   val refData: ReferenceData = ReferenceData.load("sample_local_custodian_table.csv")
 
@@ -86,7 +93,8 @@ class ResponseProcessorTest extends AnyFunSuite {
        and include the metadata
     """) {
     val rp = new ResponseProcessor(refData)
-    for (de <- List(dbGB1 -> expGB1M, dbGB2 -> expGB2M, dbGB10 -> expGB10M, dbGB11 -> expGB11M, dbGBZ -> expGBZM, dbNI1 -> expNI1M, dbNI2 -> expNI2M)) {
+    for (de <- List(dbGB1 -> expGB1M, dbGB2 -> expGB2M, dbGB10 -> expGB10M, dbGB11 -> expGB11M, dbGBZ -> expGBZM,
+      dbNI1 -> expNI1M, dbNI2 -> expNI2M, dbPoBox -> expPoBox)) {
       val in = List(de._1)
       val exp = List(de._2)
       val adr = rp.convertAddressList(in)
