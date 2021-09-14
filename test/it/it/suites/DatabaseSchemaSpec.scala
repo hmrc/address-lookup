@@ -37,8 +37,8 @@ class DatabaseSchemaSpec extends DbBaseSpec {
 
   "Address Lookup Repository" when {
     "configured" should {
-        // Configure guice to create use the created transactor
-        lazy val lookup = new AddressLookupRepository(tx, RdsQueryConfig(10000, 100))
+      // Configure guice to create use the created transactor
+      lazy val lookup = new AddressLookupRepository(tx, RdsQueryConfig(10000, 100))
 
       "retrieve the correct number of non-pobox addresses" in {
         val poBoxAddressCount = csql(s"""select count(*) from  ${schemaName}.address_lookup where poboxnumber is null""").query[Int].unique.transact(tx).unsafeRunSync()
@@ -52,7 +52,7 @@ class DatabaseSchemaSpec extends DbBaseSpec {
 
       "retrieve records correctly from database" in {
         val result = Await.result(lookup.findPostcode(Postcode("JE2 6PZ")), 10.seconds)
-        result should have length(1)
+        result should have length (1)
         val address = result.head
         address.poBox shouldBe None
         address.administrativeArea shouldBe Some("JERSEY")
@@ -69,7 +69,7 @@ class DatabaseSchemaSpec extends DbBaseSpec {
 
       "retrieve pobox record correctly" in {
         val result = Await.result(lookup.findPostcode(Postcode("JE2 6QB")), 10.seconds)
-        result should have length(1)
+        result should have length (1)
         val address = result.head
         address.poBox shouldBe Some("1234")
         address.administrativeArea shouldBe Some("JERSEY")

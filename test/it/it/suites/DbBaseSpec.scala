@@ -29,10 +29,6 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import org.testcontainers.utility.DockerImageName
-import play.api
-import play.api.Application
-import play.api.inject.bind
-import play.api.inject.guice.GuiceApplicationBuilder
 
 import java.io.File
 import java.nio.file.{Files, StandardOpenOption}
@@ -62,13 +58,6 @@ trait DbBaseSpec extends AnyWordSpec with Matchers with BeforeAndAfterAll with F
       pass = container.password
     )
 
-//    val ptx = Transactor.fromDriverManager[IO](
-//      driver = "org.postgresql.Driver",
-//      url = "jdbc:postgresql://localhost:5433/addressbasepremium",
-//      user = "root",
-//      pass = "password"
-//    )
-
     IO(ptx)
   }
 
@@ -80,15 +69,11 @@ trait DbBaseSpec extends AnyWordSpec with Matchers with BeforeAndAfterAll with F
       _ =  println(s""">>> Created schemaName: ${schemaName}""")
       _ <- csql(sqlMap("createDbSchemaUrl")).update.run
       _ =  println(s""">>> Created schema objects""")
-      _ <- csql("""CREATE TABLE IF NOT EXISTS public.address_lookup_status (
-                   | schema_name VARCHAR(64) NOT NULL PRIMARY KEY,
-                   | status      VARCHAR(32) NOT NULL,
-                   | error_message VARCHAR NULL,
-                   | timestamp   TIMESTAMP NOT NULL);""".stripMargin).update.run
+      _ <- csql(sqlMap("createDbAddressStatusTableUrl")).update.run
       _ =  println(s""">>> Created public.address_lookup_status table""")
       _ <- csql(sqlMap("createDbSchemaIndexesUrl")).update.run
       _ =  println(s""">>> Created schema indexes""")
-      x <- csql(sqlMap("createDbLookupViewAndIndexesUrl")).update.run
+      x <- csql(sqlMap("createDbLookupViewAndIndexesFunctionUrl")).update.run
       _ =  println(s""">>> Created lookup view and indexes function""")
     } yield x).transact(t)
 
@@ -122,49 +107,39 @@ trait DbBaseSpec extends AnyWordSpec with Matchers with BeforeAndAfterAll with F
   protected lazy val tx: Transactor[IO] = {
     for {
       ptx <- createTransactor()
-      _ <- createTestData(ptx)
-      _ <- loadTestData(ptx)
+      _   <- createTestData(ptx)
+      _   <- loadTestData(ptx)
     } yield ptx
   }.unsafeRunSync()
 
-  private val sqlFiles: List[String] = List(
-    "create_db_schema.sql",
-    "create_db_status_table.sql",
-    "create_db_schema_indexes.sql",
-    "create_db_lookup_view_and_indexes.sql",
-    "create_db_invoke_create_view_function.sql"
-  )
   private val scriptFileUrls = {
     val scriptRootUrl = "https://raw.githubusercontent.com/hmrc/address-lookup-ingest-lambda-function/master/src/main/resources/"
     Map(
-      "createDbSchemaUrl" -> s"${scriptRootUrl}create_db_schema.sql",
-      "createDbSchemaIndexesUrl" -> s"${scriptRootUrl}create_db_schema_indexes.sql",
-      "createDbLookupViewAndIndexesUrl" -> s"${scriptRootUrl}create_db_lookup_view_and_indexes.sql"
+      "createDbSchemaUrl"               -> s"${scriptRootUrl}create_db_schema.sql",
+      "createDbSchemaIndexesUrl"        -> s"${scriptRootUrl}create_db_schema_indexes.sql",
+      "createDbLookupViewAndIndexesFunctionUrl" -> s"${scriptRootUrl}create_db_lookup_view_and_indexes_function.sql",
+      "createDbInvokeLookupViewFunctionUrl" -> s"${scriptRootUrl}create_db_invoke_lookup_view_function.sql",
+      "createDbAddressStatusTableUrl"   -> s"${scriptRootUrl}create_db_address_status_table.sql",
+      "createDbDropSchemaUrl"           -> s"${scriptRootUrl}create_db_drop_schema.sql",
+      "createDbSchemasToDropUrl"        -> s"${scriptRootUrl}create_db_schemas_to_drop.sql",
+      "createDbSwitchPublicViewUrl"     -> s"${scriptRootUrl}create_db_switch_public_view.sql"
     )
   }
 
   private val loadSqlFiles: Map[String, String] = {
     for {
-      config <- IO.pure(scriptFileUrls)
+      config      <- IO.pure(scriptFileUrls)
       createsOnly <- IO.pure(config.filter(_._1.startsWith("create")))
-      creates <- IO.pure(createsOnly.map { case (k, v) => k -> Resource.make(IO(Source.fromURL(v)))(s => IO(s.close())) })
+      creates     <- IO.pure(createsOnly.map { case (k, v) => k -> Resource.make(IO(Source.fromURL(v)))(s => IO(s.close())) })
     } yield creates.map {
       case (k, v) =>
-        k -> v.use(s => {
-          val sqlStr = s.mkString.replaceAll("__schema__", schemaName)
-//          println(s""">>> ${k} -> ${sqlStr}""")
-          IO.pure(sqlStr)
-        }).unsafeRunSync()
+        k -> v.use {
+          s =>
+            val sqlStr = s.mkString.replaceAll("__schema__", schemaName)
+            IO.pure(sqlStr)
+        }.unsafeRunSync()
     }
   }.unsafeRunSync()
-
-  private def _loadSqlFiles: Map[String, String] = {
-    sqlFiles.map(f => f -> (if (!f.startsWith("/")) s"/$f" else f))
-            .map { case (f, fcp) => f -> Resource.make(IO(Source.fromURL(classOf[DbBaseSpec].getResource(fcp))))(s => IO(s.close())) }
-            .map { case (f, fr) => f -> fr.use(fs => IO(fs.mkString.replaceAll("__schema__", schemaName))) }
-            .map { case (f, fr) => f -> fr.unsafeRunSync() }
-            .toMap
-  }
 
   private val recordToFileNames = Map(
     "abp_blpu" -> "ID21_BLPU_Records.csv",
