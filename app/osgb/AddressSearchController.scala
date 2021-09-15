@@ -78,7 +78,7 @@ class AddressSearchController @Inject()(addressSearch: AddressSearcher, response
       }
   }
 
-  @deprecated
+  @deprecated("Please use Post endpoint", "4.87.0")
   def searchWithGet(): Action[AnyContent] = Action.async {
     request =>
       val sp = SearchParameters.fromQueryParameters(request.queryString).clean

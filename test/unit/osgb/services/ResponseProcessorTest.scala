@@ -25,10 +25,6 @@ class ResponseProcessorTest extends AnyFunSuite {
   import Countries._
 
   private val en = "en"
-  private val TyneAndWear = Some("Tyne & Wear")
-  private val InUse = Some("In_Use")
-  private val Approved = Some("Approved")
-  private val AllVehicles = Some("All_Vehicles")
 
   private val lc4510 = Some(LocalCustodian(4510, "Newcastle upon Tyne"))
   private val lc8132 = Some(LocalCustodian(8132, "Belfast"))

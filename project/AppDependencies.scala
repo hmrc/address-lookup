@@ -14,7 +14,7 @@ object AppDependencies {
   val compile = Seq(
     ws,
     "uk.gov.hmrc"                   %% "bootstrap-backend-play-28"  % "5.6.0",
-    "com.univocity"                 %  "univocity-parsers"          % "1.5.6",
+    "com.univocity"                 %  "univocity-parsers"          % "2.9.1",
     "com.fasterxml.jackson.core"    %  "jackson-core"               % jacksonVersion,
     "com.fasterxml.jackson.core"    %  "jackson-databind"           % jacksonVersion,
     "com.fasterxml.jackson.core"    %  "jackson-annotations"        % jacksonVersion,
@@ -28,16 +28,17 @@ object AppDependencies {
   )
 
   val test = Seq(
-      "org.scalatest"           %% "scalatest"                    % scalaTestVersion    % "test, it",
-      "com.vladsch.flexmark"    %  "flexmark-all"                 % "0.36.8"            % "test, it",
-      "org.pegdown"             %  "pegdown"                      % pegdownVersion      % "test, it",
-      "com.typesafe.play"       %% "play-test"                    % PlayVersion.current % "test, it",
-      "org.scalatestplus.play"  %% "scalatestplus-play"           % "5.1.0"             % "test, it",
-      "org.scalatestplus"       %% "mockito-3-4"                  % "3.1.4.0"           % "test, it",
-      "org.jsoup"               %  "jsoup"                        % "1.7.3"             % "test, it",
-      "org.tpolecat"            %% "doobie-scalatest"             % doobieVersion       % "test, it"
+      "org.scalatest"           %% "scalatest"                        % scalaTestVersion    % "test, it",
+      "com.vladsch.flexmark"    %  "flexmark-all"                     % "0.36.8"            % "test, it",
+      "org.pegdown"             %  "pegdown"                          % pegdownVersion      % "test, it",
+      "com.typesafe.play"       %% "play-test"                        % PlayVersion.current % "test, it",
+      "org.scalatestplus.play"  %% "scalatestplus-play"               % "5.1.0"             % "test, it",
+      "org.scalatestplus"       %% "mockito-3-4"                      % "3.1.4.0"           % "test, it",
+      "org.jsoup"               %  "jsoup"                            % "1.7.3"             % "test, it",
+      "org.tpolecat"            %% "doobie-scalatest"                 % doobieVersion       % "test, it",
+      "com.dimafeng"            %% "testcontainers-scala-scalatest"   % "0.39.7"            % "test, it",
+      "com.dimafeng"            %% "testcontainers-scala-postgresql"  % "0.39.7"            % "test, it"
     )
 
   def apply(): Seq[ModuleID] = compile ++ test
 }
-

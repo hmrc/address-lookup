@@ -32,13 +32,9 @@ object FixturesV2 {
   private val lc915 = Some(LocalCustodian(915, "Carlisle"))
 
   private val en = "en"
-  private val InUse = Some("In_Use")
-  private val Approved = Some("Approved")
-  private val AllVehicles = Some("All_Vehicles")
 
 
   private val TownName1 = "Newcastle upon Tyne"
-  private val CountyName1 = Some("Tyne & Wear")
   private val Postcode1 = "FX1 6JN"
 
   val location1: Location = Location("12.345678", "-12.345678")

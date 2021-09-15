@@ -37,13 +37,8 @@ class AddressLookupIdControllerTest extends AnyWordSpec with ScalaFutures with M
   implicit val ec = scala.concurrent.ExecutionContext.Implicits.global
 
   private val lc4510 = Some(LocalCustodian(4510, "Custodian1"))
-  private val lc9999 = Some(LocalCustodian(9999, "Somewhere"))
-  private val lc2935 = Some(LocalCustodian(2935, "Custodian3"))
 
   private val en = "en"
-  private val InUse = Some("In_Use")
-  private val Approved = Some("Approved")
-  private val AllVehicles = Some("All_Vehicles")
 
   import Countries._
 

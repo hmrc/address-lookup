@@ -17,14 +17,23 @@
 package services
 
 import address.osgb.DbAddress
-import address.uk.Postcode
-import repositories.AddressLookupRepository
+import address.uk.{Outcode, Postcode}
+import osgb.SearchParameters
+import osgb.services.AddressSearcher
 
 import javax.inject.Inject
 import scala.concurrent.Future
 
-class AddressLookupService @Inject()(addressLookupRepository: AddressLookupRepository) {
-  def lookupPostcode(postcode: String): Future[List[DbAddress]] = {
-    addressLookupRepository.findPostcode(Postcode(postcode))
-  }
+class AddressLookupService @Inject()(addressSearcher: AddressSearcher) extends AddressSearcher {
+  override def findID(id: String): Future[Option[DbAddress]] = addressSearcher.findID(id)
+
+  override def findUprn(uprn: String): Future[List[DbAddress]] = addressSearcher.findUprn(uprn)
+
+  override def findPostcode(postcode: Postcode, filter: Option[String]): Future[List[DbAddress]] = addressSearcher.findPostcode(postcode)
+
+  override def findTown(town: String, filter: Option[String]): Future[List[DbAddress]] = addressSearcher.findTown(town, filter)
+
+  override def findOutcode(outcode: Outcode, filter: String): Future[List[DbAddress]] = addressSearcher.findOutcode(outcode, filter)
+
+  override def searchFuzzy(sp: SearchParameters): Future[List[DbAddress]] = addressSearcher.searchFuzzy(sp)
 }

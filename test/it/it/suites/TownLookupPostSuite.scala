@@ -17,6 +17,7 @@
 package it.suites
 
 import address.model.AddressRecord
+import com.codahale.metrics.SharedMetricRegistries
 import it.helper.AppServerTestApi
 import it.tools.Utils.headerOrigin
 import org.scalatest.matchers.must.Matchers
@@ -29,6 +30,8 @@ import play.api.test.Helpers._
 
 class TownLookupPostSuite()
   extends AnyWordSpec with GuiceOneServerPerSuite with Matchers with AppServerTestApi {
+
+  SharedMetricRegistries.clear()
 
   import FixturesV2._
 

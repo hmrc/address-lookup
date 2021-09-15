@@ -18,7 +18,6 @@ package osgb
 
 import address.uk.Postcode
 import osgb.services.{AddressSearcher, ResponseProcessor}
-import play.api.Logger
 import play.api.libs.json._
 import play.api.mvc._
 
@@ -39,11 +38,9 @@ class PostcodesController @Inject()(addressSearch: AddressSearcher, responseProc
 
   import PostcodeResponseReadWrite._
 
-  private val logger = Logger(this.getClass.getSimpleName)
-
   implicit private val xec = ec
 
-  @deprecated
+  @deprecated("Please use Post endpoint", "4.87.0")
   def lookupWithGet(postcode: String): Action[AnyContent] = Action.async {
     (request: Request[AnyContent]) =>
       val origin = getOriginHeaderIfSatisfactory(request.headers)
