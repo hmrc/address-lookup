@@ -19,12 +19,14 @@ package it.suites
 import address.uk.Postcode
 import doobie.implicits._
 import doobie.Fragment.{const => csql}
+import org.scalatest.Ignore
 import repositories.{AddressLookupRepository, RdsQueryConfig}
 
 import scala.concurrent.Await
 import scala.concurrent.duration.DurationInt
 
 
+@Ignore
 class DatabaseSchemaSpec extends DbBaseSpec {
   "PG Test" when {
     "connect" should {
