@@ -60,7 +60,7 @@ class InMemoryAddressLookupRepository @Inject()(env: Environment, ec: ExecutionC
 
 
   private def dbsToFilterText(dbAddress: DbAddress): Set[String] =
-    (dbAddress.lines.mkString(" ") + " " + dbAddress.town).replaceAll("[\\p{Space},]+", " ").split(" ").map(_.toLowerCase).toSet
+    (dbAddress.lines.mkString(" ") + " " + dbAddress.town + " " + dbAddress.administrativeArea.getOrElse("") + " " + dbAddress.poBox.getOrElse("")).replaceAll("[\\p{Space},]+", " ").split(" ").map(_.toLowerCase).toSet
 
   override def findID(id: String): Future[Option[DbAddress]] =
     Future.successful(dbAddresses.find(_.id == id))
