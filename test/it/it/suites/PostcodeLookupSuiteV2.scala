@@ -114,6 +114,16 @@ class PostcodeLookupSuiteV2 ()
         seq mustBe Seq(fx1_6jn_a_terse, fx1_6jn_b_terse)
       }
 
+      "give single result when a filter is used" in {
+        val body = get("/v2/uk/addresses?postcode=FX1+6JN&filter=House").body
+        body must startWith("[{")
+        body must endWith("}]")
+        val json = Json.parse(body)
+        val seq = Json.fromJson[Seq[AddressRecord]](json).get
+        seq.size mustBe 1
+        seq mustBe Seq(fx1_6jn_b_terse)
+      }
+
       "give sorted results when many addresses are returned" in {
         val body = get("/v2/uk/addresses?postcode=FX1+1PG").body
         body must startWith("[{")

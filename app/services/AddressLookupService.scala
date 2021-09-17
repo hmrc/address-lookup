@@ -29,7 +29,7 @@ class AddressLookupService @Inject()(addressSearcher: AddressSearcher) extends A
 
   override def findUprn(uprn: String): Future[List[DbAddress]] = addressSearcher.findUprn(uprn)
 
-  override def findPostcode(postcode: Postcode, filter: Option[String]): Future[List[DbAddress]] = addressSearcher.findPostcode(postcode)
+  override def findPostcode(postcode: Postcode, filter: Option[String]): Future[List[DbAddress]] = addressSearcher.findPostcode(postcode, filter)
 
   override def findTown(town: String, filter: Option[String]): Future[List[DbAddress]] = addressSearcher.findTown(town, filter)
 
