@@ -90,6 +90,7 @@ object Capitalisation {
     "i'anson" -> "I'Anson") // DL3 0RL
 
   private val acronymSpecialCases = Map(
-    "bfpo" -> "BFPO")
+    "bfpo" -> "BFPO",
+    "po" -> "PO")
 
 }
