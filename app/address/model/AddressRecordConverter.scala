@@ -29,7 +29,7 @@ object AddressRecordConverter {
 
     val optSubdivision = d.subdivision.flatMap(code => Countries.find(code))
 
-    val country = if (d.country.isDefined) Countries.find(d.country.get).getOrElse(Countries.UK) else Countries.UK
+    val country = if (d.country.isDefined) Countries.find(d.country.get).getOrElse(Countries.GB) else Countries.GB
 
     val language = d.language.getOrElse(English)
 
