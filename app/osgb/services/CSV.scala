@@ -38,7 +38,7 @@ object CSV {
       val subdivision = if (line.length > 6) blankToOption(trim(line(6))) else None
       val lcc = if (line.length > 7) blankToOption(trim(line(7))).map(_.toInt) else None
       val poBox = if (line.length > 8) blankToOption(trim(line(8))) else None
-      DbAddress(prefixedId(uprn), lines, line4, postcode, subdivision, Some("UK"), lcc, Some("en"), None, None, poBox)
+      DbAddress(prefixedId(uprn), lines, line4, postcode, subdivision, Some("GB"), lcc, Some("en"), None, None, poBox)
     }
   }
 

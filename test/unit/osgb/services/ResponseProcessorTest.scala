@@ -37,17 +37,17 @@ class ResponseProcessorTest extends AnyFunSuite {
   val locZ: Location = Location("12.345678", "-12.345678")
 
   val dbGB1: DbAddress = DbAddress("GB10001", List("1 Line", "Line2", "Line3"), "ATown", "FX11 4HG",
-    Some("GB-ENG"), Some("UK"), Some(4510), Some("en"), None, Some(loc1.toString))
+    Some("GB-ENG"), Some("GB"), Some(4510), Some("en"), None, Some(loc1.toString))
   val dbGB2: DbAddress = DbAddress("GB10002", List("2 Line", "Line2", "Line3"), "ATown", "FX11 4HG",
-    Some("GB-ENG"), Some("UK"), Some(4510), Some("en"), None, Some(loc2.toString))
+    Some("GB-ENG"), Some("GB"), Some(4510), Some("en"), None, Some(loc2.toString))
   val dbGB3: DbAddress = DbAddress("GB10003", List("3 Line", "Line2", "Line3"), "ATown", "FX11 4HG",
-    Some("GB-ENG"), Some("UK"), Some(4510), Some("en"), None, Some(loc3.toString))
+    Some("GB-ENG"), Some("GB"), Some(4510), Some("en"), None, Some(loc3.toString))
   val dbGB10: DbAddress = DbAddress("GB10004", List("10 Line", "Line2", "Line3"), "ATown", "FX11 4HG",
-    Some("GB-ENG"), Some("UK"), Some(4510), Some("en"), None, Some(loc10.toString))
+    Some("GB-ENG"), Some("GB"), Some(4510), Some("en"), None, Some(loc10.toString))
   val dbGB11: DbAddress = DbAddress("GB10005", List("11 Line", "Line2", "Line3"), "ATown", "FX11 4HG",
-    Some("GB-ENG"), Some("UK"), Some(4510), Some("en"), None, Some(loc11.toString))
+    Some("GB-ENG"), Some("GB"), Some(4510), Some("en"), None, Some(loc11.toString))
   val dbGBZ: DbAddress = DbAddress("GB10006", List("wxyz1", "wxyz2", "wxyz3"), "ATown", "FX11 4HG",
-    Some("GB-ENG"), Some("UK"), Some(4510), Some("en"), None, Some(locZ.toString))
+    Some("GB-ENG"), Some("GB"), Some(4510), Some("en"), None, Some(locZ.toString))
 
   val expGB1M: AddressRecord = AddressRecord("GB10001", Some(10001L), Address(List("1 Line", "Line2", "Line3"), "ATown", "FX11 4HG", Some(England), UK), en, lc4510, Some(loc1.toSeq))
 
@@ -65,9 +65,9 @@ class ResponseProcessorTest extends AnyFunSuite {
   val locNI2: Location = Location("12.345678", "-12.345678")
 
   val dbNI1: DbAddress = DbAddress("GB10007", List("Line1", "Line2", "Line3"), "ATown", "FX11 4HG",
-    Some("GB-NIR"), Some("UK"), Some(8132), Some("en"), None, Some(locNI1.toString))
+    Some("GB-NIR"), Some("GB"), Some(8132), Some("en"), None, Some(locNI1.toString))
   val dbNI2: DbAddress = DbAddress("GB10008", List("wxyz1", "wxyz2", "wxyz3"), "ATown", "FX11 4HG",
-    Some("GB-NIR"), Some("UK"), Some(8132), Some("en"), None, Some(locNI2.toString))
+    Some("GB-NIR"), Some("GB"), Some(8132), Some("en"), None, Some(locNI2.toString))
 
   val expNI1M: AddressRecord = AddressRecord("GB10007", Some(10007L), Address(List("Line1", "Line2", "Line3"),
     "ATown", "FX11 4HG", Some(NorthernIreland), UK), en, lc8132, Some(locNI1.toSeq))
@@ -76,7 +76,7 @@ class ResponseProcessorTest extends AnyFunSuite {
     "ATown", "FX11 4HG", Some(NorthernIreland), UK), en, lc8132, Some(locNI2.toSeq))
 
   val dbPoBox: DbAddress = DbAddress("GB10008", List("PO BOX 1234", "", ""), "", "PO1 1PO",
-    Some("GB-NIR"), Some("UK"), Some(8132), Some("en"), None, Some(locNI2.toString), Some("1234"))
+    Some("GB-NIR"), Some("GB"), Some(8132), Some("en"), None, Some(locNI2.toString), Some("1234"))
   val expPoBox: AddressRecord = AddressRecord("GB10008", Some(10008L), Address(List("PO BOX 1234", "", ""),
     "", "PO1 1PO", Some(NorthernIreland), UK), en, lc8132, Some(locNI2.toSeq), None, Some("1234"))
 
@@ -113,7 +113,7 @@ class ResponseProcessorTest extends AnyFunSuite {
       val l1 = if (i < 4) s"$i $c$d Street" else "Flat 1"
       val l2 = if (i < 4) "Uninteresting" else if (i < 8) s"$i $c$d Street" else "Floor 15"
       val l3 = if (i < 8) "District" else s"$i $c$d Street"
-      DbAddress(s"G$c$d$i", List(l1, l2, l3), "Town", "FX1 1ZZ", None, Some("UK"), None, Some("en"), None, None)
+      DbAddress(s"G$c$d$i", List(l1, l2, l3), "Town", "FX1 1ZZ", None, Some("GB"), None, Some("en"), None, None)
     }
 
     val expected = for (i <- 1 to biggest;
