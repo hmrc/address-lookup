@@ -1,0 +1,28 @@
+[
+  {
+    "id": "GB10092834116",
+    "uprn": 10092834116,
+    "address": {
+      "lines": [
+        "Po Box 77766"
+      ],
+      "town": "London",
+      "postcode": "SW16 9NJ",
+      "subdivision": {
+        "code": "GB-ENG",
+        "name": "England"
+      },
+      "country": {
+        "code": "UK",
+        "name": "United Kingdom"
+      }
+    },
+    "language": "en",
+    "location": [
+      51.4309185999999983,
+      -0.13066839999999999
+    ],
+    "administrativeArea": "LAMBETH",
+    "poBox": "77766"
+  }
+]
