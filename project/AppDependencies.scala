@@ -21,7 +21,6 @@ object AppDependencies {
     "com.fasterxml.jackson.module"  %% "jackson-module-scala"       % jacksonVersion,
     "com.github.tototoshi"          %% "scala-csv"                  % "1.3.6",
     "org.tpolecat"                  %% "doobie-core"                % doobieVersion,
-    "org.tpolecat"                  %% "doobie-hikari"              % doobieVersion,
     "org.tpolecat"                  %% "doobie-postgres"            % doobieVersion,
     "org.tpolecat"                  %% "doobie-hikari"              % doobieVersion,
     jdbc
@@ -35,9 +34,6 @@ object AppDependencies {
       "org.scalatestplus.play"  %% "scalatestplus-play"               % "5.1.0"             % "test, it",
       "org.scalatestplus"       %% "mockito-3-4"                      % "3.1.4.0"           % "test, it",
       "org.jsoup"               %  "jsoup"                            % "1.7.3"             % "test, it",
-      "org.tpolecat"            %% "doobie-scalatest"                 % doobieVersion       % "test, it",
-      "com.dimafeng"            %% "testcontainers-scala-scalatest"   % "0.39.7"            % "test, it",
-      "com.dimafeng"            %% "testcontainers-scala-postgresql"  % "0.39.7"            % "test, it"
     )
 
   def apply(): Seq[ModuleID] = compile ++ test
