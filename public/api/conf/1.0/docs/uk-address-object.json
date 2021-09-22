@@ -130,6 +130,13 @@
             "administrativeArea": {
                 "description": "Local council or authority",
                 "type": "string"
+            },
+            "poBox": {
+                "description": "Post Office Box number",
+                "type": "string",
+                "minimum": 0,
+                "minLength": 1,
+                "maxLength": 255
             }
         },
         "additionalProperties": false,
