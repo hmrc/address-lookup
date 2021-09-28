@@ -41,67 +41,7 @@ No upstream services are consumed, so 502 will never be returned.
 In each error case, the body will be a short message intended to assist the developer (not to
 be shown to end users), with `Content-Type: text/plain`.
 
-## 3. UK Address Lookup By ID
-
-This endpoint returns an address by its ID. It will support queries for the same address at different stages
-of its lifecycle, although this is not yet implemented.
-
-URL:
-
- - `{contextPath}/v2/uk/addresses/nnnnnnnnnn`
- - `{contextPath}/v2/gb/addresses/nnnnnnnnnn` (alias for `uk`)
-
-Example URLs:
-
- - `{contextPath}/v2/uk/addresses/GB1234512345`
-
-Methods:
-
- - `GET`
-
-Headers:
-
- - `User-Agent` (required): *string*
-
-   This identifies the origin of the request so that usage patterns can be tracked. The value will be a short
-   string containing some code-name of the originating service, e.g. `yta`. It must not contain '/' to avoid
-   problems with default User-Agent values.
-   It will be used for reporting. All requests from a given origin must carry the same code-name.
-
- - `X-Hmrc-Origin` (alternative): *string*
-
-   The is an alternative to `User-agent`; only one of these is required.
-
- - `Accept-Language` (optional): two-letter ISO639-1 case-insensitive code list
-
-   Example:
-
-     - `Accept-Language: cy, en`
-
-   If no match was made, the default response will be sent, which will typically be English.
-
-   Note that clients of this service that have user-facing UIs may pass the Accept-Language
-   header sent by the user-agent through directly.
-
-Query params:
-
- - (none)
-
-Status codes:
-
- - *200-OK* when the lookup was successful.
- - *404-Not found* when the lookup was unsuccessful.
- - others as in section 1.
-
-Response:
-
- - `Content-Type: application/json`
- - Expiry and cache control headers will be set appropriately.
- - The body will be a _JSON object_ containing *one* [UK Address Object (v2)](uk-address-object.json).
-     [Example response (v2)](example-response.json)
-
-
-## 4. UK Address Search
+## 3. UK Address Search
 
 Two methods are provided for searching for addresses. In both cases, a list of zero or more
 addresses is returned. The response format is a _JSON array_ containing *zero or more*
@@ -109,7 +49,7 @@ addresses is returned. The response format is a _JSON array_ containing *zero or
 
 If an address is a PO Box the response will contain an optional attribute named `poBox`, see the [PO Box example response](example-response-pobox.json).
 
-### 4A. (POST) Lookup by UPRN
+### 3A. (POST) Lookup by UPRN
 
 This is an endpoint that searches for the address(es) of a given UPRN.
 
@@ -173,7 +113,7 @@ Response:
  - The body will be a _JSON array_ containing *zero or more* [UK Address Objects (v2)](uk-address-object.json).
      [Example response (v2)](example-response-multiple.json)
  
-### 4B. (POST) Lookup by Postcode
+### 3B. (POST) Lookup by Postcode
 
 This is an endpoint that searches for addresses at a given postcode.
 
@@ -243,7 +183,7 @@ Response:
  - The body will be a _JSON array_ containing *zero or more* [UK Address Objects (v2)](uk-address-object.json).
      [Example response (v2)](example-response-multiple.json)
  
-### 4C. (POST) Lookup by Outcode
+### 3C. (POST) Lookup by Outcode
 
 This is an endpoint that searches for addresses within a given outcode (the first half of a postcode).
 
@@ -312,7 +252,7 @@ Response:
  - The body will be a _JSON array_ containing *zero or more* [UK Address Objects (v2)](uk-address-object.json).
      [Example response (v2)](example-response-multiple.json)
 
-### 4D. (POST) Arbitrary Address Match
+### 3D. (POST) Arbitrary Address Match
 
 This is a more advanced query endpoint that takes an arbitrary address and searches for the best match or matches.
 The canonical address(es) is returned.
@@ -395,7 +335,7 @@ Response:
 
 
 
-## 5. Liveness Test
+## 4. Liveness Test
 
 URL:
 
@@ -426,7 +366,7 @@ Response:
    build including the Git version number etc.
 
 
-## 6. Other Information
+## 5. Other Information
 
 * Accept-Language header used here is as per [RFC-3066](https://tools.ietf.org/html/rfc3066)
    and [RFC-7231 5.3.5](https://tools.ietf.org/html/rfc7231#section-5.3.5).
