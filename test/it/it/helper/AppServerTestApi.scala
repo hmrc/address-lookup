@@ -17,9 +17,9 @@
 package it.helper
 
 import java.util.concurrent.TimeUnit
-
 import akka.util.ByteString
-import org.scalatest.Assertions
+import com.typesafe.config.ConfigFactory
+import org.scalatest.matchers.should.Matchers
 import play.api.Application
 import play.api.http.Status
 import play.api.libs.ws._
@@ -28,7 +28,10 @@ import play.api.test.Helpers._
 import scala.annotation.tailrec
 import scala.concurrent.duration.Duration
 
-trait AppServerTestApi extends Assertions with Status {
+trait AppServerTestApi extends Matchers with Status {
+  lazy val headerOrigin:String =
+    ConfigFactory.load().getString("header.x-origin")
+
   def appEndpoint: String
 
   def app: Application
@@ -76,9 +79,9 @@ trait AppServerTestApi extends Assertions with Status {
 
   def verify(path: String, expectedStatus: Int, expectedBody: String, expectedContent: String = "text/plain") {
     val step = get(path)
-    assert(step.status === expectedStatus)
-    assert(step.header("Content-Type") === Some(expectedContent))
-    assert(step.body === expectedBody)
+    step.status shouldBe expectedStatus
+    step.header("Content-Type") shouldBe Some(expectedContent)
+    step.body shouldBe expectedBody
   }
 
   @tailrec

@@ -16,70 +16,94 @@
 
 package it.suites
 
-import address.model.AddressRecord
 import com.codahale.metrics.SharedMetricRegistries
 import it.helper.AppServerTestApi
-import it.tools.Utils.headerOrigin
-import org.scalatest.matchers.must.Matchers
+import model.address.AddressRecord
+import org.mockito.ArgumentMatchers.{eq => meq}
+import org.mockito.Mockito.when
 import org.scalatest.wordspec.AnyWordSpec
+import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
-import osgb.outmodel.AddressReadable._
+import play.api.Application
+import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.{JsArray, Json}
 import play.api.libs.ws.WSClient
 import play.api.test.Helpers._
+import play.inject.Bindings
+import repositories.InMemoryAddressLookupRepository.{dbAddresses, doFilter}
+import services.AddressLookupService
+
+import scala.concurrent.Future
 
 class TownLookupPostSuite()
-  extends AnyWordSpec with GuiceOneServerPerSuite with Matchers with AppServerTestApi {
+  extends AnyWordSpec with GuiceOneServerPerSuite with AppServerTestApi {
 
-  SharedMetricRegistries.clear()
-
-  import FixturesV2._
+  val repository: AddressLookupService = mock[AddressLookupService]
+  override def fakeApplication(): Application = {
+    SharedMetricRegistries.clear()
+    new GuiceApplicationBuilder()
+        .overrides(Bindings.bind(classOf[AddressLookupService]).toInstance(repository))
+        .build()
+  }
 
   override val appEndpoint: String = s"http://localhost:$port"
   override val wsClient: WSClient = app.injector.instanceOf[WSClient]
 
   "lookup town POST" when {
+    import AddressRecord.formats._
 
-    "successful" must {
+    "successful" should {
 
       "give a successful response for a known town - uk route" in {
+        when(repository.findTown(meq("some-town"), meq(None))).thenReturn(
+          Future.successful(dbAddresses.filter(_.town == "some-town").toList))
+
         val payload =
           """{"posttown": "some-town"}""".stripMargin
 
         val response = post("/lookup/by-post-town", payload)
-        assert(response.status === OK, dump(response))
+        response.status shouldBe OK
       }
 
       "give a successful response for a known town - old style 'X-Origin'" in {
+        when(repository.findTown(meq("some-town"), meq(None))).thenReturn(
+          Future.successful(dbAddresses.filter(_.town == "some-town").toList))
+
         val payload =
           """{
             |  "posttown": "some-town"
             |}""".stripMargin
 
         val response = request("POST", "/lookup/by-post-town", payload, headerOrigin -> "xxx")
-        assert(response.status === OK, dump(response))
+        response.status shouldBe OK
       }
 
       "give a successful response for a known v.large town - uk route" in {
+        when(repository.findTown(meq("ATown"), meq(None))).thenReturn(
+          Future.successful(dbAddresses.filter(_.town == "ATown").toList))
+
         val payload =
           """{
             |  "posttown": "ATown"
             |}""".stripMargin
 
         val response = post("/lookup/by-post-town", payload)
-        assert(response.status === OK, dump(response))
+        response.status shouldBe OK
         val json = Json.parse(response.body)
         val arr = json.asInstanceOf[JsArray].value
-        arr.size mustBe 3000
+        arr.size shouldBe 3000
         val address1 = Json.fromJson[AddressRecord](arr.head).get.address
-        address1.line1 mustBe "1 Bankside"
-        address1.line2 mustBe ""
-        address1.line3 mustBe ""
-        address1.town mustBe "ATown"
-        address1.postcode mustBe "FX4 7AJ"
+        address1.line1 shouldBe "1 Bankside"
+        address1.line2 shouldBe ""
+        address1.line3 shouldBe ""
+        address1.town shouldBe "ATown"
+        address1.postcode shouldBe "FX4 7AJ"
       }
 
       "give a successful filtered response for a known v.large town - uk route" in {
+        when(repository.findTown(meq("ATown"), meq(None))).thenReturn(
+          Future.successful(doFilter(dbAddresses.filter(_.town == "ATown"), Some("10")).toList))
+
         val payload =
           """{
             |  "posttown": "ATown",
@@ -87,26 +111,29 @@ class TownLookupPostSuite()
             |}""".stripMargin
 
         val response = post("/lookup/by-post-town", payload)
-        assert(response.status === OK, dump(response))
+        response.status shouldBe OK
         val json = Json.parse(response.body)
         val arr = json.asInstanceOf[JsArray].value
         println(s""">>> arr.toString: ${arr.toString}""")
-        arr.size mustBe 2
+        arr.size shouldBe 2
         val address1 = Json.fromJson[AddressRecord](arr.head).get.address
-        address1.line1 mustBe "10 Bankside"
-        address1.line2 mustBe ""
-        address1.line3 mustBe ""
-        address1.town mustBe "ATown"
-        address1.postcode mustBe "FX4 7AJ"
+        address1.line1 shouldBe "10 Bankside"
+        address1.line2 shouldBe ""
+        address1.line3 shouldBe ""
+        address1.town shouldBe "ATown"
+        address1.postcode shouldBe "FX4 7AJ"
         val address2 = Json.fromJson[AddressRecord](arr.tail.head).get.address
-        address2.line1 mustBe "Flat 10"
-        address2.line2 mustBe "A Apartments"
-        address2.line3 mustBe "ARoad"
-        address2.town mustBe "ATown"
-        address2.postcode mustBe "FX4 7AL"
+        address2.line1 shouldBe "Flat 10"
+        address2.line2 shouldBe "A Apartments"
+        address2.line3 shouldBe "ARoad"
+        address2.town shouldBe "ATown"
+        address2.postcode shouldBe "FX4 7AL"
       }
 
       "set the content type to application/json" in {
+        when(repository.findTown(meq("some-town"), meq(None))).thenReturn(
+          Future.successful(dbAddresses.filter(_.town == "some-town").toList))
+
         val payload =
         """{
           |  "posttown": "some-town"
@@ -114,10 +141,13 @@ class TownLookupPostSuite()
 
         val response = post("/lookup/by-post-town", payload)
         val contentType = response.header("Content-Type").get
-        assert(contentType.startsWith("application/json"), dump(response))
+        contentType should startWith ("application/json")
       }
 
       "set the cache-control header and include a positive max-age in it" ignore {
+        when(repository.findTown(meq("some-town"), meq(None))).thenReturn(
+          Future.successful(dbAddresses.filter(_.town == "some-town").toList))
+
         val payload =
           """{
             |  "posttown": "some-town"
@@ -125,43 +155,56 @@ class TownLookupPostSuite()
 
         val response = post("/lookup/by-post-town", payload)
         val h = response.header("Cache-Control")
-        assert(h.nonEmpty && h.get.contains("max-age="), dump(response))
+        h should not be empty
+        h.get should include ("max-age=")
       }
 
-      "set the etag header" ignore {val payload =
-        """{
+      "set the etag header" ignore {
+        when(repository.findTown(meq("some-town"), meq(None))).thenReturn(
+          Future.successful(dbAddresses.filter(_.town == "some-town").toList))
+
+        val payload = """{
           |  "posttown": "some-town"
           |}""".stripMargin
 
         val response = post("/lookup/by-post-town", payload)
         val h = response.header("ETag")
-        assert(h.nonEmpty === true, dump(response))
+        h.nonEmpty shouldBe true
       }
 
       "give a successful response for an unknown town" in {
+        when(repository.findTown(meq("unknown-town"), meq(None))).thenReturn(
+          Future.successful(dbAddresses.filter(_.town == "unknown-town").toList))
+
         val payload =
           """{
             |  "posttown": "unknown-town"
             |}""".stripMargin
 
         val response = post("/lookup/by-post-town", payload)
-        assert(response.status === OK, dump(response))
+        response.status shouldBe OK
       }
 
       "give an empty array for an unknown town" in {
+        when(repository.findTown(meq("unknown-town"), meq(None))).thenReturn(
+          Future.successful(dbAddresses.filter(_.town == "unknown-town").toList))
+
         val payload =
           """{
             |  "posttown": "unknown-town"
             |}""".stripMargin
 
         val response = post("/lookup/by-post-town", payload)
-        assert(response.body === "[]", dump(response))
+        response.body shouldBe "[]"
       }
     }
 
-    "client error" must {
+    "client error" should {
 
       "give a bad request when the origin header is absent" in {
+        when(repository.findTown(meq("some-town"), meq(None))).thenReturn(
+          Future.successful(dbAddresses.filter(_.town == "some-town").toList))
+
         val payload =
           """{
             |  "posttown": "some-town"
@@ -173,13 +216,13 @@ class TownLookupPostSuite()
           .withHttpHeaders("content-type" -> "application/json")
           .withBody(payload).execute())
 
-        assert(response.status === BAD_REQUEST, dump(response))
+        response.status shouldBe BAD_REQUEST
       }
 
       "give a bad request when the town parameter is absent" in {
         val response = post("/lookup/by-post-town", "{}")
-        assert(response.status === BAD_REQUEST, dump(response))
-        assert(response.body == """{"obj.posttown":[{"msg":["error.path.missing"],"args":[]}]}""")
+        response.status shouldBe BAD_REQUEST
+        response.body shouldBe """{"obj.posttown":[{"msg":["error.path.missing"],"args":[]}]}"""
       }
 
       "give a bad request when the town parameter is of the wrong type" in {
@@ -189,8 +232,8 @@ class TownLookupPostSuite()
             |}""".stripMargin
 
         val response = post("/lookup/by-post-town", payload)
-        assert(response.status === BAD_REQUEST, dump(response))
-        assert(response.body == """{"obj.posttown":[{"msg":["error.expected.jsstring"],"args":[]}]}""")
+        response.status shouldBe BAD_REQUEST
+        response.body shouldBe """{"obj.posttown":[{"msg":["error.expected.jsstring"],"args":[]}]}"""
       }
 
       "give a bad request when an unexpected parameter is sent on its own" in {
@@ -200,8 +243,8 @@ class TownLookupPostSuite()
             |}""".stripMargin
 
         val response = post("/lookup/by-post-town", payload)
-        assert(response.status === BAD_REQUEST, dump(response))
-        assert(response.body == """{"obj.posttown":[{"msg":["error.path.missing"],"args":[]}]}""")
+        response.status shouldBe BAD_REQUEST
+        response.body shouldBe """{"obj.posttown":[{"msg":["error.path.missing"],"args":[]}]}"""
       }
 
       "not give a bad request when an unexpected parameter is sent" in {
@@ -212,12 +255,12 @@ class TownLookupPostSuite()
             |}""".stripMargin
 
         val response = post("/lookup/by-post-town", payload)
-        assert(response.status === OK, dump(response))
+        response.status shouldBe OK
       }
 
       "give a not found when an unknown path is requested" in {
         val response = post("/somethingElse", "{}")
-        assert(response.status === NOT_FOUND, dump(response))
+        response.status shouldBe NOT_FOUND
       }
     }
   }

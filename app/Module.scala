@@ -17,7 +17,7 @@
 import com.google.inject.{AbstractModule, Provides}
 import com.kenshoo.play.metrics.Metrics
 import config.ConfigHelper
-import osgb.services._
+import controllers.services.{AddressSearcher, AddressSearcherMetrics, ReferenceData}
 import play.api.inject.ApplicationLifecycle
 import play.api.{Configuration, Environment}
 import repositories.{AddressLookupRepository, InMemoryAddressLookupRepository, RdsQueryConfig, TransactorProvider}

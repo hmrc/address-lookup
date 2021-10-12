@@ -17,12 +17,13 @@
 package util
 
 import com.typesafe.config.ConfigFactory
+import org.scalatest.{Tag, TagAnnotation}
 import play.api.test.FakeRequest
+
+import java.lang.annotation.{ElementType, Inherited, Retention, RetentionPolicy, Target}
 
 
 object Utils {
-
-
   lazy val headerOrigin: String =  ConfigFactory.load().getString("header.x-origin")
 
   implicit class FakeRequestWithOrigin[T](fake: FakeRequest[T]) {
@@ -30,4 +31,12 @@ object Utils {
       fake.withHeaders(fake.headers.replace(headerOrigin -> "xyz"))
   }
 
+  object tags {
+    @TagAnnotation
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(Array(ElementType.METHOD, ElementType.TYPE))
+    @Inherited trait MicroBenchmark {}
+
+    object MicroBenchmark extends Tag("util.Utils.MicroBenchmark")
+  }
 }

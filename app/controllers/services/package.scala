@@ -14,16 +14,29 @@
  * limitations under the License.
  */
 
-package object util {
-  implicit class Divider(s: String) {
-    def divide(c: Char): List[String] = {
-      val i = s.indexOf(c)
-      if (i < 0) List(s)
-      else {
-        val w1 = s.substring(0, i)
-        val rest = s.substring(i + 1)
-        List(w1, rest)
+package controllers
+
+import scala.collection.mutable
+
+package object services {
+  implicit class Divider(c: Char) {
+    def qsplit(s: String): List[String] = {
+      val buf = new mutable.ListBuffer[String]
+      val chars = s.toCharArray
+      // n.b. hand-optimised while loop
+      var i = 0
+      var j = 0
+      while (i < chars.length) {
+        if (chars(i) == c) {
+          buf += s.substring(j, i)
+          i += 1
+          j = i
+        } else {
+          i += 1
+        }
       }
+      buf += s.substring(j)
+      buf.toList
     }
   }
 }

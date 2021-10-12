@@ -16,103 +16,145 @@
 
 package it.suites
 
-import address.model.AddressRecord
 import com.codahale.metrics.SharedMetricRegistries
+import controllers.SearchParameters
+import controllers.services.AddressSearcher
 import it.helper.AppServerTestApi
-import org.scalatest.matchers.must.Matchers
+import model.address.{AddressRecord, Location}
+import model.internal.DbAddress
+import org.mockito.ArgumentMatchers.{eq => meq}
+import org.mockito.Mockito.when
 import org.scalatest.wordspec.AnyWordSpec
+import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
-import osgb.outmodel.AddressReadable._
-import play.api.libs.json.{JsArray, Json}
+import play.api.Application
+import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.libs.json.Json
 import play.api.libs.ws.WSClient
-import play.api.test.Helpers._
+import play.api.test.Helpers.{await, defaultAwaitTimeout}
+import play.inject.Bindings
+import repositories.InMemoryAddressLookupRepository.{boulevardAddresses, doFilter, singleAddresses}
+import services.AddressLookupService
+
+import scala.concurrent.Future
 
 class FuzzySearchSuiteV2()
-  extends AnyWordSpec with GuiceOneServerPerSuite with Matchers with AppServerTestApi {
+  extends AnyWordSpec with GuiceOneServerPerSuite with AppServerTestApi {
 
-  SharedMetricRegistries.clear()
+  val repository: AddressLookupService = mock[AddressLookupService]
+  override def fakeApplication(): Application = {
+    SharedMetricRegistries.clear()
+    new GuiceApplicationBuilder()
+        .overrides(Bindings.bind(classOf[AddressSearcher]).toInstance(repository))
+        .build()
+  }
 
   override val appEndpoint: String = s"http://localhost:$port"
   override val wsClient: WSClient = app.injector.instanceOf[WSClient]
 
   "fuzzy search lookup" when {
+    import AddressRecord.formats._
 
-    "successful" must {
+    "successful" should {
 
       "give a successful response for a known postcode  - uk route" in {
+        val sp = SearchParameters(fuzzy = Some("A Street"))
+        when(repository.searchFuzzy(meq(sp))).thenReturn(Future.successful(List(DbAddress("GB11111", List("A House 27-45", "A Street"), "London", "FX9 9PY", Some("GB-ENG"), Some("GB"),
+          Some(5840), Some("en"), None, Some(Location("12.345678", "-12.345678").toString)))))
         val response = get("/v2/uk/addresses?fuzzy=A+Street")
-        assert(response.status === OK, dump(response))
+        response.status shouldBe OK
       }
 
       "give a successful response for a known v.large postcode- uk route" in {
+        val sp = SearchParameters(fuzzy = Some("bankside"))
+        when(repository.searchFuzzy(meq(sp))).thenReturn(Future.successful(boulevardAddresses.toList))
         val response = get("/v2/uk/addresses?fuzzy=bankside")
-        assert(response.status === OK, dump(response))
+        response.status shouldBe OK
       }
 
       "give sorted results when multiple addresses are returned" in {
+        val sp = SearchParameters(fuzzy = Some("bankside"))
+        when(repository.searchFuzzy(meq(sp))).thenReturn(Future.successful(boulevardAddresses.toList))
         val body = get("/v2/uk/addresses?fuzzy=bankside").body
         val json = Json.parse(body)
-        val arr = json.asInstanceOf[JsArray].value
-        arr.size mustBe 3000
+        val arr = json.as[List[AddressRecord]]
+        arr.size shouldBe 3000
         // TODO this sort order indicates a numbering problem with result sorting (see TXMNT-64)
-        Json.fromJson[AddressRecord](arr.head).get.address.line1 mustBe "1 Bankside"
-        Json.fromJson[AddressRecord](arr(1)).get.address.line1 mustBe "10 Bankside"
-        Json.fromJson[AddressRecord](arr(2)).get.address.line1 mustBe "100 Bankside"
-        Json.fromJson[AddressRecord](arr(3)).get.address.line1 mustBe "1000 Bankside"
+        arr.head.address.line1 shouldBe "1 Bankside"
+        arr(1).address.line1 shouldBe "10 Bankside"
+        arr(2).address.line1 shouldBe "100 Bankside"
+        arr(3).address.line1 shouldBe "1000 Bankside"
       }
 
       "filter results" in {
+        val sp = SearchParameters(fuzzy = Some("bankside"), filter = Some("100"))
+        when(repository.searchFuzzy(meq(sp))).thenReturn(Future.successful(
+          doFilter(boulevardAddresses.filter(_.line1 startsWith("100 ")), Some("100")).toList
+        ))
         val body = get("/v2/uk/addresses?fuzzy=bankside&filter=100").body
         val json = Json.parse(body)
-        val arr = json.asInstanceOf[JsArray].value
-        arr.size mustBe 1
+        val arr = json.as[List[AddressRecord]]
+        arr.size shouldBe 1
         // TODO this sort order indicates a numbering problem with result sorting (see TXMNT-64)
-        Json.fromJson[AddressRecord](arr.head).get.address.line1 mustBe "100 Bankside"
+        arr.head.address.line1 shouldBe "100 Bankside"
       }
 
 
       "set the content type to application/json" in {
+        val sp = SearchParameters(fuzzy = Some("Stamford Street"))
+        when(repository.searchFuzzy(meq(sp))).thenReturn(Future.successful(List()))
         val response = get("/v2/uk/addresses?fuzzy=Stamford+Street")
         val contentType = response.header("Content-Type").get
-        assert(contentType.startsWith("application/json"), dump(response))
+        contentType should startWith ("application/json")
       }
 
-      "set the cache-control header and include a positive max-age in it" ignore {
+      "set the cache-control header and include a positive max-age in it" in {
+        val sp = SearchParameters(fuzzy = Some("A Street"))
+        when(repository.searchFuzzy(meq(sp))).thenReturn(
+          Future.successful(singleAddresses.filter(_.line2 == "A Street").toList))
         val response = get("/v2/uk/addresses?fuzzy=A+Street")
         val h = response.header("Cache-Control")
-        assert(h.nonEmpty && h.get.contains("max-age="), dump(response))
+        h should not be empty
+        h.get should include ("max-age=")
       }
 
       "set the etag header" ignore {
+        val sp = SearchParameters(fuzzy = Some("A Street"))
+        when(repository.searchFuzzy(meq(sp))).thenReturn(
+          Future.successful(singleAddresses.filter(_.line2 == "A Street").toList))
         val response = get("/v2/uk/addresses?fuzzy=A+Street")
         val h = response.header("ETag")
-        assert(h.nonEmpty === true, dump(response))
+        h should not be empty
       }
 
       "give a successful response for an unmatched result" in {
+        val sp = SearchParameters(fuzzy = Some("zzz zzz zzz"))
+        when(repository.searchFuzzy(meq(sp))).thenReturn(Future.successful(List()))
         val response = get("/v2/uk/addresses?fuzzy=zzz+zzz+zzz")
-        assert(response.status === OK, dump(response))
+        response.status shouldBe OK
       }
 
       "give an empty array for an unmatched result" in {
+        val sp = SearchParameters(fuzzy = Some("zzz zzz zzz"))
+        when(repository.searchFuzzy(meq(sp))).thenReturn(Future.successful(List()))
         val response = get("/v2/uk/addresses?fuzzy=zzz+zzz+zzz")
-        assert(response.body === "[]", dump(response))
+        response.body shouldBe "[]"
       }
 
     }
 
 
-    "client error" must {
+    "client error" should {
 
       "give a bad request when the origin header is absent" in {
         val path = "/v2/uk/addresses?fuzzy=FX1+4AB"
         val response = await(wsClient.url(appEndpoint + path).withMethod("GET").execute())
-        assert(response.status === BAD_REQUEST, dump(response))
+        response.status shouldBe BAD_REQUEST
       }
 
       "give a bad request when the fuzzy parameter is absent" in {
         val response = get("/v2/uk/addresses")
-        assert(response.status === BAD_REQUEST, dump(response))
+        response.status shouldBe BAD_REQUEST
       }
     }
   }
