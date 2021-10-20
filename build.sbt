@@ -1,12 +1,14 @@
 import uk.gov.hmrc.DefaultBuildSettings.{addTestReportOption, defaultSettings, scalaSettings, targetJvm}
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin.publishingSettings
 
+val thisScalaVersion = "2.12.15"
+
 lazy val root = Project("address-lookup", file("."))
   .enablePlugins(play.sbt.PlayScala, SbtAutoBuildPlugin, SbtGitVersioning, SbtDistributablesPlugin)
   .enablePlugins(Seq(PlayScala): _*)
   .settings(majorVersion := 4)
   .settings(scalaSettings: _*)
-  .settings(scalaVersion := "2.12.12")
+  .settings(scalaVersion := thisScalaVersion)
   .settings(scalacOptions ++= Seq("-Xlint:-missing-interpolator"))
   .settings(publishingSettings: _*)
   .settings(defaultSettings(): _*)

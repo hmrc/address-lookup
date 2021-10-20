@@ -16,82 +16,117 @@
 
 package it.suites
 
-import address.model.AddressRecord
+import com.codahale.metrics.SharedMetricRegistries
 import it.helper.AppServerTestApi
-import org.scalatest.matchers.must.Matchers
+import model.address.AddressRecord
+import org.mockito.ArgumentMatchers.{eq => meq}
+import org.mockito.Mockito.when
 import org.scalatest.wordspec.AnyWordSpec
+import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
-import osgb.outmodel.AddressReadable._
+import play.api.Application
+import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.{JsArray, Json}
 import play.api.libs.ws.WSClient
 import play.api.test.Helpers._
+import play.inject.Bindings
+import repositories.InMemoryAddressLookupRepository.dbAddresses
+import services.AddressLookupService
+
+import scala.concurrent.Future
 
 // Please keep UprnLookupSuiteV2 and UprnLookupSuiteV2 as similar as appropriate.
 
 class UprnLookupPostSuite()
-  extends AnyWordSpec with GuiceOneServerPerSuite with Matchers with AppServerTestApi {
+  extends AnyWordSpec with GuiceOneServerPerSuite with AppServerTestApi {
 
   import FixturesV2._
+
+  val repository: AddressLookupService = mock[AddressLookupService]
+  override def fakeApplication(): Application = {
+    SharedMetricRegistries.clear()
+    new GuiceApplicationBuilder()
+        .overrides(Bindings.bind(classOf[AddressLookupService]).toInstance(repository))
+        .build()
+  }
+
   override val appEndpoint: String = s"http://localhost:$port"
   override val wsClient: WSClient = app.injector.instanceOf[WSClient]
 
   "uprn lookup" when {
+    import AddressRecord.formats._
 
-    "successful" must {
+    "successful" should {
 
       "give a successful response for a known uprn - uk route" in {
+        when(repository.findUprn(meq("11111"))).thenReturn(
+          Future.successful(dbAddresses.filter(_.uprn == 11111L).toList))
+
         val response = post("/lookup/by-uprn", """{"uprn": "11111"}""")
-        assert(response.status === OK, dump(response))
+        response.status shouldBe OK
         val body = response.body
         val json = Json.parse(body)
         val arr = json.asInstanceOf[JsArray].value
-        assert(arr.size === 1, body)
+        arr.size shouldBe 1
         val address1 = Json.fromJson[AddressRecord](arr.head).get
-        assert(address1 === fx9_9py_terse, body)
+        address1 shouldBe fx9_9py_terse
       }
 
       "set the content type to application/json" in {
+        when(repository.findUprn(meq("9999999999"))).thenReturn(
+          Future.successful(dbAddresses.filter(_.uprn == 9999999999L).toList))
+
         val response = post("/lookup/by-uprn", """{"uprn":"9999999999"}""")
         val contentType = response.header("Content-Type").get
-        assert(contentType.startsWith("application/json"), dump(response))
+        contentType should startWith ("application/json")
       }
 
       "set the cache-control header and include a positive max-age ignore it" ignore {
+        when(repository.findUprn(meq("9999999999"))).thenReturn(
+          Future.successful(dbAddresses.filter(_.uprn == 9999999999L).toList))
+
         val response = post("/lookup/by-uprn", """{"uprn":"9999999999"}""")
         val h = response.header("Cache-Control")
-        assert(h.nonEmpty && h.get.contains("max-age="), dump(response))
+        h should not be empty
+        h.get should include ("max-age=")
       }
 
       "set the etag header" ignore {
+        when(repository.findUprn(meq("9999999999"))).thenReturn(
+          Future.successful(dbAddresses.filter(_.uprn == 9999999999L).toList))
+
         val response = post("/lookup/by-uprn", """{"uprn":"9999999999"}""")
         val h = response.header("ETag")
-        assert(h.nonEmpty === true, dump(response))
+        h.nonEmpty shouldBe true
       }
 
       "give a successful response with an empty array for an unknown uprn" in {
+        when(repository.findUprn(meq("0"))).thenReturn(
+          Future.successful(dbAddresses.filter(_.uprn == 0L).toList))
+
         val response = post("/lookup/by-uprn", """{"uprn":"0"}""")
-        assert(response.status === OK, dump(response))
-        assert(response.body === "[]", dump(response))
+        response.status shouldBe OK
+        response.body shouldBe "[]"
       }
     }
 
 
-    "client error" must {
+    "client error" should {
 
       "give a bad request when the origin header is absent" in {
         val path = "/lookup/by-uprn"
         val response = await(wsClient.url(appEndpoint + path).withMethod("POST").withBody("""{"uprn":"9999999999"}""").execute())
-        assert(response.status === BAD_REQUEST, dump(response))
+        response.status shouldBe BAD_REQUEST
       }
 
       "give a bad request when the uprn parameter is absent" in {
         val response = post("/lookup/by-uprn", "{}")
-        assert(response.status === BAD_REQUEST, dump(response))
+        response.status shouldBe BAD_REQUEST
       }
 
       "give a bad request when the payload is missing" in {
         val response = post("/lookup/by-uprn", "")
-        assert(response.status === BAD_REQUEST, dump(response))
+        response.status shouldBe BAD_REQUEST
       }
     }
   }

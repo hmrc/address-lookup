@@ -16,10 +16,10 @@
 
 package services
 
-import address.osgb.DbAddress
-import address.uk.{Outcode, Postcode}
-import osgb.SearchParameters
-import osgb.services.AddressSearcher
+import controllers.SearchParameters
+import controllers.services.AddressSearcher
+import model.internal.DbAddress
+import model.address.{Outcode, Postcode}
 
 import javax.inject.Inject
 import scala.concurrent.Future

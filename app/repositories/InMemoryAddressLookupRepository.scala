@@ -16,12 +16,10 @@
 
 package repositories
 
-import address.osgb.DbAddress
-import address.services.CsvLineSplitter
-import address.uk.{Outcode, Postcode}
-import address.model.Location
-import osgb.SearchParameters
-import osgb.services.{AddressSearcher, CSV}
+import controllers.SearchParameters
+import controllers.services.AddressSearcher
+import model.address.{Location, Outcode, Postcode}
+import model.internal.DbAddress
 import play.api.Environment
 
 import javax.inject.Inject
@@ -30,37 +28,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.io.Source
 
 class InMemoryAddressLookupRepository @Inject()(env: Environment, ec: ExecutionContext) extends AddressSearcher {
-  val cannedData = "conf/data/testaddresses.csv"
-
-  lazy val dbAddresses = {
-    val file = env.getExistingFile(cannedData).getOrElse {
-      throw new Exception("Missing " + cannedData)
-    }
-
-    val splitter = new CsvLineSplitter(Source.fromFile(file).bufferedReader()).asScala.toSeq
-    splitter.map(CSV.convertCsvLine)
-  } ++ Seq(
-    DbAddress("GB11111", List("A House 27-45", "A Street"), "London", "FX9 9PY", Some("GB-ENG"), Some("GB"),
-      Some(5840), Some("en"), None, Some(Location("12.345678", "-12.345678").toString)),
-    DbAddress("GB33333", List("A House 5-7", "A Boulevard"), "Newcastle upon Tyne", "FX1 6JN", Some("GB-ENG"),
-      Some("GB"), Some(4510), Some("en"), None, Some(Location("12.345678", "-12.345678")
-        .toString)),
-    DbAddress("GB44444", List("An address with a very long first line", "Second line of address is just as long maybe" +
-      " longer", "Third line is not the longest but is still very long"), "Llanfairpwllgwyngyllgogerychwyrndrobwllllantysiliogogogoch", "FX2 2TB", Some("GB-WLS"), Some("GB"), Some(915),
-      Some("en"), None, Some(Location("12.345678", "-12.345678").toString)),
-    DbAddress("GB55555", List("An address with a PO Box"), "some-town", "FX17 1TB", Some("GB-WLS"), Some("GB"), Some(666),
-      Some("en"), None, Some(Location("12.345678", "-12.345678").toString), Some("PO Box " +
-        "1234")),
-    DbAddress("GB22222", List("11 A Boulevard"), "Newcastle upon Tyne", "FX1 6JN", Some("GB-ENG"), Some("GB"), Some(4510), Some("en"), None, Some(Location("12.345678", "-12.345678").toString))) ++ (for (i <- 1 to 2517) yield {
-    DbAddress(s"GB100$i", List(s"Flat $i", "A Apartments", "ARoad"), "ATown", "FX4 7AL", Some("GB-ENG"), Some("GB"), Some(3725), Some("en"), None, None)
-  }) ++ (for (i <- 1 to 3001) yield {
-    DbAddress(s"GB200$i", List(s"$i Bankside"), "ATown", "FX4 7AJ",
-      Some("GB-ENG"), Some("GB"), Some(3725), Some("en"), None, None)
-  })
-
-
-  private def dbsToFilterText(dbAddress: DbAddress): Set[String] =
-    (dbAddress.lines.mkString(" ") + " " + dbAddress.town + " " + dbAddress.administrativeArea.getOrElse("") + " " + dbAddress.poBox.getOrElse("")).replaceAll("[\\p{Space},]+", " ").split(" ").map(_.toLowerCase).toSet
+  import InMemoryAddressLookupRepository._
 
   override def findID(id: String): Future[Option[DbAddress]] =
     Future.successful(dbAddresses.find(_.id == id))
@@ -90,11 +58,50 @@ class InMemoryAddressLookupRepository @Inject()(env: Environment, ec: ExecutionC
     else
       Future.successful { doFilter(dbAddresses, filter).toList.take(3000) }
   }
+}
 
-  private def doFilter(filteredDbAddressStr: Seq[DbAddress], filter: Option[String]): Seq[DbAddress] = {
+object InMemoryAddressLookupRepository {
+  val singleAddresses: Seq[DbAddress] = Seq(
+    DbAddress("GB11111", List("A House 27-45", "A Street"), "London", "FX9 9PY", Some("GB-ENG"), Some("GB"),
+      Some(5840), Some("en"), None, Some(Location("12.345678", "-12.345678").toString)),
+    DbAddress("GB33333", List("A House 5-7", "A Boulevard"), "Newcastle upon Tyne", "FX1 6JN", Some("GB-ENG"),
+      Some("GB"), Some(4510), Some("en"), None, Some(Location("12.345678", "-12.345678")
+          .toString)),
+    DbAddress("GB44444", List("An address with a very long first line", "Second line of address is just as long maybe" +
+        " longer", "Third line is not the longest but is still very long"), "Llanfairpwllgwyngyllgogerychwyrndrobwllllantysiliogogogoch", "FX2 2TB", Some("GB-WLS"), Some("GB"), Some(915),
+      Some("en"), None, Some(Location("12.345678", "-12.345678").toString)),
+    DbAddress("GB55555", List("An address with a PO Box"), "some-town", "FX17 1TB", Some("GB-WLS"), Some("GB"), Some(666),
+      Some("en"), None, Some(Location("12.345678", "-12.345678").toString), Some("PO Box " +
+          "1234")),
+    DbAddress("GB22222", List("11 A Boulevard"), "Newcastle upon Tyne", "FX1 6JN", Some("GB-ENG"), Some("GB"), Some(4510), Some("en"), None, Some(Location("12.345678", "-12.345678").toString))
+  )
+
+  val apartmentAddresses: Seq[DbAddress] = (for (i <- 1 to 2517) yield {
+    DbAddress(s"GB100$i", List(s"Flat $i", "A Apartments", "ARoad"), "ATown", "FX4 7AL", Some("GB-ENG"), Some("GB"), Some(3725), Some("en"), None, None)
+  })
+
+  val boulevardAddresses: Seq[DbAddress] = (for (i <- 1 to 3000) yield {
+    DbAddress(s"GB200$i", List(s"$i Bankside"), "ATown", "FX4 7AJ",
+      Some("GB-ENG"), Some("GB"), Some(3725), Some("en"), None, None)
+  })
+
+  val extraAddresses: Seq[DbAddress] = singleAddresses ++ apartmentAddresses ++ boulevardAddresses
+
+  val cannedData = "conf/data/testaddresses.csv"
+
+  lazy val dbAddresses: Seq[DbAddress] = {
+    val cannedDataFile = Environment.simple().getExistingFile(cannedData).get
+    val splitter = new CsvLineSplitter(Source.fromFile(cannedDataFile).bufferedReader()).asScala.toSeq
+    splitter.map(CSV.convertCsvLine)
+  } ++ extraAddresses
+
+  def dbsToFilterText(dbAddress: DbAddress): Set[String] =
+    (dbAddress.lines.mkString(" ") + " " + dbAddress.town + " " + dbAddress.administrativeArea.getOrElse("") + " " + dbAddress.poBox.getOrElse("")).replaceAll("[\\p{Space},]+", " ").split(" ").map(_.toLowerCase).toSet
+
+  def doFilter(filteredDbAddresses: Seq[DbAddress], filter: Option[String]): Seq[DbAddress] = {
     val filterTokens =
       filter.map(_.toLowerCase.split("[ ]+")).map(_.toSet.filterNot(_.isEmpty)).getOrElse(Set())
-    filteredDbAddressStr.filter { dba =>
+    filteredDbAddresses.filter { dba =>
       val dbAddString = dbsToFilterText(dba)
       filterTokens.subsetOf(dbAddString)
     }

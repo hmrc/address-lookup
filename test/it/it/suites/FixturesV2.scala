@@ -16,16 +16,14 @@
 
 package it.suites
 
-import address.osgb.DbAddress
-import address.model._
+import model.internal.DbAddress
+import model.address.Country._
+import model.address.{Address, AddressRecord, LocalCustodian, Location}
 
 // Please keep FixturesV1 and FixturesV2 as similar as possible.
 
 object FixturesV2 {
 
-  import Countries.GB
-  import Countries.England
-  import Countries.Wales
 
   private val lc4510 = Some(LocalCustodian(4510, "Newcastle upon Tyne"))
   private val lc5840 = Some(LocalCustodian(5840, "Southwark"))

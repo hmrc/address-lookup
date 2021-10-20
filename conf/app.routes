@@ -9,17 +9,17 @@ GET         /admin/metrics              com.kenshoo.play.metrics.MetricsControll
 
 # Note that these resources take up to four query parameters: postcode, filter, fuzzy, uprn
 # and the tests are more explicit as a result.
-GET         /v2/uk/addresses            osgb.AddressSearchController.searchWithGet()
+GET         /v2/uk/addresses            controllers.AddressSearchController.searchWithGet()
 
-GET         /lookup                     osgb.AddressSearchController.searchWithGet()
-POST        /lookup                     osgb.AddressSearchController.search()
-POST        /lookup/by-post-town        osgb.AddressSearchController.searchByPostTown()
-POST        /lookup/by-uprn             osgb.AddressSearchController.searchByUprn()
+GET         /lookup                     controllers.AddressSearchController.searchWithGet()
+POST        /lookup                     controllers.AddressSearchController.search()
+POST        /lookup/by-post-town        controllers.AddressSearchController.searchByPostTown()
+POST        /lookup/by-uprn             controllers.AddressSearchController.searchByUprn()
 
 # ----- OSGB AddressBase lookup-by-ID search service -----
-GET         /v2/uk/addresses/:id        osgb.AddressLookupIdController.findById(id)
+GET         /v2/uk/addresses/:id        controllers.AddressLookupIdController.findById(id)
 
 # ----- Postcodes endppint -----
-GET         /v1/uk/postcodes/:pc        osgb.PostcodesController.lookupWithGet(pc)
+GET         /v1/uk/postcodes/:pc        controllers.PostcodesController.lookupWithGet(pc)
 
-GET         /v1/uk/postcodes            osgb.PostcodesController.missing
+GET         /v1/uk/postcodes            controllers.PostcodesController.missing

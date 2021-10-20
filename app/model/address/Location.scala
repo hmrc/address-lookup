@@ -14,16 +14,22 @@
  * limitations under the License.
  */
 
-package object util {
-  implicit class Divider(s: String) {
-    def divide(c: Char): List[String] = {
-      val i = s.indexOf(c)
-      if (i < 0) List(s)
-      else {
-        val w1 = s.substring(0, i)
-        val rest = s.substring(i + 1)
-        List(w1, rest)
-      }
-    }
+package model.address
+
+import util._
+
+case class Location(latitude: BigDecimal, longitude: BigDecimal) {
+
+  def toSeq = Seq(latitude, longitude)
+
+  override def toString: String = latitude + "," + longitude
+}
+
+object Location {
+  def apply(lat: String, long: String): Location = new Location(BigDecimal(lat), BigDecimal(long))
+
+  def apply(latlong: String): Location = {
+    val seq = latlong.divide(',')
+    apply(seq.head.trim, seq(1).trim)
   }
 }

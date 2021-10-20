@@ -23,11 +23,11 @@ import doobie.util.fragment
 import doobie.util.fragment.Fragment
 
 import javax.inject.Inject
-import osgb.SearchParameters
-import osgb.services.AddressSearcher
-import address.osgb.DbAddress
-import address.services.Capitalisation._
-import address.uk.{Outcode, Postcode}
+import config.Capitalisation._
+import controllers.SearchParameters
+import controllers.services.AddressSearcher
+import model.internal.{DbAddress, SqlDbAddress}
+import model.address.{Outcode, Postcode}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -153,17 +153,3 @@ object AddressLookupRepository {
          |FROM address_lookup """.stripMargin
 
 }
-
-case class SqlDbAddress(uprn: String,
-                        line1: Option[String],
-                        line2: Option[String],
-                        line3: Option[String],
-                        subdivision: Option[String],
-                        countrycode: Option[String],
-                        localcustodiancode: Option[String],
-                        language: Option[String],
-                        location: Option[String],
-                        posttown: Option[String],
-                        postcode: Option[String],
-                        poboxnumber: Option[String],
-                        localauthority: Option[String])
