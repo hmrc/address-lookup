@@ -19,7 +19,8 @@ package controllers
 import controllers.services.{ReferenceData, ResponseProcessor}
 import model.address._
 import model.internal.DbAddress
-import model.request.LookupByPostcodeRequest
+import model.request.{LookupByPostcodeRequest, LookupByUprnRequest}
+import org.mockito.ArgumentMatchers.{eq => meq, _}
 import org.mockito.Mockito._
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
@@ -337,5 +338,34 @@ class AddressSearchControllerTest extends AnyWordSpec with Matchers with ScalaFu
         result.header.status shouldBe play.api.http.Status.OK
       }
     }
+  }
+
+  "uprn lookup with POST request" should {
+    "give success" when {
+      """search is called with a valid uprn""" in new Context {
+        val controller = new AddressSearchController(searcher, new ResponseStub(Nil), ec, cc)
+        val request: FakeRequest[LookupByUprnRequest] = FakeRequest[LookupByUprnRequest](
+          method = "POST", uri = "http://localhost:9000/lookup/by-uprn", body = LookupByUprnRequest(uprn = "0123456789"),
+          headers = Headers())
+
+        when(searcher.findUprn(meq("0123456789"))).thenReturn(Future.successful(List()))
+        val response = controller.searchByUprn(request, request.body.uprn, "some-origin")
+
+        status(response) shouldBe 200
+      }
+    }
+
+    "give bad request" when {
+      """search is called with an invalid uprn""" in new Context {
+        val controller = new AddressSearchController(searcher, new ResponseStub(Nil), ec, cc)
+        val request: FakeRequest[LookupByUprnRequest] = FakeRequest[LookupByUprnRequest](
+          method = "POST", uri = "http://localhost:9000/lookup/by-uprn", body = LookupByUprnRequest(uprn = "GB0123456789"),
+          headers = Headers())
+        val response = controller.searchByUprn(request, request.body.uprn, "some-origin")
+
+        status(response) shouldBe 400
+      }
+    }
+
   }
 }
