@@ -98,6 +98,8 @@ class AddressSearchController @Inject()(addressSearch: AddressSearcher, response
     if (unwantedQueryParams.nonEmpty) Future.successful {
       val paramList = unwantedQueryParams.mkString(", ")
       badRequest("BAD-PARAMETER", "origin" -> origin, "uprn" -> uprn, "error" -> s"unexpected query parameter(s): $paramList")
+    } else if(Try(uprn.toLong).isFailure) Future.successful {
+      badRequest("BAD-UPRN", "origin" -> origin, "uprn" -> uprn, "error" -> s"uprn must only consist of digits")
     } else {
       import model.address.AddressRecord.formats._
 
