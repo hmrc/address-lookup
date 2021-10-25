@@ -65,6 +65,16 @@ class AddressLookupRepositoryTest extends AnyWordSpec with Matchers with GuiceOn
       }
     }
 
+    "findTown is called with an all lowercase town and no filter" should {
+      "return addresses when matches are found" in {
+        val town = "atown"
+        val expected = DbAddress(town, List("A House 27-45", "A Street"), "London", "FX9 9PY", Some("GB-ENG"), Some("GB"), Some(5840), Some("en"), None, Some(Location("12.345678", "-12.345678").toString))
+        val addresses = await(lookupService.findTown(town))
+        addresses should not be empty
+        addresses should have length (3000)
+      }
+    }
+
     "findTown is called with a town and a filter" should {
       "return addresses when matches are found" in {
         val town = "Newcastle upon Tyne"
@@ -113,7 +123,16 @@ class AddressLookupRepositoryTest extends AnyWordSpec with Matchers with GuiceOn
       }
     }
 
-    "findPostcode is called with a postcode and a filter" should {
+    "findPostcode is called with an all lowercase postcode" should {
+      "return matching addresses" in {
+        val postcode = "fx4 7aj"
+        val addresses = await(lookupService.findPostcode(Postcode(postcode)))
+        addresses should not be empty
+        addresses should have length (3000)
+      }
+    }
+
+      "findPostcode is called with a postcode and a filter" should {
       "return matching addresses" in {
         val postcode = "FX4 7AJ"
         val filter = "Bankside"
@@ -130,7 +149,17 @@ class AddressLookupRepositoryTest extends AnyWordSpec with Matchers with GuiceOn
       }
     }
 
-    "findOutcode is called with an outcode" should {
+    "findPostcode is called with all lowercase postcode and a filter" should {
+      "return matching addresses" in {
+        val postcode = "fx4 7aj"
+        val filter = "bankside"
+        val addresses = await(lookupService.findPostcode(Postcode(postcode), Option(filter)))
+        addresses should not be empty
+        addresses should have length (3000)
+      }
+    }
+
+      "findOutcode is called with an outcode" should {
       "return matching addresses" in {
         val outcode = "FX4"
         val addresses = await(lookupService.findOutcode(Outcode(outcode), ""))
@@ -145,7 +174,16 @@ class AddressLookupRepositoryTest extends AnyWordSpec with Matchers with GuiceOn
       }
     }
 
-    "findOutcode is called with an outcode and a filter" should {
+    "findOutcode is called with an all lowercase outcode" should {
+      "return matching addresses" in {
+        val outcode = "fx4"
+        val addresses = await(lookupService.findOutcode(Outcode(outcode), ""))
+        addresses should not be empty
+        addresses should have length (5517)
+      }
+    }
+
+      "findOutcode is called with an outcode and a filter" should {
       "return matching addresses" in {
         val outcode = "FX4"
         val filter = "Apartments"
@@ -180,5 +218,18 @@ class AddressLookupRepositoryTest extends AnyWordSpec with Matchers with GuiceOn
         addresses shouldBe empty
       }
     }
-  }
+
+    "all lowercase searchFuzzy" should {
+      "return matching addresses" in {
+        val fuzzySearchTerm = "boulevard"
+        val expected = List(
+          DbAddress("GB33333", List("A House 5-7", "A Boulevard"), "Newcastle upon Tyne", "FX1 6JN", Some("GB-ENG"), Some("GB"), Some(4510), Some("en"), None, Some(Location("12.345678", "-12.345678").toString)),
+          DbAddress("GB22222", List("11 A Boulevard"), "Newcastle upon Tyne", "FX1 6JN", Some("GB-ENG"), Some("GB"), Some(4510), Some("en"), None, Some(Location("12.345678", "-12.345678").toString)))
+        val addresses = await(lookupService.searchFuzzy(SearchParameters(filter = Some(fuzzySearchTerm))))
+        addresses should not be empty
+        addresses should have length (2)
+        addresses shouldBe expected
+      }
+    }
+    }
 }
