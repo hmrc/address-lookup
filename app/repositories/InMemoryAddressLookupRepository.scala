@@ -37,13 +37,13 @@ class InMemoryAddressLookupRepository @Inject()(env: Environment, ec: ExecutionC
     Future.successful(dbAddresses.filter(_.uprn == uprn.toLong).toList.take(3000))
 
   override def findPostcode(postcode: Postcode, filter: Option[String]): Future[List[DbAddress]] =
-    Future.successful(doFilter(dbAddresses.filter(_.postcode == postcode.toString), filter).toList.take(3000))
+    Future.successful(doFilter(dbAddresses.filter(_.postcode.equalsIgnoreCase(postcode.toString)), filter).toList.take(3000))
 
   override def findTown(town: String, filter: Option[String]): Future[List[DbAddress]] =
-    Future.successful(doFilter(dbAddresses.filter(_.town == town.toString), filter).toList.take(3000))
+    Future.successful(doFilter(dbAddresses.filter(_.town.equalsIgnoreCase(town.toString)), filter).toList.take(3000))
 
   override def findOutcode(outcode: Outcode, filter: String): Future[List[DbAddress]] =
-    Future.successful(doFilter(dbAddresses.filter(_.postcode.startsWith(outcode.toString)), Some(filter)).toList)
+    Future.successful(doFilter(dbAddresses.filter(_.postcode.toUpperCase.startsWith(outcode.toString.toUpperCase)), Some(filter)).toList)
 
   override def searchFuzzy(sp: SearchParameters): Future[List[DbAddress]] = {
     val filter = for {
