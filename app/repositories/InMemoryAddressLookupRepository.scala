@@ -87,11 +87,11 @@ object InMemoryAddressLookupRepository {
 
   val extraAddresses: Seq[DbAddress] = singleAddresses ++ apartmentAddresses ++ boulevardAddresses
 
-  val cannedData = "conf/data/testaddresses.csv"
+  val cannedData = "/data/testaddresses.csv"
 
   lazy val dbAddresses: Seq[DbAddress] = {
-    val cannedDataFile = Environment.simple().getExistingFile(cannedData).get
-    val splitter = new CsvLineSplitter(Source.fromFile(cannedDataFile).bufferedReader()).asScala.toSeq
+    val cannedDataFile = Environment.simple().resource(cannedData).get
+    val splitter = new CsvLineSplitter(Source.fromURL(cannedDataFile).bufferedReader()).asScala.toSeq
     splitter.map(CSV.convertCsvLine)
   } ++ extraAddresses
 
