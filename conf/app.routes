@@ -7,19 +7,6 @@ GET         /ping/ping                  uk.gov.hmrc.play.health.HealthController
 # Kenshoo metrics https://github.com/kenshoo/metrics-play
 GET         /admin/metrics              com.kenshoo.play.metrics.MetricsController.metrics
 
-# Note that these resources take up to four query parameters: postcode, filter, fuzzy, uprn
-# and the tests are more explicit as a result.
-GET         /v2/uk/addresses            controllers.AddressSearchController.searchWithGet()
-
-GET         /lookup                     controllers.AddressSearchController.searchWithGet()
 POST        /lookup                     controllers.AddressSearchController.search()
 POST        /lookup/by-post-town        controllers.AddressSearchController.searchByPostTown()
 POST        /lookup/by-uprn             controllers.AddressSearchController.searchByUprn()
-
-# ----- OSGB AddressBase lookup-by-ID search service -----
-GET         /v2/uk/addresses/:id        controllers.AddressLookupIdController.findById(id)
-
-# ----- Postcodes endppint -----
-GET         /v1/uk/postcodes/:pc        controllers.PostcodesController.lookupWithGet(pc)
-
-GET         /v1/uk/postcodes            controllers.PostcodesController.missing

@@ -19,9 +19,8 @@ package controllers.services
 import com.codahale.metrics.MetricRegistry.name
 import com.codahale.metrics.Timer.Context
 import com.codahale.metrics.{MetricRegistry, Timer}
-import controllers.SearchParameters
-import model.internal.DbAddress
 import model.address.{Outcode, Postcode}
+import model.internal.DbAddress
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -45,7 +44,7 @@ class AddressSearcherMetrics(peer: AddressSearcher, registry: MetricRegistry, ec
     r
   }
 
-  override def findID(id: String): Future[Option[DbAddress]] = {
+  override def findID(id: String): Future[List[DbAddress]] = {
     val context = findIdTimer.time()
     peer.findID(id) map {
       r =>
@@ -72,10 +71,5 @@ class AddressSearcherMetrics(peer: AddressSearcher, registry: MetricRegistry, ec
   override def findOutcode(outcode: Outcode, filterStr: String): Future[List[DbAddress]] = {
     val context = findOutcodeTimer.time()
     peer.findOutcode(outcode, filterStr) map (timerStop(context, _))
-  }
-
-  override def searchFuzzy(sp: SearchParameters): Future[List[DbAddress]] = {
-    val context = if (sp.filter.isDefined) searchFuzzyFilterTimer.time() else searchFuzzyTimer.time()
-    peer.searchFuzzy(sp) map (timerStop(context, _))
   }
 }

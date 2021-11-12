@@ -16,28 +16,35 @@
 
 package controllers
 
+import akka.stream.Materializer
 import controllers.services.{ReferenceData, ResponseProcessor}
 import model.address._
 import model.internal.DbAddress
 import model.request.{LookupByPostcodeRequest, LookupByUprnRequest}
-import org.mockito.ArgumentMatchers.{eq => meq, _}
+import org.mockito.ArgumentMatchers.{eq => meq}
 import org.mockito.Mockito._
-import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.mockito.MockitoSugar
-import play.api.mvc.Headers
+import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import play.api.http.Status
+import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.libs.json.Json
+import play.api.mvc.Request
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
+import play.api.{Application, inject}
 import repositories.AddressLookupRepository
 import uk.gov.hmrc.http.UpstreamErrorResponse
 import util.Utils._
 
 import scala.concurrent.Future
+import scala.concurrent.duration._
 
-class AddressSearchControllerTest extends AnyWordSpec with Matchers with ScalaFutures with MockitoSugar {
+class AddressSearchControllerTest extends AnyWordSpec with Matchers with GuiceOneAppPerSuite with MockitoSugar {
 
   implicit val ec = scala.concurrent.ExecutionContext.Implicits.global
+  implicit val timeout: FiniteDuration = 1 second
   val cc = play.api.test.Helpers.stubControllerComponents()
 
   private val en = "en"
@@ -61,204 +68,17 @@ class AddressSearchControllerTest extends AnyWordSpec with Matchers with ScalaFu
   val addressAr1 = AddressRecord("GB100005", Some(100005L), Address(List("Test Road"), "ATown", "FX11 7LX", Some(England), GB), en, Some(LocalCustodian(2935, "Testland")), Some(Location("12.345678", "-12.345678").toSeq), Some("TestLocalAuthority"))
   val addressAr2 = AddressRecord("GB100006", Some(100006L), Address(List("Test Station", "Test Road"), "ATown", "FX11 7LA", Some(England), GB), en, Some(LocalCustodian(2935, "Testland")), Some(Location("12.345678", "-12.345678").toSeq), Some("TestLocalAuthority"))
 
+  val searcher: AddressLookupRepository = mock[AddressLookupRepository]
+  override implicit lazy val app: Application = {
+    new GuiceApplicationBuilder()
+        .overrides(inject.bind[AddressLookupRepository]toInstance(searcher))
+        .build()
+  }
+  val controller: AddressSearchController = app.injector.instanceOf[AddressSearchController]
+  implicit val mat: Materializer = app.injector.instanceOf[Materializer]
+
   class ResponseStub(a: List[AddressRecord]) extends ResponseProcessor(ReferenceData.empty) {
     override def convertAddressList(dbAddresses: Seq[DbAddress]): List[AddressRecord] = a
-  }
-
-  class Context {
-    val searcher = mock[AddressLookupRepository]
-  }
-
-  "postcode lookup with GET requests" should {
-
-    "give bad request" when {
-
-      """when search is called without 'X-Origin' header
-       it should give a 'bad request' response via the appropriate exception
-       and not log any error
-      """ in new Context {
-        val controller = new AddressSearchController(searcher, new ResponseStub(Nil), ec, cc)
-        val request = FakeRequest("GET", "http://localhost:9000/v2/uk/addresses?SOMETHING=FX114HG")
-
-        val e = intercept[UpstreamErrorResponse] {
-          val sp = SearchParameters.fromQueryParameters(request.queryString)
-          controller.processSearch(request, sp)
-        }
-        e.reportAs shouldBe 400
-      }
-
-      """when search is called with unwanted parameters
-       it should give a 'bad request' response
-       and log the error
-      """ in new Context {
-        val controller = new AddressSearchController(searcher, new ResponseStub(Nil), ec, cc)
-        val request = FakeRequest("GET", "http://localhost:9000/v2/uk/addresses?SOMETHING=FX114HG").withHeadersOrigin
-
-        val sp = SearchParameters.fromQueryParameters(request.queryString)
-        val result = await(controller.processSearch(request, sp))
-        result.header.status shouldBe play.api.http.Status.BAD_REQUEST
-      }
-
-      """when search is called without the postcode parameter
-       it should give a 'bad request' response
-       and log the error
-      """ in new Context {
-        val controller = new AddressSearchController(searcher, new ResponseStub(Nil), ec, cc)
-        val request = FakeRequest("GET", "http://localhost:9000/v2/uk/addresses?filter=FX114HG").withHeadersOrigin
-
-        val sp = SearchParameters.fromQueryParameters(request.queryString)
-        val result = await(controller.processSearch(request, sp))
-        result.header.status shouldBe play.api.http.Status.BAD_REQUEST
-      }
-    }
-
-
-    "successful findPostcode" when {
-
-      """when search is called with correct parameters
-       it should clean up the postcode parameter
-       and give an 'ok' response
-       and log the lookup including the size of the result list
-      """ in new Context {
-        when(searcher.findPostcode(Postcode("FX11 4HG"), Some("FOO"))) thenReturn Future(List(addr1Db))
-        val controller = new AddressSearchController(searcher, new ResponseStub(List(addr1Ar)), ec, cc)
-        val request = FakeRequest("GET", "http://localhost:9000/v2/uk/addresses?postcode=FX114HG&filter=FOO").withHeadersOrigin
-
-        val sp = SearchParameters.fromQueryParameters(request.queryString)
-        val result = await(controller.processSearch(request, sp))
-        result.header.status shouldBe play.api.http.Status.OK
-      }
-
-      """when search is called with blank filter
-       it should clean up the postcode parameter
-       and give an 'ok' response as if the filter parameter wass absent
-       and log the lookup including the size of the result list
-      """ in new Context {
-        when(searcher.findPostcode(Postcode("FX11 4HG"), None)) thenReturn Future(List(addr1Db))
-        val controller = new AddressSearchController(searcher, new ResponseStub(List(addr1Ar)), ec, cc)
-        val request = FakeRequest("GET", "http://localhost:9000/v2/uk/addresses?postcode=FX114HG&filter=").withHeadersOrigin
-
-        val sp = SearchParameters.fromQueryParameters(request.queryString)
-        val result = await(controller.processSearch(request, sp))
-        result.header.status shouldBe play.api.http.Status.OK
-      }
-
-      """when search is called with a postcode that will give several results
-       it should give an 'ok' response containing the result list
-       and log the lookup including the size of the result list
-      """ in new Context {
-        when(searcher.findPostcode(Postcode("FX11 4HG"), None)) thenReturn Future(List(dx1A, dx1B, dx1C))
-        val controller = new AddressSearchController(searcher, new ResponseStub(List(fx1A, fx1B, fx1C)), ec, cc)
-        val request = FakeRequest("GET", "http://localhost:9000/v2/uk/addresses?postcode=fx114hg").withHeadersOrigin
-
-        val sp = SearchParameters.fromQueryParameters(request.queryString)
-        val result = await(controller.processSearch(request, sp))
-        result.header.status shouldBe play.api.http.Status.OK
-      }
-    }
-
-
-    "findOutcode" when {
-
-      """when search is called with correct parameters
-       it should clean up the outcode parameter
-       and give an 'ok' response
-       and log the lookup including the size of the result list
-      """ in new Context {
-        when(searcher.findOutcode(Outcode("FX11"), "FOO")) thenReturn Future(List(addr1Db))
-        val controller = new AddressSearchController(searcher, new ResponseStub(List(addr1Ar)), ec, cc)
-        val request = FakeRequest("GET", "http://localhost:9000/v2/uk/addresses?outcode=FX11&filter=FOO").withHeadersOrigin
-
-        val sp = SearchParameters.fromQueryParameters(request.queryString)
-        val result = await(controller.processSearch(request, sp))
-        result.header.status shouldBe play.api.http.Status.OK
-      }
-
-      """when search is called with a outcode that will give several results
-       it should give an 'ok' response containing the result list
-       and log the lookup including the size of the result list
-      """ in new Context {
-        when(searcher.findOutcode(Outcode("FX11"), "FOO")) thenReturn Future(List(dx1A, dx1B, dx1C))
-        val controller = new AddressSearchController(searcher, new ResponseStub(List(fx1A, fx1B, fx1C)), ec, cc)
-        val request = FakeRequest("GET", "http://localhost:9000/v2/uk/addresses?outcode=fx11&filter=FOO").withHeadersOrigin
-
-        val sp = SearchParameters.fromQueryParameters(request.queryString)
-        val result = await(controller.processSearch(request, sp))
-        result.header.status shouldBe play.api.http.Status.OK
-      }
-
-      """when search is called with the outcode parameter but no filter
-       it should give a 'bad request' response
-       and log the error
-      """ in new Context {
-        val controller = new AddressSearchController(searcher, new ResponseStub(Nil), ec, cc)
-        val request = FakeRequest("GET", "http://localhost:9000/v2/uk/addresses?outcode=FX11").withHeadersOrigin
-
-        val sp = SearchParameters.fromQueryParameters(request.queryString)
-        val result = await(controller.processSearch(request, sp))
-        result.header.status shouldBe play.api.http.Status.BAD_REQUEST
-      }
-    }
-
-
-    "successful findUprn" when {
-
-      """when search is called with a uprn
-       it should give an 'ok' response containing a list of one address
-       and log the lookup including the size of the list
-      """ in new Context {
-        when(searcher.findUprn("100001")) thenReturn Future(List(addr1Db))
-        val controller = new AddressSearchController(searcher, new ResponseStub(List(addr1Ar)), ec, cc)
-        val request = FakeRequest("GET", "http://localhost:9000/v2/uk/addresses?uprn=100001").withHeadersOrigin
-
-        val sp = SearchParameters.fromQueryParameters(request.queryString)
-        val result = await(controller.processSearch(request, sp))
-        result.header.status shouldBe play.api.http.Status.OK
-      }
-    }
-
-
-    "successful searchFuzzy" when {
-
-      """when search is called with a fuzzy term but without postcode/filter
-       it should give an 'ok' response containing a list of two addresses
-       and log the lookup including the size of the list
-      """ in new Context {
-        val sp = SearchParameters(fuzzy = Some("ATown"))
-        when(searcher.searchFuzzy(sp)) thenReturn Future(List(addressDb1, addressDb2))
-        val addressLookupController = new AddressSearchController(searcher, new ResponseStub(List(addressAr1, addressAr2)), ec, cc)
-        val request = FakeRequest("GET", "http://localhost:9000/v2/uk/addresses?fuzzy=ATown").withHeadersOrigin
-
-        val result = await(addressLookupController.processSearch(request, sp))
-        result.header.status shouldBe play.api.http.Status.OK
-      }
-
-      """when search is called with a fuzzy term, postcode and filter
-       it should give an 'ok' response containing a list of one address
-       and log the lookup including the size of the list
-      """ in new Context {
-        val sp = SearchParameters(fuzzy = Some("ATown"), postcode = Postcode.cleanupPostcode("FX11 7LA"), filter = Some("AStreet"))
-        when(searcher.searchFuzzy(sp)) thenReturn Future(List(addressDb2))
-        val controller = new AddressSearchController(searcher, new ResponseStub(List(addressAr2)), ec, cc)
-        val request = FakeRequest("GET", "http://localhost:9000/v2/uk/addresses?fuzzy=ATown&postcode=FX11+7LA&filter=AStreet").withHeadersOrigin
-
-        val result = await(controller.processSearch(request, sp))
-        result.header.status shouldBe play.api.http.Status.OK
-      }
-
-      """when search is called with line1 and postcode
-       it should give an 'ok' response containing a list of one address
-       and log the lookup including the size of the list
-      """ in new Context {
-        val sp = SearchParameters(postcode = Postcode.cleanupPostcode("FX11 7LA"), lines = List("AStreet", "ATown"))
-        when(searcher.searchFuzzy(sp)) thenReturn Future(List(addressDb2))
-        val controller = new AddressSearchController(searcher, new ResponseStub(List(addressAr2)), ec, cc)
-        val request = FakeRequest("GET", "http://localhost:9000/v2/uk/addresses?line1=AStreet&line2=ATown&postcode=FX11+7LA").withHeadersOrigin
-
-        val result = await(controller.processSearch(request, sp))
-        result.header.status shouldBe play.api.http.Status.OK
-      }
-    }
   }
 
   "postcode lookup with POST requests" should {
@@ -268,17 +88,16 @@ class AddressSearchControllerTest extends AnyWordSpec with Matchers with ScalaFu
       """when search is called without 'X-Origin' header
        it should give a 'bad request' response via the appropriate exception
        and not log any error
-      """ in new Context {
-        val controller = new AddressSearchController(searcher, new ResponseStub(Nil), ec, cc)
-        val request: FakeRequest[LookupByPostcodeRequest] = FakeRequest[LookupByPostcodeRequest](
-          method = "POST", uri = "http://localhost:9000/v2/uk/addresses", body = LookupByPostcodeRequest(postcode = Postcode("FX11 4HG")),
-          headers = Headers())
+      """ in {
+        import LookupByPostcodeRequest._
+        val jsonPayload = Json.toJson(LookupByPostcodeRequest(Postcode("FX11 4HG")))
+        val request: Request[String] = FakeRequest("POST", "/lookup")
+            .withBody(jsonPayload.toString())
 
-        val e = intercept[UpstreamErrorResponse] {
-          val sp = SearchParameters(request.body)
-          controller.processSearch(request, sp)
+        intercept[UpstreamErrorResponse] {
+          val result = controller.search().apply(request)
+          status(result) shouldBe Status.BAD_REQUEST
         }
-        e.reportAs shouldBe 400
       }
     }
 
@@ -289,80 +108,72 @@ class AddressSearchControllerTest extends AnyWordSpec with Matchers with ScalaFu
        it should clean up the postcode parameter
        and give an 'ok' response
        and log the lookup including the size of the result list
-      """ in new Context {
+      """ in {
         when(searcher.findPostcode(Postcode("FX11 4HG"), Some("FOO"))) thenReturn Future(List(addr1Db))
-        val controller = new AddressSearchController(searcher, new ResponseStub(List(addr1Ar)), ec, cc)
-        val request: FakeRequest[LookupByPostcodeRequest] = FakeRequest[LookupByPostcodeRequest](
-          method = "POST",
-          uri = "http://localhost:9000/v2/uk/addresses",
-          body = LookupByPostcodeRequest(postcode = Postcode("FX11 4HG"), filter = Some("FOO")),
-          headers = Headers()).withHeadersOrigin
+        val jsonPayload = Json.toJson(LookupByPostcodeRequest(Postcode("FX11 4HG"), Some("FOO")))
+        val request = FakeRequest("POST", "/lookup")
+          .withBody(jsonPayload.toString)
+          .withHeadersOrigin
 
-        val sp = SearchParameters(request.body)
-        val result = await(controller.processSearch(request, sp))
-        result.header.status shouldBe play.api.http.Status.OK
+        val result = controller.search().apply(request)
+        status(result) shouldBe Status.OK
       }
 
       """when search is called with blank filter
        it should clean up the postcode parameter
        and give an 'ok' response as if the filter parameter wass absent
        and log the lookup including the size of the result list
-      """ in new Context {
+      """ in {
         when(searcher.findPostcode(Postcode("FX11 4HG"), None)) thenReturn Future(List(addr1Db))
-        val controller = new AddressSearchController(searcher, new ResponseStub(List(addr1Ar)), ec, cc)
-        val request: FakeRequest[LookupByPostcodeRequest] = FakeRequest[LookupByPostcodeRequest](
-          method = "POST",
-          uri = "http://localhost:9000/v2/uk/addresses",
-          body = LookupByPostcodeRequest(postcode = Postcode("FX11 4HG"), filter = None),
-          headers = Headers()).withHeadersOrigin
+        val jsonPayload = Json.toJson(LookupByPostcodeRequest(Postcode("FX11 4HG"), None))
+        val request = FakeRequest("POST", "/lookup")
+          .withBody(jsonPayload.toString)
+          .withHeadersOrigin
 
-        val sp = SearchParameters(request.body)
-        val result = await(controller.processSearch(request, sp))
-        result.header.status shouldBe play.api.http.Status.OK
+        val result = controller.search().apply(request)
+        status(result) shouldBe Status.OK
       }
 
       """when search is called with a postcode that will give several results
        it should give an 'ok' response containing the result list
        and log the lookup including the size of the result list
-      """ in new Context {
+      """ in {
         when(searcher.findPostcode(Postcode("FX11 4HG"), None)) thenReturn Future(List(dx1A, dx1B, dx1C))
-        val controller = new AddressSearchController(searcher, new ResponseStub(List(fx1A, fx1B, fx1C)), ec, cc)
-        val request = FakeRequest(
-          method = "POST",
-          uri = "http://localhost:9000/v2/uk/addresses",
-          body = LookupByPostcodeRequest(postcode = Postcode("FX11 4HG")),
-          headers = Headers()).withHeadersOrigin
+        val jsonPayload = Json.toJson(LookupByPostcodeRequest(Postcode("FX11 4HG")))
+        val request = FakeRequest("POST", "/lookup")
+          .withBody(jsonPayload.toString)
+          .withHeadersOrigin
 
-        val sp = SearchParameters(request.body)
-        val result = await(controller.processSearch(request, sp))
-        result.header.status shouldBe play.api.http.Status.OK
+        val result = controller.search().apply(request)
+        status(result) shouldBe Status.OK
       }
     }
   }
 
   "uprn lookup with POST request" should {
     "give success" when {
-      """search is called with a valid uprn""" in new Context {
-        val controller = new AddressSearchController(searcher, new ResponseStub(Nil), ec, cc)
-        val request: FakeRequest[LookupByUprnRequest] = FakeRequest[LookupByUprnRequest](
-          method = "POST", uri = "http://localhost:9000/lookup/by-uprn", body = LookupByUprnRequest(uprn = "0123456789"),
-          headers = Headers())
-
+      """search is called with a valid uprn""" in {
+        import LookupByUprnRequest._
         when(searcher.findUprn(meq("0123456789"))).thenReturn(Future.successful(List()))
-        val response = controller.searchByUprn(request, request.body.uprn, "some-origin")
+        val jsonPayload = Json.toJson(LookupByUprnRequest("0123456789"))
+        val request = FakeRequest("POST", "/lookup/by-uprn")
+        .withBody(jsonPayload.toString)
+        .withHeadersOrigin
 
+        val response = controller.searchByUprn().apply(request)
         status(response) shouldBe 200
       }
     }
 
     "give bad request" when {
-      """search is called with an invalid uprn""" in new Context {
+      """search is called with an invalid uprn""" in {
         val controller = new AddressSearchController(searcher, new ResponseStub(Nil), ec, cc)
-        val request: FakeRequest[LookupByUprnRequest] = FakeRequest[LookupByUprnRequest](
-          method = "POST", uri = "http://localhost:9000/lookup/by-uprn", body = LookupByUprnRequest(uprn = "GB0123456789"),
-          headers = Headers())
-        val response = controller.searchByUprn(request, request.body.uprn, "some-origin")
+        val jsonPayload = Json.toJson(LookupByUprnRequest("GB0123456789"))
+        val request = FakeRequest("POST", "/lookup/by-uprn")
+        .withBody(jsonPayload.toString)
+        .withHeadersOrigin
 
+        val response = controller.searchByUprn().apply(request)
         status(response) shouldBe 400
       }
     }

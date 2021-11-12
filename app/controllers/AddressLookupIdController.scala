@@ -40,7 +40,7 @@ class AddressLookupIdController @Inject()(addressSearch: AddressSearcher, respon
 
     Try(addressSearch.findID(id).map { a =>
       import AddressRecord.formats._
-      a.fold(NotFound(s"id matched nothing")) { ad =>
+      a.headOption.fold(NotFound(s"id matched nothing")) { ad =>
         Ok(Json.toJson(responseProcessor.convertAddress(ad)))
       }
     }).getOrElse(Future.successful(BadRequest(s"Check the id supplied: $id")))

@@ -37,22 +37,38 @@ object request {
       }
     }
 
+    implicit val postcodeWrites: Writes[Postcode] = new Writes[Postcode]{
+      override def writes(o: Postcode): JsValue =
+        JsString(o.toString)
+    }
+
     implicit val reads: Reads[LookupByPostcodeRequest] = (
         (JsPath \ "postcode").read[Postcode] and
             (JsPath \ "filter").readNullable[String]
         ) (
       (pc, fo) => LookupByPostcodeRequest.apply(pc, fo))
+
+    implicit val writes: Writes[LookupByPostcodeRequest] = Json.writes[LookupByPostcodeRequest]
   }
 
   case class LookupByUprnRequest(uprn: String)
 
   object LookupByUprnRequest {
     implicit val reads: Reads[LookupByUprnRequest] = Json.reads[LookupByUprnRequest]
+    implicit val writes: Writes[LookupByUprnRequest] = Json.writes[LookupByUprnRequest]
+  }
+
+  case class LookupByIdRequest(id: String)
+
+  object LookupByIdRequest {
+    implicit val reads: Reads[LookupByIdRequest] = Json.reads[LookupByIdRequest]
+    implicit val writes: Writes[LookupByIdRequest] = Json.writes[LookupByIdRequest]
   }
 
   case class LookupByPostTownRequest(posttown: String, filter: Option[String])
 
   object LookupByPostTownRequest {
     implicit val reads: Reads[LookupByPostTownRequest] = Json.reads[LookupByPostTownRequest]
+    implicit val writes: Writes[LookupByPostTownRequest] = Json.writes[LookupByPostTownRequest]
   }
 }

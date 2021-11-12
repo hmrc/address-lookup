@@ -17,7 +17,6 @@
 package it.suites
 
 import com.codahale.metrics.SharedMetricRegistries
-import controllers.SearchParameters
 import it.helper.AppServerTestApi
 import model.address.Postcode
 import org.mockito.ArgumentMatchers.{eq => meq}
@@ -52,22 +51,11 @@ class MetricsSuiteV2()
 
   "metrics" when {
     "successful" should {
-      "give a timer for the findId search case" in {
-        when(repository.findID(meq("GB11111"))).thenReturn(
-          Future.successful(dbAddresses.find(_.id == "GB11111")))
-
-        get("/v2/uk/addresses/GB11111").status shouldBe OK
-
-        val response = get("/admin/metrics")
-        response.status shouldBe OK
-        (response.json \ "timers" \ s"$className.findId" \ "count").as[Int] should be > 0
-      }
-
       "give a timer for the findUprn search case" in {
         when(repository.findUprn(meq("9999999999"))).thenReturn(
           Future.successful(dbAddresses.find(_.id == "9999999999").toList))
 
-        get("/v2/uk/addresses?uprn=9999999999").status shouldBe OK
+        post("/lookup/by-uprn", """{"uprn":"9999999999"}""").status shouldBe OK
 
         val response = get("/admin/metrics")
         response.status shouldBe OK
@@ -78,7 +66,7 @@ class MetricsSuiteV2()
         when(repository.findPostcode(meq(Postcode("FX1 9PY")), meq(None))).thenReturn(
           Future.successful(dbAddresses.filter(_.postcode == "FX1 9PY").toList))
 
-        get("/v2/uk/addresses?postcode=FX1+9PY").status shouldBe OK
+        post("/lookup", """{"postcode":"FX1 9PY"}""").status shouldBe OK
 
         val response = get("/admin/metrics")
         response.status shouldBe OK
@@ -89,33 +77,11 @@ class MetricsSuiteV2()
         when(repository.findPostcode(meq(Postcode("SE1 9PY")), meq(Some("10")))).thenReturn(
           Future.successful(doFilter(dbAddresses.filter(_.postcode == "SE1 9PY"), Some("10")).toList))
 
-        get("/v2/uk/addresses?postcode=SE1+9PY&filter=10").status shouldBe OK
+        post("/lookup", """{"postcode":"SE1 9PY", "filter":"10"}""").status shouldBe OK
 
         val response = get("/admin/metrics")
         response.status shouldBe OK
         (response.json \ "timers" \ s"$className.findPostcodeFilter" \ "count").as[Int] should be > 0
-      }
-
-      "give a timer for the searchFuzzy search case" in {
-        when(repository.searchFuzzy(meq(SearchParameters(fuzzy = Some("FX1 9PY"))))).thenReturn(
-          Future.successful(doFilter(dbAddresses, Some("FX1 9PY")).toList))
-
-        get("/v2/uk/addresses?fuzzy=FX1+9PY").status shouldBe OK
-
-        val response = get("/admin/metrics")
-        response.status shouldBe OK
-        (response.json \ "timers" \ s"$className.searchFuzzy" \ "count").as[Int] should be > 0
-      }
-
-      "give a timer for the searchFuzzyFilter search case" in {
-        when(repository.searchFuzzy(meq(SearchParameters(fuzzy = Some("SE1 9PY"), filter = Some("2"))))).thenReturn(
-          Future.successful(doFilter(doFilter(dbAddresses, Some("SE1 9PY")), Some("2")).toList))
-
-        get("/v2/uk/addresses?fuzzy=SE1+9PY&filter=2").status shouldBe OK
-
-        val response = get("/admin/metrics")
-        response.status shouldBe OK
-        (response.json \ "timers" \ s"$className.searchFuzzyFilter" \ "count").as[Int] should be > 0
       }
     }
   }

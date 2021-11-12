@@ -16,7 +16,6 @@
 
 package services
 
-import controllers.SearchParameters
 import controllers.services.AddressSearcher
 import model.internal.DbAddress
 import model.address.{Outcode, Postcode}
@@ -25,7 +24,7 @@ import javax.inject.Inject
 import scala.concurrent.Future
 
 class AddressLookupService @Inject()(addressSearcher: AddressSearcher) extends AddressSearcher {
-  override def findID(id: String): Future[Option[DbAddress]] = addressSearcher.findID(id)
+  override def findID(id: String): Future[List[DbAddress]] = addressSearcher.findID(id)
 
   override def findUprn(uprn: String): Future[List[DbAddress]] = addressSearcher.findUprn(uprn)
 
@@ -34,6 +33,4 @@ class AddressLookupService @Inject()(addressSearcher: AddressSearcher) extends A
   override def findTown(town: String, filter: Option[String]): Future[List[DbAddress]] = addressSearcher.findTown(town, filter)
 
   override def findOutcode(outcode: Outcode, filter: String): Future[List[DbAddress]] = addressSearcher.findOutcode(outcode, filter)
-
-  override def searchFuzzy(sp: SearchParameters): Future[List[DbAddress]] = addressSearcher.searchFuzzy(sp)
 }

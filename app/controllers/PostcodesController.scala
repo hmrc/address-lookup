@@ -40,19 +40,6 @@ class PostcodesController @Inject()(addressSearch: AddressSearcher, responseProc
 
   implicit private val xec = ec
 
-  @deprecated("Please use Post endpoint", "4.87.0")
-  def lookupWithGet(postcode: String): Action[AnyContent] = Action.async {
-    (request: Request[AnyContent]) =>
-      val origin = getOriginHeaderIfSatisfactory(request.headers)
-      if (request.rawQueryString.nonEmpty) {
-        Future.successful {
-          badRequest(request.uri, "Query String supplied but not supported")
-        }
-      } else {
-        processPostcode(origin, request.uri, postcode)
-      }
-  }
-
   private def processPostcode(origin: String, requestUri: String, postcode: String): Future[Result] =
     Postcode.cleanupPostcode(
       URLDecoder.decode(postcode, "UTF-8")).fold(
