@@ -82,6 +82,11 @@ object Postcode {
     apply(p.substring(0, space), p.substring(space + 1))
   }
 
+  def unapply(postcode: Postcode): Option[String] = {
+    if(postcode == null) None
+    else Some(postcode.toString)
+  }
+
   def apply(outcode: String, incode: String): Postcode = {
     val (area, district) =
       if (Character.isDigit(outcode(1))) (outcode.substring(0, 1), outcode.substring(1))

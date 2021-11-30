@@ -24,7 +24,6 @@ import doobie.util.fragment.Fragment
 
 import javax.inject.Inject
 import config.Capitalisation._
-import controllers.SearchParameters
 import controllers.services.AddressSearcher
 import model.internal.{DbAddress, SqlDbAddress}
 import model.address.{Outcode, Postcode}
@@ -35,7 +34,7 @@ import scala.concurrent.Future
 class AddressLookupRepository @Inject()(transactor: Transactor[IO], queryConfig: RdsQueryConfig) extends AddressSearcher {
   import AddressLookupRepository._
 
-  override def findID(id: String): Future[Option[DbAddress]] = findUprn(cleanUprn(id)).map(_.headOption)
+  override def findID(id: String): Future[List[DbAddress]] = findUprn(cleanUprn(id))
 
   override def findUprn(uprn: String): Future[List[DbAddress]] = {
     val queryFragment = baseQuery ++
@@ -72,20 +71,6 @@ class AddressLookupRepository @Inject()(transactor: Transactor[IO], queryConfig:
 
     queryFragment.query[SqlDbAddress].to[List].transact(transactor).unsafeToFuture()
       .map(l => l.map(mapToDbAddress))
-  }
-
-  override def searchFuzzy(sp: SearchParameters): Future[List[DbAddress]] = {
-    val filter = for {
-      f <- Option(sp.lines).map(_.mkString(" ")).orElse(Some(""))
-      t <- sp.town.orElse(Some(""))
-      fz <- sp.fuzzy.orElse(Some(""))
-      ff <- sp.filter.orElse(Some(""))
-    } yield (f + " " + t + " " + fz + " " + ff).trim.replaceAll("\\p{Space}+", " ")
-
-    if (sp.postcode.isDefined)
-      findPostcode(sp.postcode.get, filter)
-    else
-      findWithOnlyFilter(filter)
   }
 
   private def findWithOnlyFilter(filter: Option[String]): Future[List[DbAddress]] = {

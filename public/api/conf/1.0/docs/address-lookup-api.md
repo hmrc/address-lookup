@@ -7,8 +7,6 @@ and ambiguities.
 
 If you're a UK Government Organisation wanting additional information on this service, please email [txm-attribute-validation-g@digital.hmrc.gov.uk](mailto:txm-attribute-validation-g@digital.hmrc.gov.uk).
 
-If you are looking for information on deprecated GET endpoints see our [deprecated endpoints](deprecated.md) page.
-
 ## 1. UK Address JSON Object
 
 To avoid later repetition, the common format of each UK address returned in responses from the
@@ -49,7 +47,7 @@ addresses is returned. The response format is a _JSON array_ containing *zero or
 
 If an address is a PO Box the response will contain an optional attribute named `poBox`, see the [PO Box example response](example-response-pobox.json).
 
-### 3A. (POST) Lookup by Postcode
+### 3A. Lookup by Postcode
 
 This is an endpoint that searches for addresses at a given postcode.
 
@@ -118,7 +116,7 @@ Response:
  - The body will be a _JSON array_ containing *zero or more* [UK Address Objects (v2)](uk-address-object.json).
      [Example response (v2)](example-response-multiple.json)
  
-### 3B. (POST) Lookup by Town
+### 3B. Lookup by Town
 
 This is an endpoint that searches for addresses within a given postal town
 
@@ -186,7 +184,7 @@ Response:
  - The body will be a _JSON array_ containing *zero or more* [UK Address Objects (v2)](uk-address-object.json).
      [Example response (v2)](example-response-multiple.json)
      
-### 3C. (POST) Lookup by UPRN
+### 3C. Lookup by UPRN
 
 This is an endpoint that searches for the address(es) of a given UPRN.
 

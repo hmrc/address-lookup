@@ -16,7 +16,6 @@
 
 package repositories
 
-import controllers.SearchParameters
 import controllers.services.AddressSearcher
 import model.address.{Location, Outcode, Postcode}
 import model.internal.DbAddress
@@ -30,8 +29,8 @@ import scala.io.Source
 class InMemoryAddressLookupRepository @Inject()(env: Environment, ec: ExecutionContext) extends AddressSearcher {
   import InMemoryAddressLookupRepository._
 
-  override def findID(id: String): Future[Option[DbAddress]] =
-    Future.successful(dbAddresses.find(_.id == id))
+  override def findID(id: String): Future[List[DbAddress]] =
+    Future.successful(dbAddresses.filter(_.id == id).toList)
 
   override def findUprn(uprn: String): Future[List[DbAddress]] =
     Future.successful(dbAddresses.filter(_.uprn == uprn.toLong).toList.take(3000))
@@ -44,20 +43,6 @@ class InMemoryAddressLookupRepository @Inject()(env: Environment, ec: ExecutionC
 
   override def findOutcode(outcode: Outcode, filter: String): Future[List[DbAddress]] =
     Future.successful(doFilter(dbAddresses.filter(_.postcode.toUpperCase.startsWith(outcode.toString.toUpperCase)), Some(filter)).toList)
-
-  override def searchFuzzy(sp: SearchParameters): Future[List[DbAddress]] = {
-    val filter = for {
-      f <- Option(sp.lines).map(_.mkString(" ")).orElse(Some(""))
-      t <- sp.town.orElse(Some(""))
-      fz <- sp.fuzzy.orElse(Some(""))
-      ff <- sp.filter.orElse(Some(""))
-    } yield (f + " " + t + " " + fz + " " + ff).trim.replaceAll("\\p{Space}+", " ")
-
-    if (sp.postcode.isDefined)
-      findPostcode(sp.postcode.get, filter)
-    else
-      Future.successful { doFilter(dbAddresses, filter).toList.take(3000) }
-  }
 }
 
 object InMemoryAddressLookupRepository {

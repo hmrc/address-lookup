@@ -114,7 +114,6 @@ class TownLookupPostSuite()
         response.status shouldBe OK
         val json = Json.parse(response.body)
         val arr = json.asInstanceOf[JsArray].value
-        println(s""">>> arr.toString: ${arr.toString}""")
         arr.size shouldBe 2
         val address1 = Json.fromJson[AddressRecord](arr.head).get.address
         address1.line1 shouldBe "10 Bankside"

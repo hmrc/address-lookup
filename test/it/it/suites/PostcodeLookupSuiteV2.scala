@@ -62,7 +62,7 @@ class PostcodeLookupSuiteV2 ()
         when(repository.findPostcode(meq(Postcode("fx1 9py")), meq(None))).thenReturn(
           Future.successful(dbAddresses.filter(_.postcode == "FX1 9PY").toList))
 
-        val response = get("/v2/uk/addresses?postcode=fx1++9py")
+        val response = post("/lookup", """{"postcode":"fx1 9py"}""")
         response.status shouldBe OK
       }
 
@@ -70,7 +70,7 @@ class PostcodeLookupSuiteV2 ()
         when(repository.findPostcode(meq(Postcode("fx1 9py")), meq(None))).thenReturn(
           Future.successful(dbAddresses.filter(_.postcode == "FX1 9PY").toList))
 
-        val response = request("GET", "/v2/uk/addresses?postcode=fx1++9py", headerOrigin -> "xxx")
+        val response = request("POST", "/lookup", """{"postcode":"fx1 9py"}""", headerOrigin -> "xxx")
         response.status shouldBe OK
       }
 
@@ -78,7 +78,7 @@ class PostcodeLookupSuiteV2 ()
         when(repository.findPostcode(meq(Postcode("fx4 7al")), meq(None))).thenReturn(
           Future.successful(dbAddresses.filter(_.postcode == "FX4 7AL").toList))
 
-        val response = get("/v2/uk/addresses?postcode=fx47al")
+        val response = post("/lookup", """{"postcode":"fx47al"}""")
         response.status shouldBe OK
         val json = Json.parse(response.body)
         val arr = json.asInstanceOf[JsArray].value
@@ -95,7 +95,7 @@ class PostcodeLookupSuiteV2 ()
         when(repository.findPostcode(meq(Postcode("PO1 1PO")), meq(None))).thenReturn(
           Future.successful(dbAddresses.filter(_.postcode == "PO1 1PO").toList))
 
-        val response = get("/v2/uk/addresses?postcode=PO11PO")
+        val response = post("/lookup", """{"postcode":"PO11PO"}""")
         response.status shouldBe OK
         val json = Json.parse(response.body)
         val arr = json.asInstanceOf[JsArray].value
@@ -107,7 +107,7 @@ class PostcodeLookupSuiteV2 ()
         when(repository.findPostcode(meq(Postcode("FX1 9PY")), meq(None))).thenReturn(
           Future.successful(dbAddresses.filter(_.postcode == "FX1 9PY").toList))
 
-        val response = get("/v2/uk/addresses?postcode=FX1+9PY")
+        val response = post("/lookup", """{"postcode":"FX1 9PY"}""")
         val contentType = response.header("Content-Type").get
         contentType should startWith ("application/json")
       }
@@ -116,7 +116,7 @@ class PostcodeLookupSuiteV2 ()
         when(repository.findPostcode(meq(Postcode("FX1 9PY")), meq(None))).thenReturn(
           Future.successful(dbAddresses.filter(_.postcode == "FX1 9PY").toList))
 
-        val response = get("/v2/uk/addresses?postcode=FX1+9PY")
+        val response = post("/lookup", """{"postcode":"FX1 9PY"}""")
         val h = response.header("Cache-Control")
         h should not be empty
         h.get should include ("max-age=")
@@ -126,7 +126,7 @@ class PostcodeLookupSuiteV2 ()
         when(repository.findPostcode(meq(Postcode("FX1 9PY")), meq(None))).thenReturn(
           Future.successful(dbAddresses.filter(_.postcode == "FX1 9PY").toList))
 
-        val response = get("/v2/uk/addresses?postcode=FX1+9PY")
+        val response = post("/lookup", """{"postcode":"FX1 9PY"}""")
         val h = response.header("ETag")
         h.nonEmpty shouldBe true
       }
@@ -135,7 +135,7 @@ class PostcodeLookupSuiteV2 ()
         when(repository.findPostcode(meq(Postcode("zz10 9zz")), meq(None))).thenReturn(
           Future.successful(dbAddresses.filter(_.postcode == "ZZ10 9ZZ").toList))
 
-        val response = get("/v2/uk/addresses?postcode=zz10+9zz")
+        val response = post("/lookup", """{"postcode":"zz10 9zz"}""")
         response.status shouldBe OK
       }
 
@@ -143,7 +143,7 @@ class PostcodeLookupSuiteV2 ()
         when(repository.findPostcode(meq(Postcode("ZZ10 9ZZ")), meq(None))).thenReturn(
           Future.successful(dbAddresses.filter(_.postcode == "ZZ10 9ZZ").toList))
 
-        val response = get("/v2/uk/addresses?postcode=ZZ10+9ZZ")
+        val response = post("/lookup", """{"postcode":"ZZ10 9ZZ"}""")
         response.body shouldBe "[]"
       }
 
@@ -151,7 +151,7 @@ class PostcodeLookupSuiteV2 ()
         when(repository.findPostcode(meq(Postcode("FX1 6JN")), meq(None))).thenReturn(
           Future.successful(dbAddresses.filter(_.postcode == "FX1 6JN").toList))
 
-        val body = get("/v2/uk/addresses?postcode=FX1+6JN").body
+        val body = post("/lookup", """{"postcode":"FX1 6JN"}""").body
         body should startWith("[{")
         body should endWith("}]")
         val json = Json.parse(body)
@@ -164,7 +164,7 @@ class PostcodeLookupSuiteV2 ()
         when(repository.findPostcode(meq(Postcode("FX1 6JN")), meq(None))).thenReturn(
           Future.successful(doFilter(dbAddresses.filter(_.postcode == "FX1 6JN"), Some("House")).toList))
 
-        val body = get("/v2/uk/addresses?postcode=FX1+6JN&filter=House").body
+        val body = post("/lookup", """{"postcode":"FX1 6JN", "filter":"House"}""").body
         body should startWith("[{")
         body should endWith("}]")
         val json = Json.parse(body)
@@ -177,7 +177,7 @@ class PostcodeLookupSuiteV2 ()
         when(repository.findPostcode(meq(Postcode("FX1 1PG")), meq(None))).thenReturn(
           Future.successful(dbAddresses.filter(_.postcode == "FX1 1PG").toList))
 
-        val body = get("/v2/uk/addresses?postcode=FX1+1PG").body
+        val body = post("/lookup", """{"postcode":"FX1 1PG"}""").body
         body should startWith("[{")
         body should endWith("}]")
         val json = Json.parse(body)
@@ -242,40 +242,35 @@ class PostcodeLookupSuiteV2 ()
 
     "client error" should {
       "give a bad request when the origin header is absent" in {
-        val path = "/v2/uk/addresses?postcode=FX1+4AB"
-        val response = await(wsClient.url(appEndpoint + path).withMethod("GET").execute())
+        val path = "/lookup"
+        val response = await(wsClient.url(appEndpoint + path).withMethod("POST").withBody("""{"postcode":"FX1 4AB"}""").execute())
         response.status shouldBe BAD_REQUEST
       }
 
       "give a bad request when the postcode parameter is absent" in {
-        val response = get("/v2/uk/addresses")
+        val response = post("/lookup", "{}")
         response.status shouldBe BAD_REQUEST
       }
 
       "give a bad request when the postcode parameter is rubbish text" in {
-        val response = get("/v2/uk/addresses?postcode=ThisIsNotAPostcode")
+        val response = post("/lookup", """{"postcode":"ThisIsNotAPostcode"}""")
         response.status shouldBe BAD_REQUEST
       }
 
       "give a bad request when an unexpected parameter is sent on its own" in {
-        val response = get("/v2/uk/addresses?foo=FX1+4AC")
-        response.status shouldBe BAD_REQUEST
-      }
-
-      "give a bad request when an unexpected parameter is sent" in {
-        val response = get("/v2/uk/addresses?postcode=FX1+4AC&foo=bar")
+        val response = post("/lookup", """{"foo":"FX1 4AC"}""")
         response.status shouldBe BAD_REQUEST
       }
 
       "give a not found when an unknown path is requested" in {
-        val response = get("/v2/uk/somethingElse?foo=FX1+4AD")
+        val response = post("/somethingElse", """{"foo":"FX1 4AD"}""")
         response.status shouldBe NOT_FOUND
       }
 
       // PlayFramework doesn't provide a hook for correctly handling bad method errors.
       // It was removed from earlier versions.
-      "give a bad method when posting to the address URL" ignore {
-        val response = request("POST", "/v2/uk/addresses?postcode=FX1+9PY", headerOrigin -> "xxx")
+      "give a bad method when using GET to the address URL" ignore {
+        val response = request("GET", "/lookup?postcode=FX1+9PY", headerOrigin -> "xxx")
         response.status shouldBe METHOD_NOT_ALLOWED
       }
     }

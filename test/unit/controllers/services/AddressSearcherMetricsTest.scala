@@ -18,7 +18,6 @@ package controllers.services
 
 import com.codahale.metrics.Timer.Context
 import com.codahale.metrics.{MetricRegistry, Timer}
-import controllers.SearchParameters
 import model.internal.DbAddress
 import model.address.{Outcode, Postcode}
 import org.mockito.ArgumentMatchers.anyString
@@ -55,9 +54,9 @@ class AddressSearcherMetricsTest extends AnyWordSpec with Matchers with MockitoS
 
     "testFindID is called" should {
       "return address with the requested id" in new TestContext {
-        when(peer.findID("GB1234567890")) thenReturn Future.successful(Some(dummyGBDbAddr1))
+        when(peer.findID("GB1234567890")) thenReturn Future.successful(List(dummyGBDbAddr1))
 
-        await(asm.findID("GB1234567890")) shouldBe Some(dummyGBDbAddr1)
+        await(asm.findID("GB1234567890")) shouldBe List(dummyGBDbAddr1)
 
         verify(context).stop()
       }
@@ -88,17 +87,6 @@ class AddressSearcherMetricsTest extends AnyWordSpec with Matchers with MockitoS
         when(peer.findUprn("1234567890")) thenReturn Future.successful(List(dummyGBDbAddr1))
 
         await(asm.findUprn("1234567890")) shouldBe List(dummyGBDbAddr1)
-
-        verify(context).stop()
-      }
-    }
-
-    "testSearchFuzzy is called" should {
-      "return address matching the fuzzy search parameters requested" in new TestContext {
-        val sp = SearchParameters(postcode = Postcode.cleanupPostcode("FX30 4HG"))
-        when(peer.searchFuzzy(sp)) thenReturn Future(List(dummyGBDbAddr1))
-
-        await(asm.searchFuzzy(sp)) shouldBe List(dummyGBDbAddr1)
 
         verify(context).stop()
       }

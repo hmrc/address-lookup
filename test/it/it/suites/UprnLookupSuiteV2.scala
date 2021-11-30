@@ -62,7 +62,7 @@ class UprnLookupSuiteV2()
         when(repository.findUprn(meq("11111"))).thenReturn(
           Future.successful(dbAddresses.filter(_.uprn == 11111L).toList))
 
-        val response = get("/v2/uk/addresses?uprn=11111")
+        val response = post("/lookup/by-uprn", """{"uprn":"11111"}""")
         response.status shouldBe OK
         val body = response.body
         val json = Json.parse(body)
@@ -76,7 +76,7 @@ class UprnLookupSuiteV2()
         when(repository.findUprn(meq("9999999999"))).thenReturn(
           Future.successful(dbAddresses.filter(_.uprn == 9999999999L).toList))
 
-        val response = get("/v2/uk/addresses?uprn=9999999999")
+        val response = post("/lookup/by-uprn", """{"uprn":"9999999999"}""")
         val contentType = response.header("Content-Type").get
         contentType should startWith ("application/json")
       }
@@ -85,7 +85,7 @@ class UprnLookupSuiteV2()
         when(repository.findUprn(meq("9999999999"))).thenReturn(
           Future.successful(dbAddresses.filter(_.uprn == 9999999999L).toList))
 
-        val response = get("/v2/uk/addresses?uprn=9999999999")
+        val response = post("/lookup/by-uprn", """{"uprn":"9999999999"}""")
         val h = response.header("Cache-Control")
         h should not be empty
         h.get should include ("max-age=")
@@ -95,7 +95,7 @@ class UprnLookupSuiteV2()
         when(repository.findUprn(meq("9999999999"))).thenReturn(
           Future.successful(dbAddresses.filter(_.uprn == 9999999999L).toList))
 
-        val response = get("/v2/uk/addresses?uprn=9999999999")
+        val response = post("/lookup/by-uprn", """{"uprn":"9999999999"}""")
         val h = response.header("ETag")
         h.nonEmpty shouldBe true
       }
@@ -104,7 +104,7 @@ class UprnLookupSuiteV2()
         when(repository.findUprn(meq("0"))).thenReturn(
           Future.successful(dbAddresses.filter(_.uprn == 0L).toList))
 
-        val response = get("/v2/uk/addresses?uprn=0")
+        val response = post("/lookup/by-uprn", """{"uprn":"0"}""")
         response.status shouldBe OK
         response.body shouldBe "[]"
       }
@@ -114,13 +114,13 @@ class UprnLookupSuiteV2()
     "client error" should {
 
       "give a bad request when the origin header is absent" in {
-        val path = "/v2/uk/addresses?uprn=9999999999"
-        val response = await(wsClient.url(appEndpoint + path).withMethod("GET").execute())
+        val path = "/lookup/by-uprn"
+        val response = await(wsClient.url(appEndpoint + path).withMethod("POST").withBody("""{"uprn":"9999999999"}""").execute())
         response.status shouldBe BAD_REQUEST
       }
 
       "give a bad request when the uprn parameter is absent" in {
-        val response = get("/v2/uk/addresses")
+        val response = post("/lookup/by-uprn", """{}""")
         response.status shouldBe BAD_REQUEST
       }
     }

@@ -16,7 +16,6 @@
 
 package repositories
 
-import controllers.SearchParameters
 import model.address.{Location, Outcode, Postcode}
 import model.internal.DbAddress
 import org.scalatest.matchers.should.Matchers
@@ -37,7 +36,7 @@ class AddressLookupRepositoryTest extends AnyWordSpec with Matchers with GuiceOn
         val expected = DbAddress(expectedId, List("A House 27-45", "A Street"), "London", "FX9 9PY", Some("GB-ENG"), Some("GB"), Some(5840), Some("en"), None, Some(Location("12.345678", "-12.345678").toString))
         val addressOption = await(lookupService.findID(expectedId))
         addressOption match {
-          case Some(address) =>
+          case List(address) =>
             address shouldBe expected
         }
       }
@@ -45,7 +44,7 @@ class AddressLookupRepositoryTest extends AnyWordSpec with Matchers with GuiceOn
       "returns no address when no matching one is found" in {
         val expectedId = "invalid-id"
         val addressOption = await(lookupService.findID(expectedId))
-        addressOption shouldBe None
+        addressOption shouldBe List()
       }
     }
 
@@ -199,37 +198,5 @@ class AddressLookupRepositoryTest extends AnyWordSpec with Matchers with GuiceOn
         addresses shouldBe empty
       }
     }
-
-    "searchFuzzy" should {
-      "return matching addresses" in {
-        val fuzzySearchTerm = "Boulevard"
-        val expected = List(
-          DbAddress("GB33333", List("A House 5-7", "A Boulevard"), "Newcastle upon Tyne", "FX1 6JN", Some("GB-ENG"), Some("GB"), Some(4510), Some("en"), None, Some(Location("12.345678", "-12.345678").toString)),
-          DbAddress("GB22222", List("11 A Boulevard"), "Newcastle upon Tyne", "FX1 6JN", Some("GB-ENG"), Some("GB"), Some(4510), Some("en"), None, Some(Location("12.345678", "-12.345678").toString)))
-        val addresses = await(lookupService.searchFuzzy(SearchParameters(filter = Some(fuzzySearchTerm))))
-        addresses should not be empty
-        addresses should have length (2)
-        addresses shouldBe expected
-      }
-
-      "return no addresses when fuzzy search term could not be matched" in {
-        val fuzzySearchTerm = "zoroastrianism"
-        val addresses = await(lookupService.searchFuzzy(SearchParameters(filter = Some(fuzzySearchTerm))))
-        addresses shouldBe empty
-      }
-    }
-
-    "all lowercase searchFuzzy" should {
-      "return matching addresses" in {
-        val fuzzySearchTerm = "boulevard"
-        val expected = List(
-          DbAddress("GB33333", List("A House 5-7", "A Boulevard"), "Newcastle upon Tyne", "FX1 6JN", Some("GB-ENG"), Some("GB"), Some(4510), Some("en"), None, Some(Location("12.345678", "-12.345678").toString)),
-          DbAddress("GB22222", List("11 A Boulevard"), "Newcastle upon Tyne", "FX1 6JN", Some("GB-ENG"), Some("GB"), Some(4510), Some("en"), None, Some(Location("12.345678", "-12.345678").toString)))
-        val addresses = await(lookupService.searchFuzzy(SearchParameters(filter = Some(fuzzySearchTerm))))
-        addresses should not be empty
-        addresses should have length (2)
-        addresses shouldBe expected
-      }
-    }
-    }
+   }
 }

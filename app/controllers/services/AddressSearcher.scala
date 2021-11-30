@@ -16,16 +16,15 @@
 
 package controllers.services
 
-import controllers.SearchParameters
-import model.internal.DbAddress
 import model.address.{Outcode, Postcode}
+import model.internal.DbAddress
 
 import scala.concurrent.Future
 
 
 trait AddressSearcher {
 
-  def findID(id: String): Future[Option[DbAddress]]
+  def findID(id: String): Future[List[DbAddress]]
 
   def findUprn(uprn: String): Future[List[DbAddress]]
 
@@ -34,6 +33,4 @@ trait AddressSearcher {
   def findTown(town: String, filter: Option[String] = None): Future[List[DbAddress]]
 
   def findOutcode(outcode: Outcode, filter: String): Future[List[DbAddress]]
-
-  def searchFuzzy(sp: SearchParameters): Future[List[DbAddress]]
 }
