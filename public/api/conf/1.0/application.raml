@@ -23,29 +23,6 @@ uses:
   types: https://developer.service.hmrc.gov.uk/api-documentation/assets/common/modules/types.raml
 
 /misc/address-verification/lookup:
-  get:
-    displayName: Lookup address (deprecated)
-    description: |
-      Lookup of postal and BFPO (British Forces Post Office) address details within the UK
-    is: [headers.acceptHeader]
-    securedBy: [ sec.x-application ]
-    queryParameters:
-      postcode:
-        description: Full postcode to search for (must be url escaped)
-        type: string
-        required: true
-        example: BB00+0BB
-      filter:
-        description: Refine the search results futher based on house number or street name
-        type: string
-        required: false
-        example: 36+Test+Street
-    responses:
-      200:
-        body:
-          application/json:
-            type: !include docs/uk-address-object.json
-            example: !include docs/example-response.json
   post:
     displayName: Lookup address
     description: |
