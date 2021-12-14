@@ -17,17 +17,22 @@
 package controllers
 
 import controllers.services.{AddressSearcher, ResponseProcessor}
-import model.request.{LookupByPostTownRequest, LookupByPostcodeRequest, LookupByUprnRequest, LookupByIdRequest}
 import model.address.Postcode
+import model.request.{LookupByPostTownRequest, LookupByPostcodeRequest, LookupByUprnRequest}
+import model.{AddressSearchAuditEvent, AddressSearchAuditEventMatchedAddress}
 import play.api.libs.json.{JsError, JsSuccess, Json}
 import play.api.mvc._
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.play.audit.http.connector.AuditConnector
+import uk.gov.hmrc.play.http.HeaderCarrierConverter
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
 class AddressSearchController @Inject()(addressSearch: AddressSearcher, responseProcessor: ResponseProcessor,
-                                        ec: ExecutionContext, cc: ControllerComponents) extends AddressController(cc) {
+                                        auditConnector: AuditConnector, ec: ExecutionContext, cc: ControllerComponents)
+  extends AddressController(cc) {
 
   implicit private val xec: ExecutionContext = ec
 
@@ -37,7 +42,7 @@ class AddressSearchController @Inject()(addressSearch: AddressSearcher, response
         case JsSuccess(lookupByPostcodeRequest, _) =>
           val origin = getOriginHeaderIfSatisfactory(request.headers)
           searchByPostcode(request, lookupByPostcodeRequest.postcode, lookupByPostcodeRequest.filter, origin)
-        case JsError(errors)                       =>
+        case JsError(errors) =>
           Future.successful(BadRequest(JsError.toJson(errors)))
       }
   }
@@ -46,11 +51,11 @@ class AddressSearchController @Inject()(addressSearch: AddressSearcher, response
     request =>
       val maybeJson = Try(Json.parse(request.body))
       maybeJson match {
-        case Success(json)      => json.validate[LookupByUprnRequest] match {
+        case Success(json) => json.validate[LookupByUprnRequest] match {
           case JsSuccess(lookupByUprnRequest, _) =>
             val origin = getOriginHeaderIfSatisfactory(request.headers)
             searchByUprn(request, lookupByUprnRequest.uprn, origin)
-          case JsError(errors)                   =>
+          case JsError(errors) =>
             Future.successful(BadRequest(JsError.toJson(errors)))
         }
         case Failure(exception) => Future.successful(BadRequest("""{"obj":[{"msg":["error.payload.missing"],"args":[]}]}"""))
@@ -61,11 +66,11 @@ class AddressSearchController @Inject()(addressSearch: AddressSearcher, response
     request =>
       val maybeJson = Try(Json.parse(request.body))
       maybeJson match {
-        case Success(json)      => json.validate[LookupByPostTownRequest] match {
+        case Success(json) => json.validate[LookupByPostTownRequest] match {
           case JsSuccess(lookupByTownRequest, _) =>
             val origin = getOriginHeaderIfSatisfactory(request.headers)
             searchByTown(request, lookupByTownRequest.posttown, lookupByTownRequest.filter, origin)
-          case JsError(errors)                   =>
+          case JsError(errors) =>
             Future.successful(BadRequest(JsError.toJson(errors)))
         }
         case Failure(exception) => Future.successful(BadRequest("""{"obj":[{"msg":["error.payload.missing"],"args":[]}]}"""))
@@ -73,8 +78,10 @@ class AddressSearchController @Inject()(addressSearch: AddressSearcher, response
   }
 
   private[controllers] def searchByUprn[A](request: Request[A], uprn: String, origin: String): Future[Result] = {
-    if (Try(uprn.toLong).isFailure) Future.successful {
-      badRequest("BAD-UPRN", "origin" -> origin, "uprn" -> uprn, "error" -> s"uprn must only consist of digits")
+    if (Try(uprn.toLong).isFailure) {
+      Future.successful {
+        badRequest("BAD-UPRN", "origin" -> origin, "uprn" -> uprn, "error" -> s"uprn must only consist of digits")
+      }
     } else {
       import model.address.AddressRecord.formats._
 
@@ -88,14 +95,27 @@ class AddressSearchController @Inject()(addressSearch: AddressSearcher, response
   }
 
   private[controllers] def searchByPostcode[A](request: Request[A], postcode: Postcode, filter: Option[String], origin: String): Future[Result] = {
-    if (postcode.toString.isEmpty) Future.successful {
-      badRequest("BAD-POSTCODE", "origin" -> origin, "error" -> s"missing or badly-formed $postcode parameter")
+    implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequest(request)
 
+    if (postcode.toString.isEmpty) {
+      Future.successful {
+        badRequest("BAD-POSTCODE", "origin" -> origin, "error" -> s"missing or badly-formed $postcode parameter")
+      }
     } else {
       import model.address.AddressRecord.formats._
-
       addressSearch.findPostcode(postcode, filter).map {
         a =>
+          import model.AddressSearchAuditEvent._
+
+          if (a.nonEmpty) {
+            val userAgent = request.headers.get("User-Agent")
+            auditConnector.sendExplicitAudit("AddressSearch",
+              AddressSearchAuditEvent(userAgent, a.length, a.map { ma =>
+                AddressSearchAuditEventMatchedAddress(
+                  ma.uprn.toString, ma.lines, ma.town, ma.administrativeArea, ma.postcode, ma.country)
+              }))
+          }
+
           val a2 = responseProcessor.convertAddressList(a)
           logEvent("LOOKUP", origin, a2.size, List(Some("postcode" -> postcode.toString), filter.map(f => "filter" -> f)).flatten)
           Ok(Json.toJson(a2))
@@ -104,9 +124,10 @@ class AddressSearchController @Inject()(addressSearch: AddressSearcher, response
   }
 
   private[controllers] def searchByTown[A](request: Request[A], posttown: String, filter: Option[String], origin: String): Future[Result] = {
-    if (posttown.isEmpty) Future.successful {
-      badRequest("BAD-POSTCODE", "origin" -> origin, "error" -> s"missing or badly-formed $posttown parameter")
-
+    if (posttown.isEmpty) {
+      Future.successful {
+        badRequest("BAD-POSTCODE", "origin" -> origin, "error" -> s"missing or badly-formed $posttown parameter")
+      }
     } else {
       import model.address.AddressRecord.formats._
 

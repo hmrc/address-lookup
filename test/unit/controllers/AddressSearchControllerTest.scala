@@ -17,11 +17,12 @@
 package controllers
 
 import akka.stream.Materializer
-import controllers.services.{ReferenceData, ResponseProcessor}
+import controllers.services.{AddressSearcher, ReferenceData, ResponseProcessor}
+import model.{AddressSearchAuditEvent, AddressSearchAuditEventMatchedAddress}
 import model.address._
 import model.internal.DbAddress
 import model.request.{LookupByPostcodeRequest, LookupByUprnRequest}
-import org.mockito.ArgumentMatchers.{eq => meq}
+import org.mockito.ArgumentMatchers.{any, eq => meq}
 import org.mockito.Mockito._
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -36,6 +37,7 @@ import play.api.test.Helpers._
 import play.api.{Application, inject}
 import repositories.AddressLookupRepository
 import uk.gov.hmrc.http.UpstreamErrorResponse
+import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import util.Utils._
 
 import scala.concurrent.Future
@@ -69,11 +71,15 @@ class AddressSearchControllerTest extends AnyWordSpec with Matchers with GuiceOn
   val addressAr2 = AddressRecord("GB100006", Some(100006L), Address(List("Test Station", "Test Road"), "ATown", "FX11 7LA", Some(England), GB), en, Some(LocalCustodian(2935, "Testland")), Some(Location("12.345678", "-12.345678").toSeq), Some("TestLocalAuthority"))
 
   val searcher: AddressLookupRepository = mock[AddressLookupRepository]
+  val mockAuditConnector = mock[AuditConnector]
+
   override implicit lazy val app: Application = {
     new GuiceApplicationBuilder()
-        .overrides(inject.bind[AddressLookupRepository]toInstance(searcher))
+        .overrides(inject.bind[AddressSearcher].toInstance(searcher))
+        .overrides(inject.bind[AuditConnector].toInstance(mockAuditConnector))
         .build()
   }
+
   val controller: AddressSearchController = app.injector.instanceOf[AddressSearchController]
   implicit val mat: Materializer = app.injector.instanceOf[Materializer]
 
@@ -109,6 +115,7 @@ class AddressSearchControllerTest extends AnyWordSpec with Matchers with GuiceOn
        and give an 'ok' response
        and log the lookup including the size of the result list
       """ in {
+        clearInvocations(mockAuditConnector)
         when(searcher.findPostcode(Postcode("FX11 4HG"), Some("FOO"))) thenReturn Future(List(addr1Db))
         val jsonPayload = Json.toJson(LookupByPostcodeRequest(Postcode("FX11 4HG"), Some("FOO")))
         val request = FakeRequest("POST", "/lookup")
@@ -124,6 +131,7 @@ class AddressSearchControllerTest extends AnyWordSpec with Matchers with GuiceOn
        and give an 'ok' response as if the filter parameter wass absent
        and log the lookup including the size of the result list
       """ in {
+        clearInvocations(mockAuditConnector)
         when(searcher.findPostcode(Postcode("FX11 4HG"), None)) thenReturn Future(List(addr1Db))
         val jsonPayload = Json.toJson(LookupByPostcodeRequest(Postcode("FX11 4HG"), None))
         val request = FakeRequest("POST", "/lookup")
@@ -137,15 +145,47 @@ class AddressSearchControllerTest extends AnyWordSpec with Matchers with GuiceOn
       """when search is called with a postcode that will give several results
        it should give an 'ok' response containing the result list
        and log the lookup including the size of the result list
+       and audit the results
       """ in {
-        when(searcher.findPostcode(Postcode("FX11 4HG"), None)) thenReturn Future(List(dx1A, dx1B, dx1C))
+        clearInvocations(mockAuditConnector)
+
+        when(searcher.findPostcode(meq(Postcode("FX11 4HG")), meq(None))) thenReturn Future(List(dx1A, dx1B, dx1C))
         val jsonPayload = Json.toJson(LookupByPostcodeRequest(Postcode("FX11 4HG")))
         val request = FakeRequest("POST", "/lookup")
           .withBody(jsonPayload.toString)
+          .withHeaders("User-Agent" -> "test-user-agent")
+          .withHeadersOrigin
+
+        val expectedAuditAddressMatches = Seq(
+          AddressSearchAuditEventMatchedAddress("100002", List("1 Test Street"), "Testtown", Some("TestLocalAuthority"), "FZ22 7ZW", Some("GB")),
+          AddressSearchAuditEventMatchedAddress("100003", List("2 Test Street"), "Testtown", Some("TestLocalAuthority"), "FZ22 7ZW", Some("GB")),
+          AddressSearchAuditEventMatchedAddress("100004", List("3 Test Street"), "Testtown", Some("TestLocalAuthority"), "FZ22 7ZW", Some("GB")))
+
+        val expectedAuditEvent = AddressSearchAuditEvent(Some("test-user-agent"), 3, expectedAuditAddressMatches)
+
+        val result = controller.search().apply(request)
+        status(result) shouldBe Status.OK
+
+        verify(mockAuditConnector, times(1))
+          .sendExplicitAudit(meq("AddressSearch"), meq(expectedAuditEvent))(any(), any(), any())
+      }
+
+      """when search is called with a postcode thatgives no results
+       it should give an 'ok' response and not send an explicit audit event
+      """ in {
+        clearInvocations(mockAuditConnector)
+
+        when(searcher.findPostcode(meq(Postcode("FX11 4HX")), meq(None))) thenReturn Future(List())
+        val jsonPayload = Json.toJson(LookupByPostcodeRequest(Postcode("FX11 4HX")))
+        val request = FakeRequest("POST", "/lookup")
+          .withBody(jsonPayload.toString)
+          .withHeaders("User-Agent" -> "test-user-agent")
           .withHeadersOrigin
 
         val result = controller.search().apply(request)
         status(result) shouldBe Status.OK
+
+        verify(mockAuditConnector, never()).sendExplicitAudit(any(), any[AddressSearchAuditEvent]())(any(), any(), any())
       }
     }
   }
@@ -167,7 +207,7 @@ class AddressSearchControllerTest extends AnyWordSpec with Matchers with GuiceOn
 
     "give bad request" when {
       """search is called with an invalid uprn""" in {
-        val controller = new AddressSearchController(searcher, new ResponseStub(Nil), ec, cc)
+        val controller = new AddressSearchController(searcher, new ResponseStub(Nil), mockAuditConnector, ec, cc)
         val jsonPayload = Json.toJson(LookupByUprnRequest("GB0123456789"))
         val request = FakeRequest("POST", "/lookup/by-uprn")
         .withBody(jsonPayload.toString)
