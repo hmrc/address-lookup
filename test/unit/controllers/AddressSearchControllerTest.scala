@@ -31,7 +31,7 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.Status
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
-import play.api.mvc.Request
+import play.api.mvc.{ControllerComponents, Request}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import play.api.{Application, inject}
@@ -40,38 +40,38 @@ import uk.gov.hmrc.http.UpstreamErrorResponse
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import util.Utils._
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
 
 class AddressSearchControllerTest extends AnyWordSpec with Matchers with GuiceOneAppPerSuite with MockitoSugar {
 
-  implicit val ec = scala.concurrent.ExecutionContext.Implicits.global
-  implicit val timeout: FiniteDuration = 1 second
-  val cc = play.api.test.Helpers.stubControllerComponents()
+  implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
+  implicit val timeout: FiniteDuration = 1.second
+  val cc: ControllerComponents = play.api.test.Helpers.stubControllerComponents()
 
   private val en = "en"
 
   import model.address.Country._
 
-  val addr1Db = DbAddress("GB100001", List("10 Test Court", "Test Street", "Tester"), "Test upon Tyne", "FX1 5XD", Some("GB-ENG"), Some("GB"), Some(4510), Some("en"), None, Some(Location("12.345678", "-12.345678").toString), None, Some("TestLocalAuthority"))
-  val addr1Ar = AddressRecord("GB100001", Some(100001L), Address(List("10 Test Court", "Test Street", "Tester"), "Test upon Tyne", "FX1 5XD", Some(England), GB), en, Some(LocalCustodian(4510, "Test upon Tyne")), Some(Location("12.345678", "-12.345678").toSeq), Some("TestLocalAuthority"))
+  val addr1Db: DbAddress = DbAddress("GB100001", List("10 Test Court", "Test Street", "Tester"), "Test upon Tyne", "FX1 5XD", Option("GB-ENG"), Option("GB"), Option(4510), Option("en"), None, Option(Location("12.345678", "-12.345678").toString), None, Option("TestLocalAuthority"))
+  val addr1Ar: AddressRecord = AddressRecord("GB100001", Option(100001L), Address(List("10 Test Court", "Test Street", "Tester"), "Test upon Tyne", "FX1 5XD", Option(England), GB), en, Option(LocalCustodian(4510, "Test upon Tyne")), Option(Location("12.345678", "-12.345678").toSeq), Option("TestLocalAuthority"))
 
-  val dx1A = DbAddress("GB100002", List("1 Test Street"), "Testtown", "FZ22 7ZW", Some("GB-XXX"), Some("GB"), Some(9999), Some("en"), None, Some("54.914561,-1.3905597"), None, Some("TestLocalAuthority"))
-  val dx1B = DbAddress("GB100003", List("2 Test Street"), "Testtown", "FZ22 7ZW", Some("GB-XXX"), Some("GB"), Some(9999), Some("en"), None, Some("54.914561,-1.3905597"), None, Some("TestLocalAuthority"))
-  val dx1C = DbAddress("GB100004", List("3 Test Street"), "Testtown", "FZ22 7ZW", Some("GB-XXX"), Some("GB"), Some(9999), Some("en"), None, Some("54.914561,-1.3905597"), None, Some("TestLocalAuthority"))
+  val dx1A: DbAddress = DbAddress("GB100002", List("1 Test Street"), "Testtown", "FZ22 7ZW", Option("GB-XXX"), Option("GB"), Option(9999), Option("en"), None, Option("54.914561,-1.3905597"), None, Option("TestLocalAuthority"))
+  val dx1B: DbAddress = DbAddress("GB100003", List("2 Test Street"), "Testtown", "FZ22 7ZW", Option("GB-XXX"), Option("GB"), Option(9999), Option("en"), None, Option("54.914561,-1.3905597"), None, Option("TestLocalAuthority"))
+  val dx1C: DbAddress = DbAddress("GB100004", List("3 Test Street"), "Testtown", "FZ22 7ZW", Option("GB-XXX"), Option("GB"), Option(9999), Option("en"), None, Option("54.914561,-1.3905597"), None, Option("TestLocalAuthority"))
 
-  val fx1A = AddressRecord("GB100002", Some(100002L), Address(List("1 Test Street"), "Testtown", "FZ22 7ZW", Some(England), GB), en, Some(LocalCustodian(9999, "Somewhere")), Some(Location("0,0").toSeq), Some("TestLocalAuthority"))
-  val fx1B = AddressRecord("GB100003", Some(100003L), Address(List("2 Test Street"), "Testtown", "FZ22 7ZW", Some(England), GB), en, Some(LocalCustodian(9999, "Somewhere")), Some(Location("0,0").toSeq), Some("TestLocalAuthority"))
-  val fx1C = AddressRecord("GB100004", Some(100004L), Address(List("3 Test Street"), "Testtown", "FZ22 7ZW", Some(England), GB), en, Some(LocalCustodian(9999, "Somewhere")), Some(Location("0,0").toSeq), Some("TestLocalAuthority"))
+  val fx1A: AddressRecord = AddressRecord("GB100002", Option(100002L), Address(List("1 Test Street"), "Testtown", "FZ22 7ZW", Option(England), GB), en, Option(LocalCustodian(9999, "Somewhere")), Option(Location("0,0").toSeq), Option("TestLocalAuthority"))
+  val fx1B: AddressRecord = AddressRecord("GB100003", Option(100003L), Address(List("2 Test Street"), "Testtown", "FZ22 7ZW", Option(England), GB), en, Option(LocalCustodian(9999, "Somewhere")), Option(Location("0,0").toSeq), Option("TestLocalAuthority"))
+  val fx1C: AddressRecord = AddressRecord("GB100004", Option(100004L), Address(List("3 Test Street"), "Testtown", "FZ22 7ZW", Option(England), GB), en, Option(LocalCustodian(9999, "Somewhere")), Option(Location("0,0").toSeq), Option("TestLocalAuthority"))
 
-  val addressDb1 = DbAddress("GB100005", List("Test Road"), "ATown", "FX11 7LX", Some("GB-ENG"), Some("GB"), Some(2935), Some("en"), None, Some(Location("12.345678", "-12.345678").toString), None, Some("TestLocalAuthority"))
-  val addressDb2 = DbAddress("GB100006", List("ARoad", "ARoad"), "Atown", "FX11 7LA", Some("GB-ENG"), Some("GB"), Some(2935), Some("en"), None, Some(Location("12.345678", "-12.345678").toString), None, Some("TestLocalAuthority"))
+  val addressDb1: DbAddress = DbAddress("GB100005", List("Test Road"), "ATown", "FX11 7LX", Option("GB-ENG"), Option("GB"), Option(2935), Option("en"), None, Option(Location("12.345678", "-12.345678").toString), None, Option("TestLocalAuthority"))
+  val addressDb2: DbAddress = DbAddress("GB100006", List("ARoad", "ARoad"), "Atown", "FX11 7LA", Option("GB-ENG"), Option("GB"), Option(2935), Option("en"), None, Option(Location("12.345678", "-12.345678").toString), None, Option("TestLocalAuthority"))
 
-  val addressAr1 = AddressRecord("GB100005", Some(100005L), Address(List("Test Road"), "ATown", "FX11 7LX", Some(England), GB), en, Some(LocalCustodian(2935, "Testland")), Some(Location("12.345678", "-12.345678").toSeq), Some("TestLocalAuthority"))
-  val addressAr2 = AddressRecord("GB100006", Some(100006L), Address(List("Test Station", "Test Road"), "ATown", "FX11 7LA", Some(England), GB), en, Some(LocalCustodian(2935, "Testland")), Some(Location("12.345678", "-12.345678").toSeq), Some("TestLocalAuthority"))
+  val addressAr1: AddressRecord = AddressRecord("GB100005", Option(100005L), Address(List("Test Road"), "ATown", "FX11 7LX", Option(England), GB), en, Option(LocalCustodian(2935, "Testland")), Option(Location("12.345678", "-12.345678").toSeq), Option("TestLocalAuthority"))
+  val addressAr2: AddressRecord = AddressRecord("GB100006", Option(100006L), Address(List("Test Station", "Test Road"), "ATown", "FX11 7LA", Option(England), GB), en, Option(LocalCustodian(2935, "Testland")), Option(Location("12.345678", "-12.345678").toSeq), Option("TestLocalAuthority"))
 
   val searcher: AddressLookupRepository = mock[AddressLookupRepository]
-  val mockAuditConnector = mock[AuditConnector]
+  val mockAuditConnector: AuditConnector = mock[AuditConnector]
 
   override implicit lazy val app: Application = {
     new GuiceApplicationBuilder()
@@ -116,8 +116,8 @@ class AddressSearchControllerTest extends AnyWordSpec with Matchers with GuiceOn
        and log the lookup including the size of the result list
       """ in {
         clearInvocations(mockAuditConnector)
-        when(searcher.findPostcode(Postcode("FX11 4HG"), Some("FOO"))) thenReturn Future(List(addr1Db))
-        val jsonPayload = Json.toJson(LookupByPostcodeRequest(Postcode("FX11 4HG"), Some("FOO")))
+        when(searcher.findPostcode(Postcode("FX11 4HG"), Option("FOO"))) thenReturn Future(List(addr1Db))
+        val jsonPayload = Json.toJson(LookupByPostcodeRequest(Postcode("FX11 4HG"), Option("FOO")))
         val request = FakeRequest("POST", "/lookup")
           .withBody(jsonPayload.toString)
           .withHeadersOrigin
@@ -157,11 +157,11 @@ class AddressSearchControllerTest extends AnyWordSpec with Matchers with GuiceOn
           .withHeadersOrigin
 
         val expectedAuditAddressMatches = Seq(
-          AddressSearchAuditEventMatchedAddress("100002", List("1 Test Street"), "Testtown", Some("TestLocalAuthority"), "FZ22 7ZW", Some("GB")),
-          AddressSearchAuditEventMatchedAddress("100003", List("2 Test Street"), "Testtown", Some("TestLocalAuthority"), "FZ22 7ZW", Some("GB")),
-          AddressSearchAuditEventMatchedAddress("100004", List("3 Test Street"), "Testtown", Some("TestLocalAuthority"), "FZ22 7ZW", Some("GB")))
+          AddressSearchAuditEventMatchedAddress("100002", List("1 Test Street"), "Testtown", Option("TestLocalAuthority"), "FZ22 7ZW", Option("GB")),
+          AddressSearchAuditEventMatchedAddress("100003", List("2 Test Street"), "Testtown", Option("TestLocalAuthority"), "FZ22 7ZW", Option("GB")),
+          AddressSearchAuditEventMatchedAddress("100004", List("3 Test Street"), "Testtown", Option("TestLocalAuthority"), "FZ22 7ZW", Option("GB")))
 
-        val expectedAuditEvent = AddressSearchAuditEvent(Some("test-user-agent"), 3, expectedAuditAddressMatches)
+        val expectedAuditEvent = AddressSearchAuditEvent(Option("test-user-agent"), 3, expectedAuditAddressMatches)
 
         val result = controller.search().apply(request)
         status(result) shouldBe Status.OK

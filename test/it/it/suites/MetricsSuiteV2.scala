@@ -74,8 +74,8 @@ class MetricsSuiteV2()
       }
 
       "give a timer for the findPostcodeFilter search case" in {
-        when(repository.findPostcode(meq(Postcode("SE1 9PY")), meq(Some("10")))).thenReturn(
-          Future.successful(doFilter(dbAddresses.filter(_.postcode == "SE1 9PY"), Some("10")).toList))
+        when(repository.findPostcode(meq(Postcode("SE1 9PY")), meq(Option("10")))).thenReturn(
+          Future.successful(doFilter(dbAddresses.filter(_.postcode == "SE1 9PY"), Option("10")).toList))
 
         post("/lookup", """{"postcode":"SE1 9PY", "filter":"10"}""").status shouldBe OK
 

@@ -40,7 +40,7 @@ import scala.concurrent.Future
 class UprnLookupSuiteV2()
   extends AnyWordSpec with GuiceOneServerPerSuite with AppServerTestApi {
 
-  import FixturesV2._
+  import _root_.it.suites.FixturesV2._
 
   val repository: AddressLookupService = mock[AddressLookupService]
   override def fakeApplication(): Application = {
@@ -54,7 +54,7 @@ class UprnLookupSuiteV2()
   override val wsClient: WSClient = app.injector.instanceOf[WSClient]
 
   "uprn lookup" when {
-    import AddressRecord.formats._
+    import model.address.AddressRecord.formats._
 
     "successful" should {
 
@@ -115,7 +115,7 @@ class UprnLookupSuiteV2()
 
       "give a bad request when the origin header is absent" in {
         val path = "/lookup/by-uprn"
-        val response = await(wsClient.url(appEndpoint + path).withMethod("POST").withBody("""{"uprn":"9999999999"}""").execute())
+        val response = await(wsClient.url(s"$appEndpoint$path").withMethod("POST").withBody("""{"uprn":"9999999999"}""").execute())
         response.status shouldBe BAD_REQUEST
       }
 

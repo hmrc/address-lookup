@@ -23,9 +23,9 @@ import model.address.Postcode
 object CSV {
   def convertCsvLine(line: Array[String]): DbAddress = {
     if (line.length < 6) {
-      throw new RuntimeException("Short input line: " + line.mkString)
+      throw new RuntimeException(s"Short input line: ${line.mkString}")
     } else if (line.length > 9) {
-      throw new RuntimeException("Excessive input line: " + line.mkString)
+      throw new RuntimeException(s"Excessive input line: ${line.mkString}")
     } else {
       val uprn = trim(line(0))
       val line1 = normaliseAddressLine(removeTrailingCommaAndTrim(line(1)))
@@ -37,13 +37,13 @@ object CSV {
       val subdivision = if (line.length > 6) blankToOption(trim(line(6))) else None
       val lcc = if (line.length > 7) blankToOption(trim(line(7))).map(_.toInt) else None
       val poBox = if (line.length > 8) blankToOption(trim(line(8))) else None
-      DbAddress(prefixedId(uprn), lines, line4, postcode, subdivision, Some("GB"), lcc, Some("en"), None, None, poBox)
+      DbAddress(prefixedId(uprn), lines, line4, postcode, subdivision, Option("GB"), lcc, Option("en"), None, None, poBox)
     }
   }
 
-  private def prefixedId(id: String) = if (id.startsWith("GB")) id else "GB" + id
+  private def prefixedId(id: String) = if (id.startsWith("GB")) id else s"GB$id"
 
-  def blankToOption(s: String): Option[String] = if (s == null || s.isEmpty) None else Some(s)
+  def blankToOption(s: String): Option[String] = if (s == null || s.isEmpty) None else Option(s)
 
   def trim(s: String): String = if (s == null) null else s.trim
 

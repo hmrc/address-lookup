@@ -22,7 +22,7 @@ case class Location(latitude: BigDecimal, longitude: BigDecimal) {
 
   def toSeq = Seq(latitude, longitude)
 
-  override def toString: String = latitude + "," + longitude
+  override def toString: String = s"$latitude,$longitude"
 }
 
 object Location {

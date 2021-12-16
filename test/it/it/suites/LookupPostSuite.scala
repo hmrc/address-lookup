@@ -53,7 +53,7 @@ class LookupPostSuite()
   override val wsClient: WSClient = app.injector.instanceOf[WSClient]
 
   "lookup POST" when {
-    import AddressRecord.formats._
+    import model.address.AddressRecord.formats._
 
     "successful" should {
 
@@ -183,7 +183,7 @@ class LookupPostSuite()
             |}""".stripMargin
 
         val path = "/lookup"
-        val response = await(wsClient.url(appEndpoint + path)
+        val response = await(wsClient.url(s"$appEndpoint$path")
           .withMethod("POST")
           .withHttpHeaders("content-type" -> "application/json")
           .withBody(payload).execute())

@@ -26,13 +26,13 @@ object Capitalisation {
     val words: Seq[String] = phrase.flatMap(_.split(' ').filterNot(_ == ""))
 
     if (words.isEmpty) ""
-    else if (words.length == 1) asFirstWord(words.head)
-    else asFirstWord(words.head) + words.tail.map(asOtherWord).mkString(" ", " ", "")
+    else if (words.lengthCompare(1) == 0) asFirstWord(words.head)
+    else s"${asFirstWord(words.head)}${words.tail.map(asOtherWord).mkString(" ", " ", "")}"
   }
 
   private def joinDashedWords(first: String, rest: Seq[String]): String =
     if (rest.isEmpty) first
-    else first + rest.map(capitaliseRestOfSubwords).mkString("-", "-", "")
+    else s"$first${rest.map(capitaliseRestOfSubwords).mkString("-", "-", "")}"
 
   private def splitOnDash(phrase: String): Seq[String] = phrase.split('-')
 
@@ -65,7 +65,7 @@ object Capitalisation {
     if (word.length < 2) word.capitalize
     else {
       val two = word.substring(0, 2)
-      if (contractedPrefixes.contains(two)) two.capitalize + word.substring(2).capitalize
+      if (contractedPrefixes.contains(two)) s"${two.capitalize}${word.substring(2).capitalize}"
       else word.capitalize
     }
 

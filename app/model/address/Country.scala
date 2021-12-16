@@ -40,26 +40,21 @@ object Country {
 
     implicit val countryWrites: Writes[Country] = Json.writes[Country]
   }
-  // note that "GB" is the official ISO code for UK, although "UK" is a reserved synonym and is less confusing
-  @deprecated("GB is the official ISO code for UK")
-  val UK = Country("UK", "United Kingdom")
 
-  val GB = Country("GB", "United Kingdom") // special case provided for in ISO-3166
-  val GG = Country("GG", "Guernsey")
-  val IM = Country("IM", "Isle of Man")
-  val JE = Country("JE", "Jersey")
+  val GB: Country = Country("GB", "United Kingdom") // special case provided for in ISO-3166
+  val GG: Country = Country("GG", "Guernsey")
+  val IM: Country = Country("IM", "Isle of Man")
+  val JE: Country = Country("JE", "Jersey")
 
-  val England = Country("GB-ENG", "England")
-  val Scotland = Country("GB-SCT", "Scotland")
-  val Wales = Country("GB-WLS", "Wales")
-  val Cymru = Country("GB-CYM", "Cymru")
-  val NorthernIreland = Country("GB-NIR", "Northern Ireland")
+  val England: Country = Country("GB-ENG", "England")
+  val Scotland: Country = Country("GB-SCT", "Scotland")
+  val Wales: Country = Country("GB-WLS", "Wales")
+  val Cymru: Country = Country("GB-CYM", "Cymru")
+  val NorthernIreland: Country = Country("GB-NIR", "Northern Ireland")
 
-  private val all = List(UK, GB, GG, IM, JE, England, Scotland, Wales, Cymru, NorthernIreland)
+  private val all = List(GB, GG, IM, JE, England, Scotland, Wales, Cymru, NorthernIreland)
 
   def find(code: String): Option[Country] = all.find(_.code == code)
 
   def findByName(name: String): Option[Country] = all.find(_.name == name)
-
-  // TODO this is possibly not good enough - should consult a reference HMG-approved list of countries
 }

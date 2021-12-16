@@ -26,8 +26,8 @@ import scala.collection.JavaConverters.asScalaIteratorConverter
 import scala.concurrent.{ExecutionContext, Future}
 import scala.io.Source
 
-class InMemoryAddressLookupRepository @Inject()(env: Environment, ec: ExecutionContext) extends AddressSearcher {
-  import InMemoryAddressLookupRepository._
+class InMemoryAddressLookupRepository @Inject()(env: Environment) extends AddressSearcher {
+  import repositories.InMemoryAddressLookupRepository._
 
   override def findID(id: String): Future[List[DbAddress]] =
     Future.successful(dbAddresses.filter(_.id == id).toList)
@@ -39,36 +39,36 @@ class InMemoryAddressLookupRepository @Inject()(env: Environment, ec: ExecutionC
     Future.successful(doFilter(dbAddresses.filter(_.postcode.equalsIgnoreCase(postcode.toString)), filter).toList.take(3000))
 
   override def findTown(town: String, filter: Option[String]): Future[List[DbAddress]] =
-    Future.successful(doFilter(dbAddresses.filter(_.town.equalsIgnoreCase(town.toString)), filter).toList.take(3000))
+    Future.successful(doFilter(dbAddresses.filter(_.town.equalsIgnoreCase(town)), filter).toList.take(3000))
 
   override def findOutcode(outcode: Outcode, filter: String): Future[List[DbAddress]] =
-    Future.successful(doFilter(dbAddresses.filter(_.postcode.toUpperCase.startsWith(outcode.toString.toUpperCase)), Some(filter)).toList)
+    Future.successful(doFilter(dbAddresses.filter(_.postcode.toUpperCase.startsWith(outcode.toString.toUpperCase)), Option(filter)).toList)
 }
 
 object InMemoryAddressLookupRepository {
   val singleAddresses: Seq[DbAddress] = Seq(
-    DbAddress("GB11111", List("A House 27-45", "A Street"), "London", "FX9 9PY", Some("GB-ENG"), Some("GB"),
-      Some(5840), Some("en"), None, Some(Location("12.345678", "-12.345678").toString)),
-    DbAddress("GB33333", List("A House 5-7", "A Boulevard"), "Newcastle upon Tyne", "FX1 6JN", Some("GB-ENG"),
-      Some("GB"), Some(4510), Some("en"), None, Some(Location("12.345678", "-12.345678")
+    DbAddress("GB11111", List("A House 27-45", "A Street"), "London", "FX9 9PY", Option("GB-ENG"), Option("GB"),
+      Option(5840), Option("en"), None, Option(Location("12.345678", "-12.345678").toString)),
+    DbAddress("GB33333", List("A House 5-7", "A Boulevard"), "Newcastle upon Tyne", "FX1 6JN", Option("GB-ENG"),
+      Option("GB"), Option(4510), Option("en"), None, Option(Location("12.345678", "-12.345678")
           .toString)),
-    DbAddress("GB44444", List("An address with a very long first line", "Second line of address is just as long maybe" +
-        " longer", "Third line is not the longest but is still very long"), "Llanfairpwllgwyngyllgogerychwyrndrobwllllantysiliogogogoch", "FX2 2TB", Some("GB-WLS"), Some("GB"), Some(915),
-      Some("en"), None, Some(Location("12.345678", "-12.345678").toString)),
-    DbAddress("GB55555", List("An address with a PO Box"), "some-town", "FX17 1TB", Some("GB-WLS"), Some("GB"), Some(666),
-      Some("en"), None, Some(Location("12.345678", "-12.345678").toString), Some("PO Box " +
-          "1234")),
-    DbAddress("GB22222", List("11 A Boulevard"), "Newcastle upon Tyne", "FX1 6JN", Some("GB-ENG"), Some("GB"), Some(4510), Some("en"), None, Some(Location("12.345678", "-12.345678").toString))
+    DbAddress("GB44444", List("An address with a very long first line", "Second line of address is just as long maybe longer", "Third line is not the longest but is still very long"), "Llanfairpwllgwyngyllgogerychwyrndrobwllllantysiliogogogoch", "FX2 2TB", Option("GB-WLS"), Option("GB"), Option(915),
+      Option("en"), None, Option(Location("12.345678", "-12.345678").toString)),
+    DbAddress("GB55555", List("An address with a PO Box"), "some-town", "FX17 1TB", Option("GB-WLS"), Option("GB"),
+      Option(666),
+      Option("en"), None, Option(Location("12.345678", "-12.345678").toString), Option("PO Box 1234")),
+    DbAddress("GB22222", List("11 A Boulevard"), "Newcastle upon Tyne", "FX1 6JN",
+      Option("GB-ENG"), Option("GB"), Option(4510), Option("en"), None, Option(Location("12.345678", "-12.345678").toString))
   )
 
-  val apartmentAddresses: Seq[DbAddress] = (for (i <- 1 to 2517) yield {
-    DbAddress(s"GB100$i", List(s"Flat $i", "A Apartments", "ARoad"), "ATown", "FX4 7AL", Some("GB-ENG"), Some("GB"), Some(3725), Some("en"), None, None)
-  })
+  val apartmentAddresses: Seq[DbAddress] = for (i <- 1 to 2517) yield {
+    DbAddress(s"GB100$i", List(s"Flat $i", "A Apartments", "ARoad"), "ATown", "FX4 7AL", Option("GB-ENG"), Option("GB"), Option(3725), Option("en"), None, None)
+  }
 
-  val boulevardAddresses: Seq[DbAddress] = (for (i <- 1 to 3000) yield {
+  val boulevardAddresses: Seq[DbAddress] = for (i <- 1 to 3000) yield {
     DbAddress(s"GB200$i", List(s"$i Bankside"), "ATown", "FX4 7AJ",
-      Some("GB-ENG"), Some("GB"), Some(3725), Some("en"), None, None)
-  })
+      Option("GB-ENG"), Option("GB"), Option(3725), Option("en"), None, None)
+  }
 
   val extraAddresses: Seq[DbAddress] = singleAddresses ++ apartmentAddresses ++ boulevardAddresses
 
@@ -81,7 +81,7 @@ object InMemoryAddressLookupRepository {
   } ++ extraAddresses
 
   def dbsToFilterText(dbAddress: DbAddress): Set[String] =
-    (dbAddress.lines.mkString(" ") + " " + dbAddress.town + " " + dbAddress.administrativeArea.getOrElse("") + " " + dbAddress.poBox.getOrElse("")).replaceAll("[\\p{Space},]+", " ").split(" ").map(_.toLowerCase).toSet
+    (s"${dbAddress.lines.mkString(" ")} ${dbAddress.town} ${dbAddress.administrativeArea.getOrElse("")} ${dbAddress.poBox.getOrElse("")}").replaceAll("[\\p{Space},]+", " ").split(" ").map(_.toLowerCase).toSet
 
   def doFilter(filteredDbAddresses: Seq[DbAddress], filter: Option[String]): Seq[DbAddress] = {
     val filterTokens =

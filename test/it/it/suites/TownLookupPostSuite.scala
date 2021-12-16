@@ -50,7 +50,7 @@ class TownLookupPostSuite()
   override val wsClient: WSClient = app.injector.instanceOf[WSClient]
 
   "lookup town POST" when {
-    import AddressRecord.formats._
+    import model.address.AddressRecord.formats._
 
     "successful" should {
 
@@ -102,7 +102,7 @@ class TownLookupPostSuite()
 
       "give a successful filtered response for a known v.large town - uk route" in {
         when(repository.findTown(meq("ATown"), meq(None))).thenReturn(
-          Future.successful(doFilter(dbAddresses.filter(_.town == "ATown"), Some("10")).toList))
+          Future.successful(doFilter(dbAddresses.filter(_.town == "ATown"), Option("10")).toList))
 
         val payload =
           """{
@@ -210,7 +210,7 @@ class TownLookupPostSuite()
             |}""".stripMargin
 
         val path = "/lookup/by-post-town"
-        val response = await(wsClient.url(appEndpoint + path)
+        val response = await(wsClient.url(s"$appEndpoint$path")
           .withMethod("POST")
           .withHttpHeaders("content-type" -> "application/json")
           .withBody(payload).execute())

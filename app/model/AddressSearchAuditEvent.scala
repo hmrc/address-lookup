@@ -16,7 +16,7 @@
 
 package model
 
-import play.api.libs.json.Json
+import play.api.libs.json.{Json, Writes}
 
 case class AddressSearchAuditEventMatchedAddress(uprn: String, lines: Seq[String], town: String,
                                                  administrativeArea: Option[String], postCode: String,
@@ -26,6 +26,6 @@ case class AddressSearchAuditEvent(userAgent: Option[String], numberOfAddressFou
                                    matchedAddresses: Seq[AddressSearchAuditEventMatchedAddress])
 
 object AddressSearchAuditEvent {
-  implicit def addressWrites = Json.writes[AddressSearchAuditEventMatchedAddress]
-  implicit def writes = Json.writes[AddressSearchAuditEvent]
+  implicit def addressWrites: Writes[AddressSearchAuditEventMatchedAddress] = Json.writes[AddressSearchAuditEventMatchedAddress]
+  implicit def writes: Writes[AddressSearchAuditEvent] = Json.writes[AddressSearchAuditEvent]
 }

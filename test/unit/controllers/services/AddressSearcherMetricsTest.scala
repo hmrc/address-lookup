@@ -28,23 +28,23 @@ import org.scalatestplus.mockito.MockitoSugar
 import play.api.test.Helpers._
 import services.AddressLookupService
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContextExecutor, Future}
 
 class AddressSearcherMetricsTest extends AnyWordSpec with Matchers with MockitoSugar {
 
-  val dummyGBDbAddr1 = DbAddress("GB123456", List("Line1", "Line2", "Line3"), "ATOWN", "FX30 4HG",
-    Some("GB-ENG"), Some("GB"), Some(4510), Some("en"), None, Some("12.34567,-12.34567"))
-  implicit val ec = scala.concurrent.ExecutionContext.global
+  val dummyGBDbAddr1: DbAddress = DbAddress("GB123456", List("Line1", "Line2", "Line3"), "ATOWN", "FX30 4HG",
+    Option("GB-ENG"), Option("GB"), Option(4510), Option("en"), None, Option("12.34567,-12.34567"))
+  implicit val ec: ExecutionContextExecutor = scala.concurrent.ExecutionContext.global
 
   class TestContext {
-    val peer = mock[AddressLookupService]
+    val peer: AddressLookupService = mock[AddressLookupService]
 
-    val context = mock[Context]
+    val context: Context = mock[Context]
 
-    val timer = mock[Timer]
+    val timer: Timer = mock[Timer]
     when(timer.time()) thenReturn context
 
-    val registry = mock[MetricRegistry]
+    val registry: MetricRegistry = mock[MetricRegistry]
     when(registry.timer(anyString())) thenReturn timer
 
     val asm = new AddressSearcherMetrics(peer, registry, ec)

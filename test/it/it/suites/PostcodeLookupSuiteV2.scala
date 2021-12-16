@@ -38,7 +38,7 @@ import scala.concurrent.Future
 class PostcodeLookupSuiteV2 ()
   extends AnyWordSpec with GuiceOneServerPerSuite with AppServerTestApi {
 
-  import FixturesV2._
+  import _root_.it.suites.FixturesV2._
 
   private val largePostcodeExampleSize = 2517
 
@@ -54,7 +54,7 @@ class PostcodeLookupSuiteV2 ()
   override val wsClient: WSClient = app.injector.instanceOf[WSClient]
 
   "postcode lookup" when {
-    import AddressRecord.formats._
+    import model.address.AddressRecord.formats._
 
     "successful" should {
 
@@ -100,7 +100,7 @@ class PostcodeLookupSuiteV2 ()
         val json = Json.parse(response.body)
         val arr = json.asInstanceOf[JsArray].value
         val address1 = Json.fromJson[AddressRecord](arr.head).get
-        address1.poBox shouldBe Some("1234")
+        address1.poBox shouldBe Option("1234")
       }
 
       "set the content type to application/json" in {
@@ -162,7 +162,7 @@ class PostcodeLookupSuiteV2 ()
 
       "give single result when a filter is used" in {
         when(repository.findPostcode(meq(Postcode("FX1 6JN")), meq(None))).thenReturn(
-          Future.successful(doFilter(dbAddresses.filter(_.postcode == "FX1 6JN"), Some("House")).toList))
+          Future.successful(doFilter(dbAddresses.filter(_.postcode == "FX1 6JN"), Option("House")).toList))
 
         val body = post("/lookup", """{"postcode":"FX1 6JN", "filter":"House"}""").body
         body should startWith("[{")
@@ -243,7 +243,7 @@ class PostcodeLookupSuiteV2 ()
     "client error" should {
       "give a bad request when the origin header is absent" in {
         val path = "/lookup"
-        val response = await(wsClient.url(appEndpoint + path).withMethod("POST").withBody("""{"postcode":"FX1 4AB"}""").execute())
+        val response = await(wsClient.url(s"$appEndpoint$path").withMethod("POST").withBody("""{"postcode":"FX1 4AB"}""").execute())
         response.status shouldBe BAD_REQUEST
       }
 

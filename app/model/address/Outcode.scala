@@ -18,7 +18,7 @@ package model.address
 
 case class Outcode(area: String, district: String) {
 
-  override lazy val toString = area + district
+  override lazy val toString: String = s"$area$district"
 }
 
 
@@ -39,7 +39,7 @@ object Outcode {
 
   private def checkSyntax(out: String): Option[Outcode] = {
     if (Postcode.oPattern.matcher(out).matches())
-      Some(Outcode(out))
+      Option(Outcode(out))
     else
       None
   }

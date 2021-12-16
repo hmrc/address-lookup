@@ -39,7 +39,7 @@ class AddressLookupIdController @Inject()(addressSearch: AddressSearcher, respon
     getOriginHeaderIfSatisfactory(request.headers)
 
     Try(addressSearch.findID(id).map { a =>
-      import AddressRecord.formats._
+      import model.address.AddressRecord.formats._
       a.headOption.fold(NotFound(s"id matched nothing")) { ad =>
         Ok(Json.toJson(responseProcessor.convertAddress(ad)))
       }

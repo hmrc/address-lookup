@@ -31,8 +31,8 @@ import model.address.{Outcode, Postcode}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class AddressLookupRepository @Inject()(transactor: Transactor[IO], queryConfig: RdsQueryConfig) extends AddressSearcher {
-  import AddressLookupRepository._
+class AddressLookupRepository @Inject()(transactor: Transactor[IO]) extends AddressSearcher {
+  import repositories.AddressLookupRepository._
 
   override def findID(id: String): Future[List[DbAddress]] = findUprn(cleanUprn(id))
 
@@ -67,26 +67,10 @@ class AddressLookupRepository @Inject()(transactor: Transactor[IO], queryConfig:
 
   override def findOutcode(outcode: Outcode, filter: String): Future[List[DbAddress]] = {
     val queryFragment =
-      baseQuery ++ sql""" WHERE postcode like ${outcode.toString + "%"} AND """ ++ filterToTsQuery(filter)
+      baseQuery ++ sql""" WHERE postcode like ${s"${outcode.toString}%"} AND """ ++ filterToTsQuery(filter)
 
     queryFragment.query[SqlDbAddress].to[List].transact(transactor).unsafeToFuture()
       .map(l => l.map(mapToDbAddress))
-  }
-
-  private def findWithOnlyFilter(filter: Option[String]): Future[List[DbAddress]] = {
-    val timeLimit = Fragment(s"SET statement_timeout=${queryConfig.queryTimeoutMillis}", List())
-    val limitSql = Fragment(s" LIMIT ${queryConfig.queryResultsLimit}", List())
-
-    val queryFragmentWithFilter =
-      filterOptToTsQueryOpt(filter).foldLeft(baseQuery) { case (a, f) =>
-        a ++ sql" WHERE " ++ f ++ limitSql
-      }
-
-    val toRun = for {
-      _   <- timeLimit.update.run.transact(transactor)
-      res <- queryFragmentWithFilter.query[SqlDbAddress].to[List].transact(transactor)
-    } yield res
-    toRun.unsafeToFuture().map(l => l.map(mapToDbAddress))
   }
 
   private def cleanUprn(uprn: String): String = uprn.replaceFirst("^[Gg][Bb]", "")
@@ -95,18 +79,18 @@ class AddressLookupRepository @Inject()(transactor: Transactor[IO], queryConfig:
     filterOpt.map(filterToTsQuery)
 
   private def filterToTsQuery(filter: String): fragment.Fragment = {
-    sql"""address_lookup_ft_col @@ plainto_tsquery('english', ${filter})"""
+    sql"""address_lookup_ft_col @@ plainto_tsquery('english', $filter)"""
   }
 
   private def mapToDbAddress(sqlDbAddress: SqlDbAddress): DbAddress = {
     DbAddress(
-      "GB" + sqlDbAddress.uprn, //To keep things in line with current output.
+      s"GB${sqlDbAddress.uprn}", //To keep things in line with current output.
       Seq(
         sqlDbAddress.line1.map(normaliseAddressLine(_)),
         sqlDbAddress.line2.map(normaliseAddressLine(_)),
         sqlDbAddress.line3.map(normaliseAddressLine(_))
       ).collect { case l if l.isDefined & l.get.nonEmpty => l.get }.toList,
-      sqlDbAddress.posttown.map(normaliseAddressLine(_)).getOrElse(""),
+      sqlDbAddress.posttown.fold("")(normaliseAddressLine(_)),
       sqlDbAddress.postcode.getOrElse(""), //This should not be a problem as we are searching on a provided postcode so in practice this should exist.
       sqlDbAddress.subdivision,
       sqlDbAddress.countrycode,

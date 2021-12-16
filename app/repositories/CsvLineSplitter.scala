@@ -57,7 +57,7 @@ class CsvLineSplitter(reader: Reader) extends java.util.Iterator[Array[String]] 
     r
   }
 
-  def stopParsing() {
+  def stopParsing(): Unit = {
     if (row != null) {
       parser.stopParsing()
       row = null
@@ -72,11 +72,7 @@ class CsvLineSplitter(reader: Reader) extends java.util.Iterator[Array[String]] 
 object CsvParser {
 
   def splitResource(resource: String): Iterator[Array[String]] = {
-    val is = getClass.getClassLoader.getResourceAsStream(resource)
-    if (is == null) {
-      throw new IllegalArgumentException(resource + ": no such resource")
-    }
-    val giz = if (resource.endsWith(".gz")) new GZIPInputStream(is) else is
+    val giz = util.openGZippedResource(resource)
     val list = split(new InputStreamReader(giz, StandardCharsets.UTF_8))
     giz.close()
     list

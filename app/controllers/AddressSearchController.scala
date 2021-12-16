@@ -54,11 +54,11 @@ class AddressSearchController @Inject()(addressSearch: AddressSearcher, response
         case Success(json) => json.validate[LookupByUprnRequest] match {
           case JsSuccess(lookupByUprnRequest, _) =>
             val origin = getOriginHeaderIfSatisfactory(request.headers)
-            searchByUprn(request, lookupByUprnRequest.uprn, origin)
+            searchByUprn(lookupByUprnRequest.uprn, origin)
           case JsError(errors) =>
             Future.successful(BadRequest(JsError.toJson(errors)))
         }
-        case Failure(exception) => Future.successful(BadRequest("""{"obj":[{"msg":["error.payload.missing"],"args":[]}]}"""))
+        case Failure(_) => Future.successful(BadRequest("""{"obj":[{"msg":["error.payload.missing"],"args":[]}]}"""))
       }
   }
 
@@ -69,15 +69,15 @@ class AddressSearchController @Inject()(addressSearch: AddressSearcher, response
         case Success(json) => json.validate[LookupByPostTownRequest] match {
           case JsSuccess(lookupByTownRequest, _) =>
             val origin = getOriginHeaderIfSatisfactory(request.headers)
-            searchByTown(request, lookupByTownRequest.posttown, lookupByTownRequest.filter, origin)
+            searchByTown(lookupByTownRequest.posttown, lookupByTownRequest.filter, origin)
           case JsError(errors) =>
             Future.successful(BadRequest(JsError.toJson(errors)))
         }
-        case Failure(exception) => Future.successful(BadRequest("""{"obj":[{"msg":["error.payload.missing"],"args":[]}]}"""))
+        case Failure(_) => Future.successful(BadRequest("""{"obj":[{"msg":["error.payload.missing"],"args":[]}]}"""))
       }
   }
 
-  private[controllers] def searchByUprn[A](request: Request[A], uprn: String, origin: String): Future[Result] = {
+  private[controllers] def searchByUprn[A](uprn: String, origin: String): Future[Result] = {
     if (Try(uprn.toLong).isFailure) {
       Future.successful {
         badRequest("BAD-UPRN", "origin" -> origin, "uprn" -> uprn, "error" -> s"uprn must only consist of digits")
@@ -117,13 +117,13 @@ class AddressSearchController @Inject()(addressSearch: AddressSearcher, response
           }
 
           val a2 = responseProcessor.convertAddressList(a)
-          logEvent("LOOKUP", origin, a2.size, List(Some("postcode" -> postcode.toString), filter.map(f => "filter" -> f)).flatten)
+          logEvent("LOOKUP", origin, a2.size, List(Option("postcode" -> postcode.toString), filter.map(f => "filter" -> f)).flatten)
           Ok(Json.toJson(a2))
       }
     }
   }
 
-  private[controllers] def searchByTown[A](request: Request[A], posttown: String, filter: Option[String], origin: String): Future[Result] = {
+  private[controllers] def searchByTown[A](posttown: String, filter: Option[String], origin: String): Future[Result] = {
     if (posttown.isEmpty) {
       Future.successful {
         badRequest("BAD-POSTCODE", "origin" -> origin, "error" -> s"missing or badly-formed $posttown parameter")
@@ -134,13 +134,9 @@ class AddressSearchController @Inject()(addressSearch: AddressSearcher, response
       addressSearch.findTown(posttown, filter).map {
         a =>
           val a2 = responseProcessor.convertAddressList(a)
-          logEvent("LOOKUP", origin, a2.size, List(Some("posttown" -> posttown), filter.map(f => "filter" -> f)).flatten)
+          logEvent("LOOKUP", origin, a2.size, List(Option("posttown" -> posttown), filter.map(f => "filter" -> f)).flatten)
           Ok(Json.toJson(a2))
       }
     }
-  }
-
-  private def paramFromRequest[A](request: Request[A], param: String): String = {
-    request.getQueryString(param).getOrElse("None")
   }
 }

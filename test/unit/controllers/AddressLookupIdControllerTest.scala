@@ -24,38 +24,39 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.mockito.MockitoSugar
+import play.api.mvc.{AnyContentAsEmpty, ControllerComponents, Result}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import repositories.AddressLookupRepository
 import uk.gov.hmrc.http.UpstreamErrorResponse
 import util.Utils._
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 class AddressLookupIdControllerTest extends AnyWordSpec with Matchers with ScalaFutures with MockitoSugar {
 
-  implicit val ec = scala.concurrent.ExecutionContext.Implicits.global
+  implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
 
-  private val lc4510 = Some(LocalCustodian(4510, "Custodian1"))
+  private val lc4510 = Option(LocalCustodian(4510, "Custodian1"))
 
   private val en = "en"
 
   import model.address.Country._
 
-  val shire = Some("Thereshire")
-  val addr1Loc = Location("12.345678", "-12.345678")
-  val addr1Db = DbAddress("GB123456", List("10 Test Court", "Test Street", "Tester"), "Testtown upon Tyne", "FX1 1AA",
-    Some("GB-ENG"), Some("GB"), Some(4510), Some("en"), None, Some(addr1Loc.toString))
-  val addr1Ar = AddressRecord("GB123456", Some(123456L), Address(List("10 Test Court", "A Street", "Tester"), "Testtown upon Tyne", "FX1 1AA", Some(England), GB), en, lc4510, Some(addr1Loc.toSeq))
+  val shire: Option[String] = Option("Thereshire")
+  val addr1Loc: Location = Location("12.345678", "-12.345678")
+  val addr1Db: DbAddress = DbAddress("GB123456", List("10 Test Court", "Test Street", "Tester"), "Testtown upon Tyne", "FX1 1AA",
+    Option("GB-ENG"), Option("GB"), Option(4510), Option("en"), None, Option(addr1Loc.toString))
+  val addr1Ar: AddressRecord = AddressRecord("GB123456", Option(123456L), Address(List("10 Test Court", "A Street", "Tester"), "Testtown upon Tyne", "FX1 1AA", Option(England), GB), en, lc4510, Option(addr1Loc.toSeq))
 
-  val cc = play.api.test.Helpers.stubControllerComponents()
+  val cc: ControllerComponents = play.api.test.Helpers.stubControllerComponents()
 
   class ResponseStub(a: List[AddressRecord]) extends ResponseProcessor(ReferenceData.empty) {
     override def convertAddressList(dbAddresses: Seq[DbAddress]): List[AddressRecord] = a
   }
 
   class Context {
-    val searcher = mock[AddressLookupRepository]
+    val searcher: AddressLookupRepository = mock[AddressLookupRepository]
   }
 
   "postcode lookup" should {
@@ -67,9 +68,9 @@ class AddressLookupIdControllerTest extends AnyWordSpec with Matchers with Scala
        and not log any error
       """ in new Context {
         val addressLookupController = new AddressLookupIdController(searcher, new ResponseStub(Nil), ec, cc)
-        val request = FakeRequest("GET", "http://localhost:9000/v2/uk/addresses/123456")
+        val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest("GET", "http://localhost:9000/v2/uk/addresses/123456")
 
-        val e = intercept[UpstreamErrorResponse] {
+        val e: UpstreamErrorResponse = intercept[UpstreamErrorResponse] {
           addressLookupController.findByIdRequest(request, "123456")
         }
         e.reportAs shouldBe 400
@@ -85,9 +86,9 @@ class AddressLookupIdControllerTest extends AnyWordSpec with Matchers with Scala
       """ in new Context {
         when(searcher.findID("GB123456")) thenReturn Future(List(addr1Db))
         val addressLookupController = new AddressLookupIdController(searcher, new ResponseStub(List(addr1Ar)), ec, cc)
-        val request = FakeRequest("GET", "http://localhost:9000/v2/uk/addresses/GB123456").withHeadersOrigin
+        val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest("GET", "http://localhost:9000/v2/uk/addresses/GB123456").withHeadersOrigin
 
-        val result = await(addressLookupController.findByIdRequest(request, "GB123456"))
+        val result: Result = await(addressLookupController.findByIdRequest(request, "GB123456"))
         result.header.status shouldBe play.api.http.Status.OK
       }
 
@@ -97,9 +98,9 @@ class AddressLookupIdControllerTest extends AnyWordSpec with Matchers with Scala
       """ in new Context {
         when(searcher.findID("GB1010101010")) thenReturn Future(List())
         val addressLookupController = new AddressLookupIdController(searcher, new ResponseStub(Nil), ec, cc)
-        val request = FakeRequest("GET", "http://localhost:9000/v2/uk/addresses/GB1010101010").withHeadersOrigin
+        val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest("GET", "http://localhost:9000/v2/uk/addresses/GB1010101010").withHeadersOrigin
 
-        val result = await(addressLookupController.findByIdRequest(request, "GB1010101010"))
+        val result: Result = await(addressLookupController.findByIdRequest(request, "GB1010101010"))
         result.header.status shouldBe play.api.http.Status.NOT_FOUND
       }
     }

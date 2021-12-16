@@ -33,10 +33,10 @@ case class Address(lines: List[String],
                    subdivision: Option[Country],
                    country: Country) {
 
-  import Address._
+  import model.address.Address._
 
   @JsonIgnore // needed because the name starts 'is...'
-  def isValid: Boolean = lines.nonEmpty && lines.size <= (if (town.isEmpty) 4 else 3)
+  def isValid: Boolean = lines.nonEmpty && lines.lengthCompare(if (town.isEmpty) 4 else 3) <= 0
 
   def nonEmptyFields: List[String] = lines ::: List(town) ::: List(postcode)
 
@@ -49,11 +49,11 @@ case class Address(lines: List[String],
 
   def line1: String = if (lines.nonEmpty) lines.head else ""
 
-  def line2: String = if (lines.size > 1) lines(1) else ""
+  def line2: String = if (lines.lengthCompare(1) > 0) lines(1) else ""
 
-  def line3: String = if (lines.size > 2) lines(2) else ""
+  def line3: String = if (lines.lengthCompare(2) > 0) lines(2) else ""
 
-  def line4: String = if (lines.size > 3) lines(3) else ""
+  def line4: String = if (lines.lengthCompare(3) > 0) lines(3) else ""
 
   def longestLineLength: Int = nonEmptyFields.map(_.length).max
 
@@ -82,7 +82,7 @@ object Address {
   }
 
   object formats {
-    import Country.formats._
+    import model.address.Country.formats._
 
     implicit val addressReads: Reads[Address] = (
         (JsPath \ "lines").read[List[String]] and

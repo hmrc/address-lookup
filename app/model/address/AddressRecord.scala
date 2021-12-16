@@ -52,7 +52,7 @@ case class AddressRecord(
                           administrativeArea: Option[String] = None,
                           poBox: Option[String] = None) {
 
-  require(location.isEmpty || location.get.size == 2, location.get)
+  require(location.isEmpty || location.get.lengthCompare(2) == 0, location.get)
 
   @JsonIgnore // needed because the name starts 'is...'
   def isValid: Boolean = address.isValid && language.length == 2
@@ -66,8 +66,8 @@ case class AddressRecord(
 
 object AddressRecord {
   object formats {
-    import Address.formats._
-    import LocalCustodian.formats._
+    import model.address.Address.formats._
+    import model.address.LocalCustodian.formats._
 
     implicit val addressRecordReads: Reads[AddressRecord] = (
         (JsPath \ "id").read[String] and

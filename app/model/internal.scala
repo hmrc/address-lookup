@@ -69,9 +69,9 @@ object internal {
 
     def line1: String = if (lines.nonEmpty) lines.head else ""
 
-    def line2: String = if (lines.size > 1) lines(1) else ""
+    def line2: String = if (lines.lengthCompare(1) > 0) lines(1) else ""
 
-    def line3: String = if (lines.size > 2) lines(2) else ""
+    def line3: String = if (lines.lengthCompare(2) > 0) lines(2) else ""
 
     def latLong: Option[LatLong] = LatLong(location)
 
@@ -95,9 +95,9 @@ object internal {
     def tupledFlat: List[(String, Any)] = {
       def optLine1 = if (lines.nonEmpty) List(lines.head) else Nil
 
-      def optLine2 = if (lines.size > 1) List(lines(1)) else Nil
+      def optLine2 = if (lines.lengthCompare(1) > 0) List(lines(1)) else Nil
 
-      def optLine3 = if (lines.size > 2) List(lines(2)) else Nil
+      def optLine3 = if (lines.lengthCompare(2) > 0) List(lines(2)) else Nil
 
       List("postcode" -> postcode) ++
           optLine1.map("line1" -> _) ++
@@ -133,14 +133,14 @@ object internal {
   }
 
   case class LatLong(lat: Double, long: Double) {
-    def toLocation = lat.toString + "," + long.toString
+    def toLocation: String = s"${lat.toString},${long.toString}"
   }
 
   object LatLong {
     def apply(location: Option[String]): Option[LatLong] = {
       if (location.isDefined) {
         val a = location.get.divide(',')
-        Some(LatLong(a(0).toDouble, a(1).toDouble))
+        Option(LatLong(a.head.toDouble, a(1).toDouble))
       } else None
     }
   }

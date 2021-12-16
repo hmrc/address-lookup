@@ -34,9 +34,9 @@ class Module(environment: Environment, configuration: Configuration) extends Abs
   @Singleton
   def provideRdsQueryConfig(configHelper: ConfigHelper): RdsQueryConfig = {
     val queryTimeoutMillis =
-      configHelper.getConfigString("address-lookup-rds.query-timeout-ms").map(_.toInt).getOrElse(10000)
+      configHelper.getConfigString("address-lookup-rds.query-timeout-ms").fold(10000)(_.toInt)
     val queryResultsLimit =
-      configHelper.getConfigString("address-lookup-rds.query-results-limit").map(_.toInt).getOrElse(300)
+      configHelper.getConfigString("address-lookup-rds.query-results-limit").fold(300)(_.toInt)
 
     RdsQueryConfig(queryTimeoutMillis, queryResultsLimit)
   }
@@ -49,9 +49,9 @@ class Module(environment: Environment, configuration: Configuration) extends Abs
 
     val searcher = if (dbEnabled) {
       val transactor = new TransactorProvider(configuration, applicationLifecycle).get(executionContext)
-      new AddressLookupRepository(transactor, rdsQueryConfig)
+      new AddressLookupRepository(transactor)
     } else {
-      new InMemoryAddressLookupRepository(environment, executionContext)
+      new InMemoryAddressLookupRepository(environment)
     }
 
     new AddressSearcherMetrics(new AddressLookupService(searcher), metrics.defaultRegistry, executionContext)

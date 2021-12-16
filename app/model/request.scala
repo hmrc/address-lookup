@@ -37,10 +37,7 @@ object request {
       }
     }
 
-    implicit val postcodeWrites: Writes[Postcode] = new Writes[Postcode]{
-      override def writes(o: Postcode): JsValue =
-        JsString(o.toString)
-    }
+    implicit val postcodeWrites: Writes[Postcode] = (o: Postcode) => JsString(o.toString)
 
     implicit val reads: Reads[LookupByPostcodeRequest] = (
         (JsPath \ "postcode").read[Postcode] and

@@ -25,7 +25,7 @@ import play.api.{Configuration, Environment}
 class ConfigHelper @Inject() (config: Configuration, env: Environment) {
   def mustGetConfigString(key: String): String = {
     getConfigString(key).getOrElse {
-      throw new Exception("ERROR: Unable to find config item " + key)
+      throw new Exception(s"ERROR: Unable to find config item $key")
     }
   }
 

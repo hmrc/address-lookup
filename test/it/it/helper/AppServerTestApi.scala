@@ -43,7 +43,7 @@ trait AppServerTestApi extends Matchers with Status {
   //-----------------------------------------------------------------------------------------------
 
   def newRequest(method: String, path: String): WSRequest = {
-    wsClient.url(appEndpoint + path).withMethod(method).withRequestTimeout(Duration(120, TimeUnit.SECONDS))
+    wsClient.url(s"$appEndpoint$path").withMethod(method).withRequestTimeout(Duration(120, TimeUnit.SECONDS))
   }
 
   def newRequest(method: String, path: String, body: String): WSRequest = {
@@ -73,14 +73,14 @@ trait AppServerTestApi extends Matchers with Status {
 
   //-----------------------------------------------------------------------------------------------
 
-  def verifyOK(path: String, expectedBody: String, expectedContent: String = "text/plain") {
+  def verifyOK(path: String, expectedBody: String, expectedContent: String = "text/plain"): Unit = {
     verify(path, OK, expectedBody, expectedContent)
   }
 
-  def verify(path: String, expectedStatus: Int, expectedBody: String, expectedContent: String = "text/plain") {
+  def verify(path: String, expectedStatus: Int, expectedBody: String, expectedContent: String = "text/plain"): Unit = {
     val step = get(path)
     step.status shouldBe expectedStatus
-    step.header("Content-Type") shouldBe Some(expectedContent)
+    step.header("Content-Type") shouldBe Option(expectedContent)
     step.body shouldBe expectedBody
   }
 
@@ -115,5 +115,6 @@ trait AppServerTestApi extends Matchers with Status {
 
 class WSResponseDumper(response: WSResponse) {
   override def toString: String =
-    "\n  Got " + response.status + ":" + response.body
+    s"""
+  Got ${response.status}:${response.body}"""
 }

@@ -19,15 +19,15 @@ package model.address
 import java.util.regex.Pattern
 
 case class Postcode(area: String, district: String, sector: String, unit: String) {
-  def outcode: String = area + district
+  def outcode: String = s"$area$district"
 
-  def asOutcode = Outcode(area, district)
+  def asOutcode: Outcode = Outcode(area, district)
 
-  def incode: String = sector + unit
+  def incode: String = s"$sector$unit"
 
-  def urlSafe: String = outcode + "+" + incode
+  def urlSafe: String = s"$outcode+$incode"
 
-  override lazy val toString = outcode + " " + incode
+  override lazy val toString: String = s"$outcode $incode"
 }
 
 
@@ -65,7 +65,7 @@ object Postcode {
 
   private def checkSyntax(out: String, in: String): Option[Postcode] = {
     if (oPattern.matcher(out).matches() && iPattern.matcher(in).matches())
-      Some(Postcode(out, in))
+      Option(Postcode(out, in))
     else
       None
   }
@@ -84,7 +84,7 @@ object Postcode {
 
   def unapply(postcode: Postcode): Option[String] = {
     if(postcode == null) None
-    else Some(postcode.toString)
+    else Option(postcode.toString)
   }
 
   def apply(outcode: String, incode: String): Postcode = {

@@ -26,7 +26,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class AddressSearcherMetrics(peer: AddressSearcher, registry: MetricRegistry, ec: ExecutionContext) extends AddressSearcher {
 
-  private implicit val xec = ec
+  private implicit val xec: ExecutionContext = ec
 
   private val prefix = peer.getClass.getSimpleName
   private val findIdTimer: Timer = registry.timer(name(prefix, "findId"))
@@ -36,8 +36,6 @@ class AddressSearcherMetrics(peer: AddressSearcher, registry: MetricRegistry, ec
   private val findPostcodeFilterTimer: Timer = registry.timer(name(prefix, "findPostcodeFilter"))
   private val findTownFilterTimer: Timer = registry.timer(name(prefix, "findTownFilter"))
   private val findOutcodeTimer: Timer = registry.timer(name(prefix, "findOutcode"))
-  private val searchFuzzyTimer: Timer = registry.timer(name(prefix, "searchFuzzy"))
-  private val searchFuzzyFilterTimer: Timer = registry.timer(name(prefix, "searchFuzzyFilter"))
 
   private def timerStop(t: Context, r: List[DbAddress]) = {
     t.stop()
