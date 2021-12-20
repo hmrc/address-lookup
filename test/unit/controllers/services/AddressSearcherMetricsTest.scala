@@ -17,6 +17,7 @@
 package controllers.services
 
 import cats.effect.IO
+import cats.effect.unsafe.implicits.global
 import com.codahale.metrics.Timer.Context
 import com.codahale.metrics.{MetricRegistry, Timer}
 import model.internal.DbAddress

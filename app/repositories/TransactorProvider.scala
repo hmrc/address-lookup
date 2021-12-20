@@ -16,7 +16,8 @@
 
 package repositories
 
-import cats.effect.{ContextShift, IO}
+import cats.effect._
+import cats.effect.unsafe.implicits.global
 import doobie.Transactor
 import doobie.hikari.HikariTransactor
 import play.api.Configuration
@@ -28,7 +29,7 @@ import scala.concurrent.ExecutionContext
 class TransactorProvider (configuration: Configuration, applicationLifecycle: ApplicationLifecycle) {
 
   def get(ec: ExecutionContext): Transactor[IO] = {
-    implicit val cs: ContextShift[IO] = IO.contextShift(ec)
+//    implicit val cs: ContextShift[IO] = IO.contextShift(ec)
 
     val dbConfig = configuration.get[Configuration]("address-lookup-rds")
 
@@ -37,8 +38,7 @@ class TransactorProvider (configuration: Configuration, applicationLifecycle: Ap
       dbConfig.get[String]("url"),
       dbConfig.get[String]("username"),
       dbConfig.get[String]("password"),
-      ExecutionContext.fromExecutor(Executors.newFixedThreadPool(10)), // waiting for connections
-      ExecutionContext.fromExecutor(Executors.newCachedThreadPool()) // executing db calls, bounded by hikari connection pool size
+      ExecutionContext.fromExecutor(Executors.newFixedThreadPool(10))// executing db calls, bounded by hikari connection pool size
     )
 
     val (transactor, releaseResource) = hikariTransactorResource.allocated.unsafeRunSync()

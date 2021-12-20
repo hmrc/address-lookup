@@ -16,7 +16,11 @@
 
 package controllers
 
+import doobie._
+import doobie.implicits._
 import cats.effect.IO
+import cats.effect.unsafe.implicits.global
+
 import controllers.services.{AddressSearcher, ResponseProcessor}
 import model.address.AddressRecord
 import play.api.libs.json.Json

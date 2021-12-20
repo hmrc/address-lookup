@@ -16,6 +16,8 @@
 
 package repositories
 
+import cats.effect.unsafe.implicits.global
+
 import model.address.{Location, Outcode, Postcode}
 import model.internal.DbAddress
 import org.scalatest.matchers.should.Matchers

@@ -17,6 +17,7 @@
 package controllers
 
 import cats.effect.IO
+import cats.effect.unsafe.implicits.global
 import controllers.services.{AddressSearcher, ResponseProcessor}
 import model.address.Postcode
 import model.request.{LookupByPostTownRequest, LookupByPostcodeRequest, LookupByUprnRequest}

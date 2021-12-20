@@ -8,7 +8,7 @@ object AppDependencies {
 
   private val scalaTestVersion  = "3.2.9"
   private val pegdownVersion    = "1.6.0"
-  private val doobieVersion     = "0.7.1"
+  private val doobieVersion     = "1.0.0-RC1"
 
   val compile = Seq(
     ws,
