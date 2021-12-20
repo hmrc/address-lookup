@@ -16,13 +16,14 @@
 
 package controllers.services
 
+import cats.effect.IO
 import com.codahale.metrics.MetricRegistry.name
 import com.codahale.metrics.Timer.Context
 import com.codahale.metrics.{MetricRegistry, Timer}
 import model.address.{Outcode, Postcode}
 import model.internal.DbAddress
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
 class AddressSearcherMetrics(peer: AddressSearcher, registry: MetricRegistry, ec: ExecutionContext) extends AddressSearcher {
 
@@ -42,7 +43,7 @@ class AddressSearcherMetrics(peer: AddressSearcher, registry: MetricRegistry, ec
     r
   }
 
-  override def findID(id: String): Future[List[DbAddress]] = {
+  override def findID(id: String): IO[List[DbAddress]] = {
     val context = findIdTimer.time()
     peer.findID(id) map {
       r =>
@@ -51,22 +52,22 @@ class AddressSearcherMetrics(peer: AddressSearcher, registry: MetricRegistry, ec
     }
   }
 
-  override def findUprn(uprn: String): Future[List[DbAddress]] = {
+  override def findUprn(uprn: String): IO[List[DbAddress]] = {
     val context = findUprnTimer.time()
     peer.findUprn(uprn) map (timerStop(context, _))
   }
 
-  override def findPostcode(postcode: Postcode, filterStr: Option[String]): Future[List[DbAddress]] = {
+  override def findPostcode(postcode: Postcode, filterStr: Option[String]): IO[List[DbAddress]] = {
     val context = if (filterStr.isDefined) findPostcodeFilterTimer.time() else findPostcodeTimer.time()
     peer.findPostcode(postcode, filterStr) map (timerStop(context, _))
   }
 
-  override def findTown(town: String, filterStr: Option[String]): Future[List[DbAddress]] = {
+  override def findTown(town: String, filterStr: Option[String]): IO[List[DbAddress]] = {
     val context = if (filterStr.isDefined) findTownFilterTimer.time() else findTownTimer.time()
     peer.findTown(town, filterStr) map (timerStop(context, _))
   }
 
-  override def findOutcode(outcode: Outcode, filterStr: String): Future[List[DbAddress]] = {
+  override def findOutcode(outcode: Outcode, filterStr: String): IO[List[DbAddress]] = {
     val context = findOutcodeTimer.time()
     peer.findOutcode(outcode, filterStr) map (timerStop(context, _))
   }

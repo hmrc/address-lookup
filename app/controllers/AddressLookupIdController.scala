@@ -16,6 +16,7 @@
 
 package controllers
 
+import cats.effect.IO
 import controllers.services.{AddressSearcher, ResponseProcessor}
 import model.address.AddressRecord
 import play.api.libs.json.Json
@@ -43,6 +44,6 @@ class AddressLookupIdController @Inject()(addressSearch: AddressSearcher, respon
       a.headOption.fold(NotFound(s"id matched nothing")) { ad =>
         Ok(Json.toJson(responseProcessor.convertAddress(ad)))
       }
-    }).getOrElse(Future.successful(BadRequest(s"Check the id supplied: $id")))
-  }
+    }).getOrElse(IO(BadRequest(s"Check the id supplied: $id")))
+  }.unsafeToFuture()
 }

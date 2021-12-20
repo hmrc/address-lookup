@@ -16,6 +16,7 @@
 
 package it.suites
 
+import cats.effect.IO
 import com.codahale.metrics.SharedMetricRegistries
 import it.helper.AppServerTestApi
 import model.address.{AddressRecord, Postcode}
@@ -60,7 +61,7 @@ class PostcodeLookupSuiteV2 ()
 
       "give a successful response for a known postcode - uk route" in {
         when(repository.findPostcode(meq(Postcode("fx1 9py")), meq(None))).thenReturn(
-          Future.successful(dbAddresses.filter(_.postcode == "FX1 9PY").toList))
+          IO(dbAddresses.filter(_.postcode == "FX1 9PY").toList))
 
         val response = post("/lookup", """{"postcode":"fx1 9py"}""")
         response.status shouldBe OK
@@ -68,7 +69,7 @@ class PostcodeLookupSuiteV2 ()
 
       "give a successful response for a known postcode - old style 'X-Origin'" in {
         when(repository.findPostcode(meq(Postcode("fx1 9py")), meq(None))).thenReturn(
-          Future.successful(dbAddresses.filter(_.postcode == "FX1 9PY").toList))
+          IO(dbAddresses.filter(_.postcode == "FX1 9PY").toList))
 
         val response = request("POST", "/lookup", """{"postcode":"fx1 9py"}""", headerOrigin -> "xxx")
         response.status shouldBe OK
@@ -76,7 +77,7 @@ class PostcodeLookupSuiteV2 ()
 
       "give a successful response for a known v.large postcode - uk route" in {
         when(repository.findPostcode(meq(Postcode("fx4 7al")), meq(None))).thenReturn(
-          Future.successful(dbAddresses.filter(_.postcode == "FX4 7AL").toList))
+          IO(dbAddresses.filter(_.postcode == "FX4 7AL").toList))
 
         val response = post("/lookup", """{"postcode":"fx47al"}""")
         response.status shouldBe OK
@@ -93,7 +94,7 @@ class PostcodeLookupSuiteV2 ()
 
       "give a successful response for a po box postcode" in {
         when(repository.findPostcode(meq(Postcode("PO1 1PO")), meq(None))).thenReturn(
-          Future.successful(dbAddresses.filter(_.postcode == "PO1 1PO").toList))
+          IO(dbAddresses.filter(_.postcode == "PO1 1PO").toList))
 
         val response = post("/lookup", """{"postcode":"PO11PO"}""")
         response.status shouldBe OK
@@ -105,7 +106,7 @@ class PostcodeLookupSuiteV2 ()
 
       "set the content type to application/json" in {
         when(repository.findPostcode(meq(Postcode("FX1 9PY")), meq(None))).thenReturn(
-          Future.successful(dbAddresses.filter(_.postcode == "FX1 9PY").toList))
+          IO(dbAddresses.filter(_.postcode == "FX1 9PY").toList))
 
         val response = post("/lookup", """{"postcode":"FX1 9PY"}""")
         val contentType = response.header("Content-Type").get
@@ -114,7 +115,7 @@ class PostcodeLookupSuiteV2 ()
 
       "set the cache-control header and include a positive max-age in it" ignore {
         when(repository.findPostcode(meq(Postcode("FX1 9PY")), meq(None))).thenReturn(
-          Future.successful(dbAddresses.filter(_.postcode == "FX1 9PY").toList))
+          IO(dbAddresses.filter(_.postcode == "FX1 9PY").toList))
 
         val response = post("/lookup", """{"postcode":"FX1 9PY"}""")
         val h = response.header("Cache-Control")
@@ -124,7 +125,7 @@ class PostcodeLookupSuiteV2 ()
 
       "set the etag header" ignore {
         when(repository.findPostcode(meq(Postcode("FX1 9PY")), meq(None))).thenReturn(
-          Future.successful(dbAddresses.filter(_.postcode == "FX1 9PY").toList))
+          IO(dbAddresses.filter(_.postcode == "FX1 9PY").toList))
 
         val response = post("/lookup", """{"postcode":"FX1 9PY"}""")
         val h = response.header("ETag")
@@ -133,7 +134,7 @@ class PostcodeLookupSuiteV2 ()
 
       "give a successful response for an unknown postcode" in {
         when(repository.findPostcode(meq(Postcode("zz10 9zz")), meq(None))).thenReturn(
-          Future.successful(dbAddresses.filter(_.postcode == "ZZ10 9ZZ").toList))
+          IO(dbAddresses.filter(_.postcode == "ZZ10 9ZZ").toList))
 
         val response = post("/lookup", """{"postcode":"zz10 9zz"}""")
         response.status shouldBe OK
@@ -141,7 +142,7 @@ class PostcodeLookupSuiteV2 ()
 
       "give an empty array for an unknown postcode" in {
         when(repository.findPostcode(meq(Postcode("ZZ10 9ZZ")), meq(None))).thenReturn(
-          Future.successful(dbAddresses.filter(_.postcode == "ZZ10 9ZZ").toList))
+          IO(dbAddresses.filter(_.postcode == "ZZ10 9ZZ").toList))
 
         val response = post("/lookup", """{"postcode":"ZZ10 9ZZ"}""")
         response.body shouldBe "[]"
@@ -149,7 +150,7 @@ class PostcodeLookupSuiteV2 ()
 
       "give sorted results when two addresses are returned" in {
         when(repository.findPostcode(meq(Postcode("FX1 6JN")), meq(None))).thenReturn(
-          Future.successful(dbAddresses.filter(_.postcode == "FX1 6JN").toList))
+          IO(dbAddresses.filter(_.postcode == "FX1 6JN").toList))
 
         val body = post("/lookup", """{"postcode":"FX1 6JN"}""").body
         body should startWith("[{")
@@ -162,7 +163,7 @@ class PostcodeLookupSuiteV2 ()
 
       "give single result when a filter is used" in {
         when(repository.findPostcode(meq(Postcode("FX1 6JN")), meq(None))).thenReturn(
-          Future.successful(doFilter(dbAddresses.filter(_.postcode == "FX1 6JN"), Option("House")).toList))
+          IO(doFilter(dbAddresses.filter(_.postcode == "FX1 6JN"), Option("House")).toList))
 
         val body = post("/lookup", """{"postcode":"FX1 6JN", "filter":"House"}""").body
         body should startWith("[{")
@@ -175,7 +176,7 @@ class PostcodeLookupSuiteV2 ()
 
       "give sorted results when many addresses are returned" in {
         when(repository.findPostcode(meq(Postcode("FX1 1PG")), meq(None))).thenReturn(
-          Future.successful(dbAddresses.filter(_.postcode == "FX1 1PG").toList))
+          IO(dbAddresses.filter(_.postcode == "FX1 1PG").toList))
 
         val body = post("/lookup", """{"postcode":"FX1 1PG"}""").body
         body should startWith("[{")

@@ -16,6 +16,7 @@
 
 package repositories
 
+import cats.effect.IO
 import controllers.services.AddressSearcher
 import model.address.{Location, Outcode, Postcode}
 import model.internal.DbAddress
@@ -23,26 +24,25 @@ import play.api.Environment
 
 import javax.inject.Inject
 import scala.collection.JavaConverters.asScalaIteratorConverter
-import scala.concurrent.{ExecutionContext, Future}
 import scala.io.Source
 
 class InMemoryAddressLookupRepository @Inject()(env: Environment) extends AddressSearcher {
   import repositories.InMemoryAddressLookupRepository._
 
-  override def findID(id: String): Future[List[DbAddress]] =
-    Future.successful(dbAddresses.filter(_.id == id).toList)
+  override def findID(id: String): IO[List[DbAddress]] =
+    IO(dbAddresses.filter(_.id == id).toList)
 
-  override def findUprn(uprn: String): Future[List[DbAddress]] =
-    Future.successful(dbAddresses.filter(_.uprn == uprn.toLong).toList.take(3000))
+  override def findUprn(uprn: String): IO[List[DbAddress]] =
+    IO(dbAddresses.filter(_.uprn == uprn.toLong).toList.take(3000))
 
-  override def findPostcode(postcode: Postcode, filter: Option[String]): Future[List[DbAddress]] =
-    Future.successful(doFilter(dbAddresses.filter(_.postcode.equalsIgnoreCase(postcode.toString)), filter).toList.take(3000))
+  override def findPostcode(postcode: Postcode, filter: Option[String]): IO[List[DbAddress]] =
+    IO(doFilter(dbAddresses.filter(_.postcode.equalsIgnoreCase(postcode.toString)), filter).toList.take(3000))
 
-  override def findTown(town: String, filter: Option[String]): Future[List[DbAddress]] =
-    Future.successful(doFilter(dbAddresses.filter(_.town.equalsIgnoreCase(town)), filter).toList.take(3000))
+  override def findTown(town: String, filter: Option[String]): IO[List[DbAddress]] =
+    IO(doFilter(dbAddresses.filter(_.town.equalsIgnoreCase(town)), filter).toList.take(3000))
 
-  override def findOutcode(outcode: Outcode, filter: String): Future[List[DbAddress]] =
-    Future.successful(doFilter(dbAddresses.filter(_.postcode.toUpperCase.startsWith(outcode.toString.toUpperCase)), Option(filter)).toList)
+  override def findOutcode(outcode: Outcode, filter: String): IO[List[DbAddress]] =
+    IO(doFilter(dbAddresses.filter(_.postcode.toUpperCase.startsWith(outcode.toString.toUpperCase)), Option(filter)).toList)
 }
 
 object InMemoryAddressLookupRepository {

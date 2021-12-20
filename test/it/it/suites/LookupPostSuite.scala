@@ -16,6 +16,7 @@
 
 package it.suites
 
+import cats.effect.IO
 import com.codahale.metrics.SharedMetricRegistries
 import controllers.services.AddressSearcher
 import it.helper.AppServerTestApi
@@ -59,7 +60,7 @@ class LookupPostSuite()
 
       "give a successful response for a known postcode - uk route" in {
         when(repository.findPostcode(meq(Postcode("FX1 9PY")), meq(None))).thenReturn(
-          Future.successful(singleAddresses.filter(_.postcode == "FX1 9PY").toList))
+          IO(singleAddresses.filter(_.postcode == "FX1 9PY").toList))
 
         val payload =
           """{"postcode": "fx1 9py"}""".stripMargin
@@ -70,7 +71,7 @@ class LookupPostSuite()
 
       "give a successful response for a known postcode - old style 'X-Origin'" in {
         when(repository.findPostcode(meq(Postcode("FX1 9PY")), meq(None))).thenReturn(
-          Future.successful(singleAddresses.filter(_.postcode == "FX1 9PY").toList))
+          IO(singleAddresses.filter(_.postcode == "FX1 9PY").toList))
 
         val payload =
           """{
@@ -83,7 +84,7 @@ class LookupPostSuite()
 
       "give a successful response for a known v.large postcode - uk route" in {
         when(repository.findPostcode(meq(Postcode("FX4 7AL")), meq(None))).thenReturn(
-          Future.successful(dbAddresses.filter(_.postcode == "FX4 7AL").toList))
+          IO(dbAddresses.filter(_.postcode == "FX4 7AL").toList))
 
         val payload =
           """{
@@ -105,7 +106,7 @@ class LookupPostSuite()
 
       "set the content type to application/json" in {
         when(repository.findPostcode(meq(Postcode("FX4 9PY")), meq(None))).thenReturn(
-          Future.successful(dbAddresses.filter(_.postcode == "FX4 9PY").toList))
+          IO(dbAddresses.filter(_.postcode == "FX4 9PY").toList))
         val payload =
         """{
           |  "postcode": "FX1 9PY"
@@ -118,7 +119,7 @@ class LookupPostSuite()
 
       "set the cache-control header and include a positive max-age in it" ignore {
         when(repository.findPostcode(meq(Postcode("FX4 9PY")), meq(None))).thenReturn(
-          Future.successful(dbAddresses.filter(_.postcode == "FX4 9PY").toList))
+          IO(dbAddresses.filter(_.postcode == "FX4 9PY").toList))
         val payload =
           """{
             |  "postcode": "FX1 9PY"
@@ -132,7 +133,7 @@ class LookupPostSuite()
 
       "set the etag header" ignore {
         when(repository.findPostcode(meq(Postcode("FX4 9PY")), meq(None))).thenReturn(
-          Future.successful(dbAddresses.filter(_.postcode == "FX4 9PY").toList))
+          IO(dbAddresses.filter(_.postcode == "FX4 9PY").toList))
 
         val payload =
         """{
@@ -146,7 +147,7 @@ class LookupPostSuite()
 
       "give a successful response for an unknown postcode" in {
         when(repository.findPostcode(meq(Postcode("ZZ10 9ZZ")), meq(None))).thenReturn(
-          Future.successful(dbAddresses.filter(_.postcode == "ZZ10 9ZZ").toList))
+          IO(dbAddresses.filter(_.postcode == "ZZ10 9ZZ").toList))
 
         val payload =
           """{
@@ -159,7 +160,7 @@ class LookupPostSuite()
 
       "give an empty array for an unknown postcode" in {
         when(repository.findPostcode(meq(Postcode("ZZ10 9ZZ")), meq(None))).thenReturn(
-          Future.successful(dbAddresses.filter(_.postcode == "ZZ10 9ZZ").toList))
+          IO(dbAddresses.filter(_.postcode == "ZZ10 9ZZ").toList))
 
         val payload =
           """{
@@ -175,7 +176,7 @@ class LookupPostSuite()
 
       "give a bad request when the origin header is absent" in {
         when(repository.findPostcode(meq(Postcode("FX1 4AB")), meq(None))).thenReturn(
-          Future.successful(dbAddresses.filter(_.postcode == "FX1 4AB").toList))
+          IO(dbAddresses.filter(_.postcode == "FX1 4AB").toList))
 
         val payload =
           """{
@@ -221,7 +222,7 @@ class LookupPostSuite()
 
       "give a bad request when an unexpected parameter is sent on its own" in {
         when(repository.findPostcode(meq(Postcode("FX1 4AC")), meq(None))).thenReturn(
-          Future.successful(dbAddresses.filter(_.postcode == "FX1 4AC").toList))
+          IO(dbAddresses.filter(_.postcode == "FX1 4AC").toList))
 
         val payload =
           """{
@@ -235,7 +236,7 @@ class LookupPostSuite()
 
       "not give a bad request when an unexpected parameter is sent" in {
         when(repository.findPostcode(meq(Postcode("FX1 4AC")), meq(None))).thenReturn(
-          Future.successful(dbAddresses.filter(_.postcode == "FX1 4AC").toList))
+          IO(dbAddresses.filter(_.postcode == "FX1 4AC").toList))
 
         val payload =
           """{

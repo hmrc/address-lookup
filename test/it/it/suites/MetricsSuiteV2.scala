@@ -16,6 +16,7 @@
 
 package it.suites
 
+import cats.effect.IO
 import com.codahale.metrics.SharedMetricRegistries
 import it.helper.AppServerTestApi
 import model.address.Postcode
@@ -53,7 +54,7 @@ class MetricsSuiteV2()
     "successful" should {
       "give a timer for the findUprn search case" in {
         when(repository.findUprn(meq("9999999999"))).thenReturn(
-          Future.successful(dbAddresses.find(_.id == "9999999999").toList))
+          IO(dbAddresses.find(_.id == "9999999999").toList))
 
         post("/lookup/by-uprn", """{"uprn":"9999999999"}""").status shouldBe OK
 
@@ -64,7 +65,7 @@ class MetricsSuiteV2()
 
       "give a timer for the findPostcode search case" in {
         when(repository.findPostcode(meq(Postcode("FX1 9PY")), meq(None))).thenReturn(
-          Future.successful(dbAddresses.filter(_.postcode == "FX1 9PY").toList))
+          IO(dbAddresses.filter(_.postcode == "FX1 9PY").toList))
 
         post("/lookup", """{"postcode":"FX1 9PY"}""").status shouldBe OK
 
@@ -75,7 +76,7 @@ class MetricsSuiteV2()
 
       "give a timer for the findPostcodeFilter search case" in {
         when(repository.findPostcode(meq(Postcode("SE1 9PY")), meq(Option("10")))).thenReturn(
-          Future.successful(doFilter(dbAddresses.filter(_.postcode == "SE1 9PY"), Option("10")).toList))
+          IO(doFilter(dbAddresses.filter(_.postcode == "SE1 9PY"), Option("10")).toList))
 
         post("/lookup", """{"postcode":"SE1 9PY", "filter":"10"}""").status shouldBe OK
 

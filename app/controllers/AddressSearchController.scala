@@ -16,6 +16,7 @@
 
 package controllers
 
+import cats.effect.IO
 import controllers.services.{AddressSearcher, ResponseProcessor}
 import model.address.Postcode
 import model.request.{LookupByPostTownRequest, LookupByPostcodeRequest, LookupByUprnRequest}
@@ -79,7 +80,7 @@ class AddressSearchController @Inject()(addressSearch: AddressSearcher, response
 
   private[controllers] def searchByUprn[A](uprn: String, origin: String): Future[Result] = {
     if (Try(uprn.toLong).isFailure) {
-      Future.successful {
+      IO {
         badRequest("BAD-UPRN", "origin" -> origin, "uprn" -> uprn, "error" -> s"uprn must only consist of digits")
       }
     } else {
@@ -92,13 +93,13 @@ class AddressSearchController @Inject()(addressSearch: AddressSearcher, response
           Ok(Json.toJson(a2))
       }
     }
-  }
+  }.unsafeToFuture()
 
   private[controllers] def searchByPostcode[A](request: Request[A], postcode: Postcode, filter: Option[String], origin: String): Future[Result] = {
     implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequest(request)
 
     if (postcode.toString.isEmpty) {
-      Future.successful {
+      IO {
         badRequest("BAD-POSTCODE", "origin" -> origin, "error" -> s"missing or badly-formed $postcode parameter")
       }
     } else {
@@ -121,11 +122,11 @@ class AddressSearchController @Inject()(addressSearch: AddressSearcher, response
           Ok(Json.toJson(a2))
       }
     }
-  }
+  }.unsafeToFuture
 
   private[controllers] def searchByTown[A](posttown: String, filter: Option[String], origin: String): Future[Result] = {
     if (posttown.isEmpty) {
-      Future.successful {
+      IO {
         badRequest("BAD-POSTCODE", "origin" -> origin, "error" -> s"missing or badly-formed $posttown parameter")
       }
     } else {
@@ -138,5 +139,5 @@ class AddressSearchController @Inject()(addressSearch: AddressSearcher, response
           Ok(Json.toJson(a2))
       }
     }
-  }
+  }.unsafeToFuture()
 }

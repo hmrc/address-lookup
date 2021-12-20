@@ -16,21 +16,21 @@
 
 package services
 
+import cats.effect.IO
 import controllers.services.AddressSearcher
-import model.internal.DbAddress
 import model.address.{Outcode, Postcode}
+import model.internal.DbAddress
 
 import javax.inject.Inject
-import scala.concurrent.Future
 
 class AddressLookupService @Inject()(addressSearcher: AddressSearcher) extends AddressSearcher {
-  override def findID(id: String): Future[List[DbAddress]] = addressSearcher.findID(id)
+  override def findID(id: String): IO[List[DbAddress]] = addressSearcher.findID(id)
 
-  override def findUprn(uprn: String): Future[List[DbAddress]] = addressSearcher.findUprn(uprn)
+  override def findUprn(uprn: String): IO[List[DbAddress]] = addressSearcher.findUprn(uprn)
 
-  override def findPostcode(postcode: Postcode, filter: Option[String]): Future[List[DbAddress]] = addressSearcher.findPostcode(postcode, filter)
+  override def findPostcode(postcode: Postcode, filter: Option[String]): IO[List[DbAddress]] = addressSearcher.findPostcode(postcode, filter)
 
-  override def findTown(town: String, filter: Option[String]): Future[List[DbAddress]] = addressSearcher.findTown(town, filter)
+  override def findTown(town: String, filter: Option[String]): IO[List[DbAddress]] = addressSearcher.findTown(town, filter)
 
-  override def findOutcode(outcode: Outcode, filter: String): Future[List[DbAddress]] = addressSearcher.findOutcode(outcode, filter)
+  override def findOutcode(outcode: Outcode, filter: String): IO[List[DbAddress]] = addressSearcher.findOutcode(outcode, filter)
 }

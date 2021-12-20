@@ -16,6 +16,7 @@
 
 package it.suites
 
+import cats.effect.IO
 import com.codahale.metrics.SharedMetricRegistries
 import it.helper.AppServerTestApi
 import model.address.AddressRecord
@@ -60,7 +61,7 @@ class UprnLookupPostSuite()
 
       "give a successful response for a known uprn - uk route" in {
         when(repository.findUprn(meq("11111"))).thenReturn(
-          Future.successful(dbAddresses.filter(_.uprn == 11111L).toList))
+          IO(dbAddresses.filter(_.uprn == 11111L).toList))
 
         val response = post("/lookup/by-uprn", """{"uprn": "11111"}""")
         response.status shouldBe OK
@@ -74,7 +75,7 @@ class UprnLookupPostSuite()
 
       "set the content type to application/json" in {
         when(repository.findUprn(meq("9999999999"))).thenReturn(
-          Future.successful(dbAddresses.filter(_.uprn == 9999999999L).toList))
+          IO(dbAddresses.filter(_.uprn == 9999999999L).toList))
 
         val response = post("/lookup/by-uprn", """{"uprn":"9999999999"}""")
         val contentType = response.header("Content-Type").get
@@ -83,7 +84,7 @@ class UprnLookupPostSuite()
 
       "set the cache-control header and include a positive max-age ignore it" ignore {
         when(repository.findUprn(meq("9999999999"))).thenReturn(
-          Future.successful(dbAddresses.filter(_.uprn == 9999999999L).toList))
+          IO(dbAddresses.filter(_.uprn == 9999999999L).toList))
 
         val response = post("/lookup/by-uprn", """{"uprn":"9999999999"}""")
         val h = response.header("Cache-Control")
@@ -93,7 +94,7 @@ class UprnLookupPostSuite()
 
       "set the etag header" ignore {
         when(repository.findUprn(meq("9999999999"))).thenReturn(
-          Future.successful(dbAddresses.filter(_.uprn == 9999999999L).toList))
+          IO(dbAddresses.filter(_.uprn == 9999999999L).toList))
 
         val response = post("/lookup/by-uprn", """{"uprn":"9999999999"}""")
         val h = response.header("ETag")
@@ -102,7 +103,7 @@ class UprnLookupPostSuite()
 
       "give a successful response with an empty array for an unknown uprn" in {
         when(repository.findUprn(meq("0"))).thenReturn(
-          Future.successful(dbAddresses.filter(_.uprn == 0L).toList))
+          IO(dbAddresses.filter(_.uprn == 0L).toList))
 
         val response = post("/lookup/by-uprn", """{"uprn":"0"}""")
         response.status shouldBe OK

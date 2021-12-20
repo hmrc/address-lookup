@@ -16,6 +16,7 @@
 
 package controllers
 
+import cats.effect.IO
 import controllers.services.{ReferenceData, ResponseProcessor}
 import model.address.{Address, AddressRecord, LocalCustodian, Location}
 import model.internal.DbAddress
@@ -84,7 +85,7 @@ class AddressLookupIdControllerTest extends AnyWordSpec with Matchers with Scala
        it should give an 'ok' response
        and log the lookup including the size=1
       """ in new Context {
-        when(searcher.findID("GB123456")) thenReturn Future(List(addr1Db))
+        when(searcher.findID("GB123456")) thenReturn IO(List(addr1Db))
         val addressLookupController = new AddressLookupIdController(searcher, new ResponseStub(List(addr1Ar)), ec, cc)
         val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest("GET", "http://localhost:9000/v2/uk/addresses/GB123456").withHeadersOrigin
 
@@ -96,7 +97,7 @@ class AddressLookupIdControllerTest extends AnyWordSpec with Matchers with Scala
        it should give a 'not found' response
        and log the lookup including the size=0
       """ in new Context {
-        when(searcher.findID("GB1010101010")) thenReturn Future(List())
+        when(searcher.findID("GB1010101010")) thenReturn IO(List())
         val addressLookupController = new AddressLookupIdController(searcher, new ResponseStub(Nil), ec, cc)
         val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest("GET", "http://localhost:9000/v2/uk/addresses/GB1010101010").withHeadersOrigin
 

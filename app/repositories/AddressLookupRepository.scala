@@ -34,42 +34,40 @@ import scala.concurrent.Future
 class AddressLookupRepository @Inject()(transactor: Transactor[IO]) extends AddressSearcher {
   import repositories.AddressLookupRepository._
 
-  override def findID(id: String): Future[List[DbAddress]] = findUprn(cleanUprn(id))
+  override def findID(id: String): IO[List[DbAddress]] = findUprn(cleanUprn(id))
 
-  override def findUprn(uprn: String): Future[List[DbAddress]] = {
+  override def findUprn(uprn: String): IO[List[DbAddress]] = {
     val queryFragment = baseQuery ++
       sql""" WHERE uprn = ${uprn.toLong}"""
 
-    queryFragment.query[SqlDbAddress].to[List].transact(transactor).unsafeToFuture().map(l => l.map(mapToDbAddress))
+    queryFragment.query[SqlDbAddress].to[List].transact(transactor).map(l => l.map(mapToDbAddress))
   }
 
-  override def findPostcode(postcode: Postcode, filter: Option[String]): Future[List[DbAddress]] = {
+  override def findPostcode(postcode: Postcode, filter: Option[String]): IO[List[DbAddress]] = {
     val queryFragment = baseQuery ++ sql""" WHERE postcode = ${postcode.toString}"""
     val queryFragmentWithFilter =
       filterOptToTsQueryOpt(filter).foldLeft(queryFragment) { case (a, f) =>
         a ++ sql" AND " ++ f
       }
 
-    queryFragmentWithFilter.query[SqlDbAddress].to[List].transact(transactor).unsafeToFuture()
+    queryFragmentWithFilter.query[SqlDbAddress].to[List].transact(transactor)
       .map(l => l.map(mapToDbAddress))
   }
 
-  override def findTown(town: String, filter: Option[String]): Future[List[DbAddress]] = {
+  override def findTown(town: String, filter: Option[String]): IO[List[DbAddress]] = {
     val queryFragment = baseQuery ++ sql""" WHERE posttown = ${town.toUpperCase}"""
     val queryFragmentWithFilter =
-      filterOptToTsQueryOpt(filter).foldLeft(queryFragment) { case (a, f) =>
-        a ++ sql" AND " ++ f
-      }
+      filterOptToTsQueryOpt(filter).foldLeft(queryFragment) { case (a, f) => a ++ sql" AND " ++ f }
 
-    queryFragmentWithFilter.query[SqlDbAddress].to[List].transact(transactor).unsafeToFuture()
+    queryFragmentWithFilter.query[SqlDbAddress].to[List].transact(transactor)
       .map(l => l.map(mapToDbAddress))
   }
 
-  override def findOutcode(outcode: Outcode, filter: String): Future[List[DbAddress]] = {
+  override def findOutcode(outcode: Outcode, filter: String): IO[List[DbAddress]] = {
     val queryFragment =
       baseQuery ++ sql""" WHERE postcode like ${s"${outcode.toString}%"} AND """ ++ filterToTsQuery(filter)
 
-    queryFragment.query[SqlDbAddress].to[List].transact(transactor).unsafeToFuture()
+    queryFragment.query[SqlDbAddress].to[List].transact(transactor)
       .map(l => l.map(mapToDbAddress))
   }
 

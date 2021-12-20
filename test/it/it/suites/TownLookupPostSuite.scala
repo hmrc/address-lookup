@@ -16,6 +16,7 @@
 
 package it.suites
 
+import cats.effect.IO
 import com.codahale.metrics.SharedMetricRegistries
 import it.helper.AppServerTestApi
 import model.address.AddressRecord
@@ -56,7 +57,7 @@ class TownLookupPostSuite()
 
       "give a successful response for a known town - uk route" in {
         when(repository.findTown(meq("some-town"), meq(None))).thenReturn(
-          Future.successful(dbAddresses.filter(_.town == "some-town").toList))
+          IO(dbAddresses.filter(_.town == "some-town").toList))
 
         val payload =
           """{"posttown": "some-town"}""".stripMargin
@@ -67,7 +68,7 @@ class TownLookupPostSuite()
 
       "give a successful response for a known town - old style 'X-Origin'" in {
         when(repository.findTown(meq("some-town"), meq(None))).thenReturn(
-          Future.successful(dbAddresses.filter(_.town == "some-town").toList))
+          IO(dbAddresses.filter(_.town == "some-town").toList))
 
         val payload =
           """{
@@ -80,7 +81,7 @@ class TownLookupPostSuite()
 
       "give a successful response for a known v.large town - uk route" in {
         when(repository.findTown(meq("ATown"), meq(None))).thenReturn(
-          Future.successful(dbAddresses.filter(_.town == "ATown").toList))
+          IO(dbAddresses.filter(_.town == "ATown").toList))
 
         val payload =
           """{
@@ -102,7 +103,7 @@ class TownLookupPostSuite()
 
       "give a successful filtered response for a known v.large town - uk route" in {
         when(repository.findTown(meq("ATown"), meq(None))).thenReturn(
-          Future.successful(doFilter(dbAddresses.filter(_.town == "ATown"), Option("10")).toList))
+          IO(doFilter(dbAddresses.filter(_.town == "ATown"), Option("10")).toList))
 
         val payload =
           """{
@@ -131,7 +132,7 @@ class TownLookupPostSuite()
 
       "set the content type to application/json" in {
         when(repository.findTown(meq("some-town"), meq(None))).thenReturn(
-          Future.successful(dbAddresses.filter(_.town == "some-town").toList))
+          IO(dbAddresses.filter(_.town == "some-town").toList))
 
         val payload =
         """{
@@ -145,7 +146,7 @@ class TownLookupPostSuite()
 
       "set the cache-control header and include a positive max-age in it" ignore {
         when(repository.findTown(meq("some-town"), meq(None))).thenReturn(
-          Future.successful(dbAddresses.filter(_.town == "some-town").toList))
+          IO(dbAddresses.filter(_.town == "some-town").toList))
 
         val payload =
           """{
@@ -160,7 +161,7 @@ class TownLookupPostSuite()
 
       "set the etag header" ignore {
         when(repository.findTown(meq("some-town"), meq(None))).thenReturn(
-          Future.successful(dbAddresses.filter(_.town == "some-town").toList))
+          IO(dbAddresses.filter(_.town == "some-town").toList))
 
         val payload = """{
           |  "posttown": "some-town"
@@ -173,7 +174,7 @@ class TownLookupPostSuite()
 
       "give a successful response for an unknown town" in {
         when(repository.findTown(meq("unknown-town"), meq(None))).thenReturn(
-          Future.successful(dbAddresses.filter(_.town == "unknown-town").toList))
+          IO(dbAddresses.filter(_.town == "unknown-town").toList))
 
         val payload =
           """{
@@ -186,7 +187,7 @@ class TownLookupPostSuite()
 
       "give an empty array for an unknown town" in {
         when(repository.findTown(meq("unknown-town"), meq(None))).thenReturn(
-          Future.successful(dbAddresses.filter(_.town == "unknown-town").toList))
+          IO(dbAddresses.filter(_.town == "unknown-town").toList))
 
         val payload =
           """{
@@ -202,7 +203,7 @@ class TownLookupPostSuite()
 
       "give a bad request when the origin header is absent" in {
         when(repository.findTown(meq("some-town"), meq(None))).thenReturn(
-          Future.successful(dbAddresses.filter(_.town == "some-town").toList))
+          IO(dbAddresses.filter(_.town == "some-town").toList))
 
         val payload =
           """{
