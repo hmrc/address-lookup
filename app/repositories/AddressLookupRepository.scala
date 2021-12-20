@@ -32,44 +32,49 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class AddressLookupRepository @Inject()(transactor: Transactor[IO]) extends AddressSearcher {
+
   import repositories.AddressLookupRepository._
 
   override def findID(id: String): IO[List[DbAddress]] = findUprn(cleanUprn(id))
 
-  override def findUprn(uprn: String): IO[List[DbAddress]] = {
-    val queryFragment = baseQuery ++
-      sql""" WHERE uprn = ${uprn.toLong}"""
+  override def findUprn(uprn: String): IO[List[DbAddress]] =
+    for {
+      qf <- baseQueryWithWhere(("uprn", "=", uprn))
+      l <- qf.query[SqlDbAddress].to[List].transact(transactor)
+    } yield l.map(mapToDbAddress)
 
-    queryFragment.query[SqlDbAddress].to[List].transact(transactor).map(l => l.map(mapToDbAddress))
-  }
-
-  override def findPostcode(postcode: Postcode, filter: Option[String]): IO[List[DbAddress]] = {
-    val queryFragment = baseQuery ++ sql""" WHERE postcode = ${postcode.toString}"""
-    val queryFragmentWithFilter =
-      filterOptToTsQueryOpt(filter).foldLeft(queryFragment) { case (a, f) =>
-        a ++ sql" AND " ++ f
+  override def findPostcode(postcode: Postcode, filter: Option[String]): IO[List[DbAddress]] =
+    for {
+      qf <- baseQueryWithWhere(("postcode", "=", postcode.toString))
+      ff = filterOptToTsQueryOpt(filter).foldLeft(qf) {
+        case (a, f) => a ++ sql" AND " ++ f
       }
-
-    queryFragmentWithFilter.query[SqlDbAddress].to[List].transact(transactor)
-      .map(l => l.map(mapToDbAddress))
-  }
+      l <- ff.query[SqlDbAddress].to[List].transact(transactor)
+    } yield l.map(mapToDbAddress)
 
   override def findTown(town: String, filter: Option[String]): IO[List[DbAddress]] = {
-    val queryFragment = baseQuery ++ sql""" WHERE posttown = ${town.toUpperCase}"""
-    val queryFragmentWithFilter =
-      filterOptToTsQueryOpt(filter).foldLeft(queryFragment) { case (a, f) => a ++ sql" AND " ++ f }
-
-    queryFragmentWithFilter.query[SqlDbAddress].to[List].transact(transactor)
-      .map(l => l.map(mapToDbAddress))
+    for {
+      qf <- baseQueryWithWhere(("posttown", "=", town.toUpperCase))
+      ff = filterOptToTsQueryOpt(filter).foldLeft(qf) {
+        case (a, f) => a ++ sql" AND " ++ f
+      }
+      l <- ff.query[SqlDbAddress].to[List].transact(transactor)
+    } yield l.map(mapToDbAddress)
   }
 
   override def findOutcode(outcode: Outcode, filter: String): IO[List[DbAddress]] = {
-    val queryFragment =
-      baseQuery ++ sql""" WHERE postcode like ${s"${outcode.toString}%"} AND """ ++ filterToTsQuery(filter)
-
-    queryFragment.query[SqlDbAddress].to[List].transact(transactor)
-      .map(l => l.map(mapToDbAddress))
+    for {
+      qf <- baseQueryWithWhere(("postcode", "like", s"${outcode.toString}%"))
+      ff = filterToTsQuery(filter)
+      l <- ff.query[SqlDbAddress].to[List].transact(transactor)
+    } yield l.map(mapToDbAddress)
   }
+
+  private def baseQueryWithWhere(whereKeyValues: (String, String, String)) = for {
+    bq <- IO(baseQuery)
+    sq <- IO(Fragment.const(s""" WHERE ${whereKeyValues._1} ${whereKeyValues._2} "${whereKeyValues._3}""""))
+    qf <- IO(bq ++ sq)
+  } yield qf
 
   private def cleanUprn(uprn: String): String = uprn.replaceFirst("^[Gg][Bb]", "")
 
