@@ -17,19 +17,17 @@
 package repositories
 
 import cats.effect.IO
+import config.Capitalisation._
+import controllers.services.AddressSearcher
 import doobie.Transactor
 import doobie.implicits._
 import doobie.util.fragment
 import doobie.util.fragment.Fragment
+import model.address.{Outcode, Postcode}
+import model.internal.{DbAddress, SqlDbAddress}
+import repositories.AddressLookupRepository.WhereOp.{Equal, Like}
 
 import javax.inject.Inject
-import config.Capitalisation._
-import controllers.services.AddressSearcher
-import model.internal.{DbAddress, SqlDbAddress}
-import model.address.{Outcode, Postcode}
-
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 
 class AddressLookupRepository @Inject()(transactor: Transactor[IO]) extends AddressSearcher {
 
@@ -39,13 +37,13 @@ class AddressLookupRepository @Inject()(transactor: Transactor[IO]) extends Addr
 
   override def findUprn(uprn: String): IO[List[DbAddress]] =
     for {
-      qf <- baseQueryWithWhere(("uprn", "=", uprn))
+      qf <- baseQueryWithWhere(("uprn", Equal, uprn))
       l <- qf.query[SqlDbAddress].to[List].transact(transactor)
     } yield l.map(mapToDbAddress)
 
   override def findPostcode(postcode: Postcode, filter: Option[String]): IO[List[DbAddress]] =
     for {
-      qf <- baseQueryWithWhere(("postcode", "=", postcode.toString))
+      qf <- baseQueryWithWhere(("postcode", Equal, postcode.toString))
       ff = filterOptToTsQueryOpt(filter).foldLeft(qf) {
         case (a, f) => a ++ sql" AND " ++ f
       }
@@ -54,7 +52,7 @@ class AddressLookupRepository @Inject()(transactor: Transactor[IO]) extends Addr
 
   override def findTown(town: String, filter: Option[String]): IO[List[DbAddress]] = {
     for {
-      qf <- baseQueryWithWhere(("posttown", "=", town.toUpperCase))
+      qf <- baseQueryWithWhere(("posttown", Equal, town.toUpperCase))
       ff = filterOptToTsQueryOpt(filter).foldLeft(qf) {
         case (a, f) => a ++ sql" AND " ++ f
       }
@@ -64,13 +62,13 @@ class AddressLookupRepository @Inject()(transactor: Transactor[IO]) extends Addr
 
   override def findOutcode(outcode: Outcode, filter: String): IO[List[DbAddress]] = {
     for {
-      qf <- baseQueryWithWhere(("postcode", "like", s"${outcode.toString}%"))
+      qf <- baseQueryWithWhere(("postcode", Like, s"${outcode.toString}%"))
       ff = filterToTsQuery(filter)
       l <- ff.query[SqlDbAddress].to[List].transact(transactor)
     } yield l.map(mapToDbAddress)
   }
 
-  private def baseQueryWithWhere(whereKeyValues: (String, String, String)) = for {
+  private def baseQueryWithWhere(whereKeyValues: (String, WhereOp, String)) = for {
     bq <- IO(baseQuery)
     sq <- IO(Fragment.const(s""" WHERE ${whereKeyValues._1} ${whereKeyValues._2} "${whereKeyValues._3}""""))
     qf <- IO(bq ++ sq)
@@ -123,5 +121,16 @@ object AddressLookupRepository {
          |poboxnumber,
          |localauthority
          |FROM address_lookup """.stripMargin
+
+
+  import enumeratum._
+
+  sealed trait WhereOp extends EnumEntry
+  object WhereOp extends Enum[WhereOp] {
+    val values = findValues
+
+    case object Equal extends WhereOp
+    case object Like extends WhereOp
+  }
 
 }

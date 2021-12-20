@@ -9,6 +9,7 @@ object AppDependencies {
   private val scalaTestVersion  = "3.2.9"
   private val pegdownVersion    = "1.6.0"
   private val doobieVersion     = "1.0.0-RC1"
+  private val enumeratumPlayVersion = "1.7.0"
 
   val compile = Seq(
     ws,
@@ -18,7 +19,9 @@ object AppDependencies {
     "org.tpolecat"                  %% "doobie-core"                % doobieVersion,
     "org.tpolecat"                  %% "doobie-postgres"            % doobieVersion,
     "org.tpolecat"                  %% "doobie-hikari"              % doobieVersion,
-    jdbc
+    jdbc,
+    "com.beachape"                  %% "enumeratum"                 % enumeratumPlayVersion,
+    "com.beachape"                  %% "enumeratum-play"            % enumeratumPlayVersion
   )
 
   val test = Seq(
