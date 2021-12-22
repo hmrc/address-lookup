@@ -1,4 +1,4 @@
-import uk.gov.hmrc.DefaultBuildSettings.{addTestReportOption, defaultSettings, targetJvm}
+import uk.gov.hmrc.DefaultBuildSettings.{addTestReportOption, targetJvm}
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin.publishingSettings
 
 lazy val root = Project("address-lookup", file("."))
@@ -16,20 +16,20 @@ lazy val root = Project("address-lookup", file("."))
       Compile / packageBin / publishArtifact := true
     )
     .settings(
-      Test / parallelExecution := false,
-      Test / fork := false,
       Test / unmanagedSourceDirectories := (Test / baseDirectory) (base => Seq(base / "test" / "unit")).value,
-      addTestReportOption(Test, "test-reports"),
       Test / doc / sources := List(),
-      Test / packageDoc / publishArtifact := false
+      Test / packageDoc / publishArtifact := false,
+      addTestReportOption(Test, "test-reports"),
+      Test / fork := false,
+      Test / parallelExecution := false
     )
     .configs(IntegrationTest)
     .settings(inConfig(IntegrationTest)(Defaults.itSettings): _*)
     .settings(
-      IntegrationTest / Keys.fork := false,
       IntegrationTest / unmanagedSourceDirectories := (Test / baseDirectory) (base => Seq(base / "test" / "it")).value,
       IntegrationTest / unmanagedResourceDirectories := (Test / baseDirectory) (base => Seq(base / "test" / "resources")).value,
       addTestReportOption(IntegrationTest, "int-test-reports"),
+      IntegrationTest / Keys.fork := false,
       IntegrationTest / parallelExecution := false
     )
     .settings(

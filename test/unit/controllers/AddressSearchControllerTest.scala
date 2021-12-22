@@ -19,10 +19,10 @@ package controllers
 import akka.stream.Materializer
 import cats.effect.IO
 import controllers.services.{AddressSearcher, ReferenceData, ResponseProcessor}
-import model.{AddressSearchAuditEvent, AddressSearchAuditEventMatchedAddress}
 import model.address._
 import model.internal.DbAddress
 import model.request.{LookupByPostcodeRequest, LookupByUprnRequest}
+import model.{AddressSearchAuditEvent, AddressSearchAuditEventMatchedAddress}
 import org.mockito.ArgumentMatchers.{any, eq => meq}
 import org.mockito.Mockito._
 import org.scalatest.matchers.should.Matchers
@@ -41,7 +41,7 @@ import uk.gov.hmrc.http.UpstreamErrorResponse
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import util.Utils._
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 
 class AddressSearchControllerTest extends AnyWordSpec with Matchers with GuiceOneAppPerSuite with MockitoSugar {

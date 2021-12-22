@@ -81,7 +81,7 @@ object InMemoryAddressLookupRepository {
   } ++ extraAddresses
 
   def dbsToFilterText(dbAddress: DbAddress): Set[String] =
-    (s"${dbAddress.lines.mkString(" ")} ${dbAddress.town} ${dbAddress.administrativeArea.getOrElse("")} ${dbAddress.poBox.getOrElse("")}").replaceAll("[\\p{Space},]+", " ").split(" ").map(_.toLowerCase).toSet
+    s"${dbAddress.lines.mkString(" ")} ${dbAddress.town} ${dbAddress.administrativeArea.getOrElse("")} ${dbAddress.poBox.getOrElse("")}".replaceAll("[\\p{Space},]+", " ").split(" ").map(_.toLowerCase).toSet
 
   def doFilter(filteredDbAddresses: Seq[DbAddress], filter: Option[String]): Seq[DbAddress] = {
     val filterTokens =

@@ -129,8 +129,8 @@ object AddressLookupRepository {
   object WhereOp extends Enum[WhereOp] {
     val values = findValues
 
-    case object Equal extends WhereOp
-    case object Like extends WhereOp
+    final case object Equal extends WhereOp
+    final case object Like extends WhereOp
   }
 
 }
