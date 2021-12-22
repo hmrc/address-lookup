@@ -16,16 +16,31 @@
 
 package model
 
+import model.address.{Country, LocalCustodian, Postcode}
 import play.api.libs.json.Json
 
 case class AddressSearchAuditEventMatchedAddress(uprn: String, lines: Seq[String], town: String,
-                                                 administrativeArea: Option[String], postCode: String,
-                                                 country: Option[String])
+                                                 localCustodian: Option[LocalCustodian],
+                                                 location: Option[Seq[BigDecimal]],
+                                                 administrativeArea: Option[String],
+                                                 poBox: Option[String],
+                                                 postCode: String,
+                                                 subDivision: Option[Country],
+                                                 country: Country)
 
-case class AddressSearchAuditEvent(userAgent: Option[String], numberOfAddressFound: Int,
+case class AddressSearchAuditEventRequestDetails(postcode: Option[String] = None, postTown: Option[String] = None,
+                                                 filter: Option[String] = None)
+
+case class AddressSearchAuditEvent(userAgent: Option[String],
+                                   request: AddressSearchAuditEventRequestDetails,
+                                   numberOfAddressFound: Int,
                                    matchedAddresses: Seq[AddressSearchAuditEventMatchedAddress])
 
 object AddressSearchAuditEvent {
+  import Country.formats._
+  import LocalCustodian.formats._
+
+  implicit def requestDetailsWrites = Json.writes[AddressSearchAuditEventRequestDetails]
   implicit def addressWrites = Json.writes[AddressSearchAuditEventMatchedAddress]
   implicit def writes = Json.writes[AddressSearchAuditEvent]
 }
