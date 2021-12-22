@@ -17,9 +17,9 @@
 package controllers
 
 import controllers.services.{AddressSearcher, ResponseProcessor}
-import model.address.Postcode
+import model.address.{AddressRecord, Postcode}
 import model.request.{LookupByPostTownRequest, LookupByPostcodeRequest, LookupByUprnRequest}
-import model.{AddressSearchAuditEvent, AddressSearchAuditEventMatchedAddress}
+import model.{AddressSearchAuditEvent, AddressSearchAuditEventMatchedAddress, AddressSearchAuditEventRequestDetails}
 import play.api.libs.json.{JsError, JsSuccess, Json}
 import play.api.mvc._
 import uk.gov.hmrc.http.HeaderCarrier
@@ -33,6 +33,8 @@ import scala.util.{Failure, Success, Try}
 class AddressSearchController @Inject()(addressSearch: AddressSearcher, responseProcessor: ResponseProcessor,
                                         auditConnector: AuditConnector, ec: ExecutionContext, cc: ControllerComponents)
   extends AddressController(cc) {
+
+  import model.AddressSearchAuditEvent._
 
   implicit private val xec: ExecutionContext = ec
 
@@ -105,18 +107,13 @@ class AddressSearchController @Inject()(addressSearch: AddressSearcher, response
       import model.address.AddressRecord.formats._
       addressSearch.findPostcode(postcode, filter).map {
         a =>
-          import model.AddressSearchAuditEvent._
+          val userAgent = request.headers.get("User-Agent")
+          val a2 = responseProcessor.convertAddressList(a)
 
-          if (a.nonEmpty) {
-            val userAgent = request.headers.get("User-Agent")
-            auditConnector.sendExplicitAudit("AddressSearch",
-              AddressSearchAuditEvent(userAgent, a.length, a.map { ma =>
-                AddressSearchAuditEventMatchedAddress(
-                  ma.uprn.toString, ma.lines, ma.town, ma.administrativeArea, ma.postcode, ma.country)
-              }))
+          if (a2.nonEmpty) {
+            auditAddressSearch(userAgent, a2, postcode = Some(postcode), filter = filter)
           }
 
-          val a2 = responseProcessor.convertAddressList(a)
           logEvent("LOOKUP", origin, a2.size, List(Some("postcode" -> postcode.toString), filter.map(f => "filter" -> f)).flatten)
           Ok(Json.toJson(a2))
       }
@@ -124,23 +121,49 @@ class AddressSearchController @Inject()(addressSearch: AddressSearcher, response
   }
 
   private[controllers] def searchByTown[A](request: Request[A], posttown: String, filter: Option[String], origin: String): Future[Result] = {
+    implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequest(request)
+
     if (posttown.isEmpty) {
       Future.successful {
-        badRequest("BAD-POSTCODE", "origin" -> origin, "error" -> s"missing or badly-formed $posttown parameter")
+        badRequest("BAD-POSTTOWN", "origin" -> origin, "error" -> s"missing or badly-formed $posttown parameter")
       }
     } else {
       import model.address.AddressRecord.formats._
 
       addressSearch.findTown(posttown, filter).map {
         a =>
+          val userAgent = request.headers.get("User-Agent")
           val a2 = responseProcessor.convertAddressList(a)
+
+          if (a2.nonEmpty) {
+            auditAddressSearch(userAgent, a2, postTown = Some(posttown), filter = filter)
+          }
+
           logEvent("LOOKUP", origin, a2.size, List(Some("posttown" -> posttown), filter.map(f => "filter" -> f)).flatten)
           Ok(Json.toJson(a2))
       }
     }
   }
 
-  private def paramFromRequest[A](request: Request[A], param: String): String = {
-    request.getQueryString(param).getOrElse("None")
+  private def auditAddressSearch[A](userAgent: Option[String], a2: List[AddressRecord], postcode: Option[Postcode] = None,
+                                    postTown: Option[String] = None, filter: Option[String] = None)(implicit hc: HeaderCarrier): Unit = {
+
+    auditConnector.sendExplicitAudit("AddressSearch",
+      AddressSearchAuditEvent(userAgent,
+        AddressSearchAuditEventRequestDetails(postcode.map(_.toString), postTown, filter),
+        a2.length,
+        a2.map { ma =>
+          AddressSearchAuditEventMatchedAddress(
+            ma.uprn.getOrElse("").toString,
+            ma.address.lines,
+            ma.address.town,
+            ma.localCustodian,
+            ma.location,
+            ma.administrativeArea,
+            ma.poBox,
+            ma.address.postcode,
+            ma.address.subdivision,
+            ma.address.country)
+        }))
   }
 }

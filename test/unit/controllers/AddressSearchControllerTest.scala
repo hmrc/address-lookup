@@ -18,10 +18,10 @@ package controllers
 
 import akka.stream.Materializer
 import controllers.services.{AddressSearcher, ReferenceData, ResponseProcessor}
-import model.{AddressSearchAuditEvent, AddressSearchAuditEventMatchedAddress}
+import model.{AddressSearchAuditEvent, AddressSearchAuditEventMatchedAddress, AddressSearchAuditEventRequestDetails}
 import model.address._
 import model.internal.DbAddress
-import model.request.{LookupByPostcodeRequest, LookupByUprnRequest}
+import model.request.{LookupByPostTownRequest, LookupByPostcodeRequest, LookupByUprnRequest}
 import org.mockito.ArgumentMatchers.{any, eq => meq}
 import org.mockito.Mockito._
 import org.scalatest.matchers.should.Matchers
@@ -107,6 +107,57 @@ class AddressSearchControllerTest extends AnyWordSpec with Matchers with GuiceOn
       }
     }
 
+    "successful findPostTown" when {
+      """when search is called with a postcode that will give several results
+       it should give an 'ok' response containing the result list
+       and log the lookup including the size of the result list
+       and audit the results
+      """ in {
+        clearInvocations(mockAuditConnector)
+
+        when(searcher.findTown(meq("Testtown"), meq(Some("Test Street")))).thenReturn(Future(List(dx1A, dx1B, dx1C)))
+
+        val jsonPayload = Json.toJson(LookupByPostTownRequest("Testtown", Some("Test Street")))
+        val request = FakeRequest("POST", "/lookup/by-post-town")
+          .withBody(jsonPayload.toString)
+          .withHeaders("User-Agent" -> "test-user-agent")
+          .withHeadersOrigin
+
+        val expectedAuditRequestDetails = AddressSearchAuditEventRequestDetails(postTown = Some("Testtown"), filter = Some("Test Street"))
+
+        val expectedAuditAddressMatches = Seq(
+          AddressSearchAuditEventMatchedAddress("100002", List("1 Test Street"), "Testtown", None, Some(List(54.914561, -1.3905597)), Some("TestLocalAuthority"), None, "FZ22 7ZW", None, Country("GB", "United Kingdom")),
+          AddressSearchAuditEventMatchedAddress("100003", List("2 Test Street"), "Testtown", None, Some(List(54.914561, -1.3905597)), Some("TestLocalAuthority"), None, "FZ22 7ZW", None, Country("GB", "United Kingdom")),
+          AddressSearchAuditEventMatchedAddress("100004", List("3 Test Street"), "Testtown", None, Some(List(54.914561, -1.3905597)), Some("TestLocalAuthority"), None, "FZ22 7ZW", None, Country("GB", "United Kingdom")))
+
+        val expectedAuditEvent = AddressSearchAuditEvent(Some("test-user-agent"), expectedAuditRequestDetails, 3, expectedAuditAddressMatches)
+
+        val result = controller.searchByPostTown().apply(request)
+        status(result) shouldBe Status.OK
+
+        verify(mockAuditConnector, times(1))
+          .sendExplicitAudit(meq("AddressSearch"), meq(expectedAuditEvent))(any(), any(), any())
+      }
+
+      """when search is called with a posttown that gives no results
+       it should give an 'ok' response and not send an explicit audit event
+      """ in {
+        clearInvocations(mockAuditConnector)
+
+        when(searcher.findTown(meq("Testtown"), meq(None))) thenReturn Future(List())
+
+        val jsonPayload = Json.toJson(LookupByPostTownRequest("Testtown", None))
+        val request = FakeRequest("POST", "/lookup/by-post-town")
+          .withBody(jsonPayload.toString)
+          .withHeaders("User-Agent" -> "test-user-agent")
+          .withHeadersOrigin
+
+        val result = controller.searchByPostTown().apply(request)
+        status(result) shouldBe Status.OK
+
+        verify(mockAuditConnector, never()).sendExplicitAudit(any(), any[AddressSearchAuditEvent]())(any(), any(), any())
+      }
+    }
 
     "successful findPostcode" when {
 
@@ -149,19 +200,21 @@ class AddressSearchControllerTest extends AnyWordSpec with Matchers with GuiceOn
       """ in {
         clearInvocations(mockAuditConnector)
 
-        when(searcher.findPostcode(meq(Postcode("FX11 4HG")), meq(None))) thenReturn Future(List(dx1A, dx1B, dx1C))
-        val jsonPayload = Json.toJson(LookupByPostcodeRequest(Postcode("FX11 4HG")))
+        when(searcher.findPostcode(meq(Postcode("FX11 4HG")), meq(Some("Test Street")))) thenReturn Future(List(dx1A, dx1B, dx1C))
+        val jsonPayload = Json.toJson(LookupByPostcodeRequest(Postcode("FX11 4HG"), Some("Test Street")))
         val request = FakeRequest("POST", "/lookup")
           .withBody(jsonPayload.toString)
           .withHeaders("User-Agent" -> "test-user-agent")
           .withHeadersOrigin
 
-        val expectedAuditAddressMatches = Seq(
-          AddressSearchAuditEventMatchedAddress("100002", List("1 Test Street"), "Testtown", Some("TestLocalAuthority"), "FZ22 7ZW", Some("GB")),
-          AddressSearchAuditEventMatchedAddress("100003", List("2 Test Street"), "Testtown", Some("TestLocalAuthority"), "FZ22 7ZW", Some("GB")),
-          AddressSearchAuditEventMatchedAddress("100004", List("3 Test Street"), "Testtown", Some("TestLocalAuthority"), "FZ22 7ZW", Some("GB")))
+        val expectedAuditRequestDetails = AddressSearchAuditEventRequestDetails(postcode = Some("FX11 4HG"), filter = Some("Test Street"))
 
-        val expectedAuditEvent = AddressSearchAuditEvent(Some("test-user-agent"), 3, expectedAuditAddressMatches)
+        val expectedAuditAddressMatches = Seq(
+          AddressSearchAuditEventMatchedAddress("100002", List("1 Test Street"), "Testtown", None, Some(List(54.914561, -1.3905597)), Some("TestLocalAuthority"), None, "FZ22 7ZW", None, Country("GB", "United Kingdom")),
+          AddressSearchAuditEventMatchedAddress("100003", List("2 Test Street"), "Testtown", None, Some(List(54.914561, -1.3905597)), Some("TestLocalAuthority"), None, "FZ22 7ZW", None, Country("GB", "United Kingdom")),
+          AddressSearchAuditEventMatchedAddress("100004", List("3 Test Street"), "Testtown", None, Some(List(54.914561, -1.3905597)), Some("TestLocalAuthority"), None, "FZ22 7ZW", None, Country("GB", "United Kingdom")))
+
+        val expectedAuditEvent = AddressSearchAuditEvent(Some("test-user-agent"), expectedAuditRequestDetails, 3, expectedAuditAddressMatches)
 
         val result = controller.search().apply(request)
         status(result) shouldBe Status.OK
