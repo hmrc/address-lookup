@@ -68,7 +68,12 @@ object request {
   case class LookupByPostTownRequest(posttown: String, filter: Option[String])
 
   object LookupByPostTownRequest {
-    implicit val reads: Reads[LookupByPostTownRequest] = Json.reads[LookupByPostTownRequest]
+    implicit val reads: Reads[LookupByPostTownRequest] = (
+        (JsPath \ "posttown").read[String].map(_.toUpperCase) and
+            (JsPath \ "filter").readNullable[String]
+        ) (
+      (pt, fo) => LookupByPostTownRequest.apply(pt, fo))
+
     implicit val writes: Writes[LookupByPostTownRequest] = Json.writes[LookupByPostTownRequest]
   }
 }
