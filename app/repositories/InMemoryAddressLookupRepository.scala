@@ -47,27 +47,27 @@ class InMemoryAddressLookupRepository @Inject()(env: Environment, ec: ExecutionC
 
 object InMemoryAddressLookupRepository {
   val singleAddresses: Seq[DbAddress] = Seq(
-    DbAddress("GB11111", List("A House 27-45", "A Street"), "London", "FX9 9PY", Some("GB-ENG"), Some("GB"),
-      Some(5840), Some("en"), None, Some(Location("12.345678", "-12.345678").toString)),
-    DbAddress("GB33333", List("A House 5-7", "A Boulevard"), "Newcastle upon Tyne", "FX1 6JN", Some("GB-ENG"),
-      Some("GB"), Some(4510), Some("en"), None, Some(Location("12.345678", "-12.345678")
+    DbAddress("GB11111", List("A HOUSE 27-45", "A STREET"), "LONDON", "FX9 9PY", Some("GB-ENG"), Some("GB"),
+      Some(5840), Some("EN"), None, Some(Location("12.345678", "-12.345678").toString)),
+    DbAddress("GB33333", List("A HOUSE 5-7", "A BOULEVARD"), "NEWCASTLE UPON TYNE", "FX1 6JN", Some("GB-ENG"),
+      Some("GB"), Some(4510), Some("EN"), None, Some(Location("12.345678", "-12.345678")
           .toString)),
-    DbAddress("GB44444", List("An address with a very long first line", "Second line of address is just as long maybe" +
-        " longer", "Third line is not the longest but is still very long"), "Llanfairpwllgwyngyllgogerychwyrndrobwllllantysiliogogogoch", "FX2 2TB", Some("GB-WLS"), Some("GB"), Some(915),
-      Some("en"), None, Some(Location("12.345678", "-12.345678").toString)),
-    DbAddress("GB55555", List("An address with a PO Box"), "some-town", "FX17 1TB", Some("GB-WLS"), Some("GB"), Some(666),
-      Some("en"), None, Some(Location("12.345678", "-12.345678").toString), Some("PO Box " +
+    DbAddress("GB44444", List("AN ADDRESS WITH A VERY LONG FIRST LINE", "SECOND LINE OF ADDRESS IS JUST AS LONG MAYBE" +
+        " LONGER", "THIRD LINE IS NOT THE LONGEST BUT IS STILL VERY LONG"), "LLANFAIRPWLLGWYNGYLLGOGERYCHWYRNDROBWLLLLANTYSILIOGOGOGOCH", "FX2 2TB", Some("GB-WLS"), Some("GB"), Some(915),
+      Some("EN"), None, Some(Location("12.345678", "-12.345678").toString)),
+    DbAddress("GB55555", List("AN ADDRESS WITH A PO BOX"), "SOME-TOWN", "FX17 1TB", Some("GB-WLS"), Some("GB"), Some(666),
+      Some("EN"), None, Some(Location("12.345678", "-12.345678").toString), Some("PO BOX " +
           "1234")),
-    DbAddress("GB22222", List("11 A Boulevard"), "Newcastle upon Tyne", "FX1 6JN", Some("GB-ENG"), Some("GB"), Some(4510), Some("en"), None, Some(Location("12.345678", "-12.345678").toString))
+    DbAddress("GB22222", List("11 A BOULEVARD"), "NEWCASTLE UPON TYNE", "FX1 6JN", Some("GB-ENG"), Some("GB"), Some(4510), Some("EN"), None, Some(Location("12.345678", "-12.345678").toString))
   )
 
   val apartmentAddresses: Seq[DbAddress] = (for (i <- 1 to 2517) yield {
-    DbAddress(s"GB100$i", List(s"Flat $i", "A Apartments", "ARoad"), "ATown", "FX4 7AL", Some("GB-ENG"), Some("GB"), Some(3725), Some("en"), None, None)
+    DbAddress(s"GB100$i", List(s"FLAT $i", "A APARTMENTS", "AROAD"), "ATOWN", "FX4 7AL", Some("GB-ENG"), Some("GB"), Some(3725), Some("EN"), None, None)
   })
 
   val boulevardAddresses: Seq[DbAddress] = (for (i <- 1 to 3000) yield {
-    DbAddress(s"GB200$i", List(s"$i Bankside"), "ATown", "FX4 7AJ",
-      Some("GB-ENG"), Some("GB"), Some(3725), Some("en"), None, None)
+    DbAddress(s"GB200$i", List(s"$i BANKSIDE"), "ATOWN", "FX4 7AJ",
+      Some("GB-ENG"), Some("GB"), Some(3725), Some("EN"), None, None)
   })
 
   val extraAddresses: Seq[DbAddress] = singleAddresses ++ apartmentAddresses ++ boulevardAddresses
