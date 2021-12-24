@@ -115,7 +115,7 @@ class AddressSearchControllerTest extends AnyWordSpec with Matchers with GuiceOn
       """ in {
         clearInvocations(mockAuditConnector)
 
-        when(searcher.findTown(meq("Testtown"), meq(Some("Test Street")))).thenReturn(Future(List(dx1A, dx1B, dx1C)))
+        when(searcher.findTown(meq("TESTTOWN"), meq(Some("Test Street")))).thenReturn(Future(List(dx1A, dx1B, dx1C)))
 
         val jsonPayload = Json.toJson(LookupByPostTownRequest("Testtown", Some("Test Street")))
         val request = FakeRequest("POST", "/lookup/by-post-town")
@@ -123,7 +123,7 @@ class AddressSearchControllerTest extends AnyWordSpec with Matchers with GuiceOn
           .withHeaders("User-Agent" -> "test-user-agent")
           .withHeadersOrigin
 
-        val expectedAuditRequestDetails = AddressSearchAuditEventRequestDetails(postTown = Some("Testtown"), filter = Some("Test Street"))
+        val expectedAuditRequestDetails = AddressSearchAuditEventRequestDetails(postTown = Some("TESTTOWN"), filter = Some("Test Street"))
 
         val expectedAuditAddressMatches = Seq(
           AddressSearchAuditEventMatchedAddress("100002", List("1 Test Street"), "Testtown", None, Some(List(54.914561, -1.3905597)), Some("TestLocalAuthority"), None, "FZ22 7ZW", None, Country("GB", "United Kingdom")),
@@ -144,7 +144,7 @@ class AddressSearchControllerTest extends AnyWordSpec with Matchers with GuiceOn
       """ in {
         clearInvocations(mockAuditConnector)
 
-        when(searcher.findTown(meq("Testtown"), meq(None))) thenReturn Future(List())
+        when(searcher.findTown(meq("TESTTOWN"), meq(None))) thenReturn Future(List())
 
         val jsonPayload = Json.toJson(LookupByPostTownRequest("Testtown", None))
         val request = FakeRequest("POST", "/lookup/by-post-town")
