@@ -80,7 +80,7 @@ object ReferenceData {
           val v = cells(valueIndex)
           if (Character.isDigit(k(0)) && v.nonEmpty) {
             val ki = k.toInt
-            outputBuffer += ki -> capitalise(v)
+            outputBuffer += ki -> v
           } // else ignore non-numeric codes
         }
       }

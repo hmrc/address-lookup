@@ -25,9 +25,9 @@ import model.address.{Address, AddressRecord, LocalCustodian, Location}
 object FixturesV2 {
 
 
-  private val lc4510 = Some(LocalCustodian(4510, "Newcastle upon Tyne"))
-  private val lc5840 = Some(LocalCustodian(5840, "Southwark"))
-  private val lc915 = Some(LocalCustodian(915, "Carlisle"))
+  private val lc4510 = Some(LocalCustodian(4510, "NEWCASTLE UPON TYNE"))
+  private val lc5840 = Some(LocalCustodian(5840, "SOUTHWARK"))
+  private val lc915 = Some(LocalCustodian(915, "CARLISLE"))
 
   private val en = "en"
 
