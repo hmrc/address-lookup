@@ -28,8 +28,8 @@ class ResponseProcessorTest extends AnyWordSpec with Matchers {
 
   private val en = "en"
 
-  private val lc4510 = Some(LocalCustodian(4510, "Newcastle upon Tyne"))
-  private val lc8132 = Some(LocalCustodian(8132, "Belfast"))
+  private val lc4510 = Some(LocalCustodian(4510, "NEWCASTLE UPON TYNE"))
+  private val lc8132 = Some(LocalCustodian(8132, "BELFAST"))
 
   val loc1: Location = Location("12.345678", "-12.345678")
   val loc2: Location = Location("12.345678", "-12.345678")
@@ -38,44 +38,44 @@ class ResponseProcessorTest extends AnyWordSpec with Matchers {
   val loc11: Location = Location("12.345678", "-12.345678")
   val locZ: Location = Location("12.345678", "-12.345678")
 
-  val dbGB1: DbAddress = DbAddress("GB10001", List("1 Line", "Line2", "Line3"), "ATown", "FX11 4HG",
+  val dbGB1: DbAddress = DbAddress("GB10001", List("1 LINE", "LINE2", "LINE3"), "ATOWN", "FX11 4HG",
     Some("GB-ENG"), Some("GB"), Some(4510), Some("en"), None, Some(loc1.toString))
-  val dbGB2: DbAddress = DbAddress("GB10002", List("2 Line", "Line2", "Line3"), "ATown", "FX11 4HG",
+  val dbGB2: DbAddress = DbAddress("GB10002", List("2 LINE", "LINE2", "LINE3"), "ATOWN", "FX11 4HG",
     Some("GB-ENG"), Some("GB"), Some(4510), Some("en"), None, Some(loc2.toString))
-  val dbGB3: DbAddress = DbAddress("GB10003", List("3 Line", "Line2", "Line3"), "ATown", "FX11 4HG",
+  val dbGB3: DbAddress = DbAddress("GB10003", List("3 LINE", "LINE2", "LINE3"), "ATOWN", "FX11 4HG",
     Some("GB-ENG"), Some("GB"), Some(4510), Some("en"), None, Some(loc3.toString))
-  val dbGB10: DbAddress = DbAddress("GB10004", List("10 Line", "Line2", "Line3"), "ATown", "FX11 4HG",
+  val dbGB10: DbAddress = DbAddress("GB10004", List("10 LINE", "LINE2", "LINE3"), "ATOWN", "FX11 4HG",
     Some("GB-ENG"), Some("GB"), Some(4510), Some("en"), None, Some(loc10.toString))
-  val dbGB11: DbAddress = DbAddress("GB10005", List("11 Line", "Line2", "Line3"), "ATown", "FX11 4HG",
+  val dbGB11: DbAddress = DbAddress("GB10005", List("11 LINE", "LINE2", "LINE3"), "ATOWN", "FX11 4HG",
     Some("GB-ENG"), Some("GB"), Some(4510), Some("en"), None, Some(loc11.toString))
-  val dbGBZ: DbAddress = DbAddress("GB10006", List("wxyz1", "wxyz2", "wxyz3"), "ATown", "FX11 4HG",
+  val dbGBZ: DbAddress = DbAddress("GB10006", List("WXYZ1", "WXYZ2", "WXYZ3"), "ATOWN", "FX11 4HG",
     Some("GB-ENG"), Some("GB"), Some(4510), Some("en"), None, Some(locZ.toString))
 
-  val expGB1M: AddressRecord = AddressRecord("GB10001", Some(10001L), Address(List("1 Line", "Line2", "Line3"), "ATown", "FX11 4HG", Some(England), GB), en, lc4510, Some(loc1.toSeq))
+  val expGB1M: AddressRecord = AddressRecord("GB10001", Some(10001L), Address(List("1 LINE", "LINE2", "LINE3"), "ATOWN", "FX11 4HG", Some(England), GB), en, lc4510, Some(loc1.toSeq))
 
-  val expGB2M: AddressRecord = AddressRecord("GB10002", Some(10002L), Address(List("2 Line", "Line2", "Line3"), "ATown", "FX11 4HG", Some(England), GB), en, lc4510, Some(loc2.toSeq))
+  val expGB2M: AddressRecord = AddressRecord("GB10002", Some(10002L), Address(List("2 LINE", "LINE2", "LINE3"), "ATOWN", "FX11 4HG", Some(England), GB), en, lc4510, Some(loc2.toSeq))
 
-  val expGB3M: AddressRecord = AddressRecord("GB10003", Some(10003L), Address(List("3 Line", "Line2", "Line3"), "ATown", "FX11 4HG", Some(England), GB), en, lc4510, Some(loc3.toSeq))
+  val expGB3M: AddressRecord = AddressRecord("GB10003", Some(10003L), Address(List("3 LINE", "LINE2", "LINE3"), "ATOWN", "FX11 4HG", Some(England), GB), en, lc4510, Some(loc3.toSeq))
 
-  val expGB10M: AddressRecord = AddressRecord("GB10004", Some(10004L), Address(List("10 Line", "Line2", "Line3"), "ATown", "FX11 4HG", Some(England), GB), en, lc4510, Some(loc10.toSeq))
+  val expGB10M: AddressRecord = AddressRecord("GB10004", Some(10004L), Address(List("10 LINE", "LINE2", "LINE3"), "ATOWN", "FX11 4HG", Some(England), GB), en, lc4510, Some(loc10.toSeq))
 
-  val expGB11M: AddressRecord = AddressRecord("GB10005", Some(10005L), Address(List("11 Line", "Line2", "Line3"), "ATown", "FX11 4HG", Some(England), GB), en, lc4510, Some(loc11.toSeq))
+  val expGB11M: AddressRecord = AddressRecord("GB10005", Some(10005L), Address(List("11 LINE", "LINE2", "LINE3"), "ATOWN", "FX11 4HG", Some(England), GB), en, lc4510, Some(loc11.toSeq))
 
-  val expGBZM: AddressRecord = AddressRecord("GB10006", Some(10006L), Address(List("wxyz1", "wxyz2", "wxyz3"), "ATown", "FX11 4HG", Some(England), GB), en, lc4510, Some(loc11.toSeq))
+  val expGBZM: AddressRecord = AddressRecord("GB10006", Some(10006L), Address(List("WXYZ1", "WXYZ2", "WXYZ3"), "ATOWN", "FX11 4HG", Some(England), GB), en, lc4510, Some(loc11.toSeq))
 
   val locNI1: Location = Location("12.345678", "-12.345678")
   val locNI2: Location = Location("12.345678", "-12.345678")
 
-  val dbNI1: DbAddress = DbAddress("GB10007", List("Line1", "Line2", "Line3"), "ATown", "FX11 4HG",
+  val dbNI1: DbAddress = DbAddress("GB10007", List("LINE1", "LINE2", "LINE3"), "ATOWN", "FX11 4HG",
     Some("GB-NIR"), Some("GB"), Some(8132), Some("en"), None, Some(locNI1.toString))
-  val dbNI2: DbAddress = DbAddress("GB10008", List("wxyz1", "wxyz2", "wxyz3"), "ATown", "FX11 4HG",
+  val dbNI2: DbAddress = DbAddress("GB10008", List("WXYZ1", "WXYZ2", "WXYZ3"), "ATOWN", "FX11 4HG",
     Some("GB-NIR"), Some("GB"), Some(8132), Some("en"), None, Some(locNI2.toString))
 
-  val expNI1M: AddressRecord = AddressRecord("GB10007", Some(10007L), Address(List("Line1", "Line2", "Line3"),
-    "ATown", "FX11 4HG", Some(NorthernIreland), GB), en, lc8132, Some(locNI1.toSeq))
+  val expNI1M: AddressRecord = AddressRecord("GB10007", Some(10007L), Address(List("LINE1", "LINE2", "LINE3"),
+    "ATOWN", "FX11 4HG", Some(NorthernIreland), GB), en, lc8132, Some(locNI1.toSeq))
 
-  val expNI2M: AddressRecord = AddressRecord("GB10008", Some(10008L), Address(List("wxyz1", "wxyz2", "wxyz3"),
-    "ATown", "FX11 4HG", Some(NorthernIreland), GB), en, lc8132, Some(locNI2.toSeq))
+  val expNI2M: AddressRecord = AddressRecord("GB10008", Some(10008L), Address(List("WXYZ1", "WXYZ2", "WXYZ3"),
+    "ATOWN", "FX11 4HG", Some(NorthernIreland), GB), en, lc8132, Some(locNI2.toSeq))
 
   val dbPoBox: DbAddress = DbAddress("GB10008", List("PO BOX 1234", "", ""), "", "PO1 1PO",
     Some("GB-NIR"), Some("GB"), Some(8132), Some("en"), None, Some(locNI2.toString), Some("1234"))

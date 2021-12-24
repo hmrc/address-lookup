@@ -38,7 +38,7 @@ import scala.concurrent.Future
 class PostcodeLookupSuiteV2 ()
   extends AnyWordSpec with GuiceOneServerPerSuite with AppServerTestApi {
 
-  import FixturesV2._
+  import Fixtures._
 
   private val largePostcodeExampleSize = 2517
 

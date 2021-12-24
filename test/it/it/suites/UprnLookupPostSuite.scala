@@ -40,7 +40,7 @@ import scala.concurrent.Future
 class UprnLookupPostSuite()
   extends AnyWordSpec with GuiceOneServerPerSuite with AppServerTestApi {
 
-  import FixturesV2._
+  import Fixtures._
 
   val repository: AddressLookupService = mock[AddressLookupService]
   override def fakeApplication(): Application = {
