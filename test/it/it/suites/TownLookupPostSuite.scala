@@ -93,10 +93,10 @@ class TownLookupPostSuite()
         val arr = json.asInstanceOf[JsArray].value
         arr.size shouldBe 3000
         val address1 = Json.fromJson[AddressRecord](arr.head).get.address
-        address1.line1 shouldBe "1 Bankside"
+        address1.line1 shouldBe "1 BANKSIDE"
         address1.line2 shouldBe ""
         address1.line3 shouldBe ""
-        address1.town shouldBe "ATown"
+        address1.town shouldBe "ATOWN"
         address1.postcode shouldBe "FX4 7AJ"
       }
 
@@ -116,16 +116,16 @@ class TownLookupPostSuite()
         val arr = json.asInstanceOf[JsArray].value
         arr.size shouldBe 2
         val address1 = Json.fromJson[AddressRecord](arr.head).get.address
-        address1.line1 shouldBe "10 Bankside"
+        address1.line1 shouldBe "10 BANKSIDE"
         address1.line2 shouldBe ""
         address1.line3 shouldBe ""
-        address1.town shouldBe "ATown"
+        address1.town shouldBe "ATOWN"
         address1.postcode shouldBe "FX4 7AJ"
         val address2 = Json.fromJson[AddressRecord](arr.tail.head).get.address
-        address2.line1 shouldBe "Flat 10"
-        address2.line2 shouldBe "A Apartments"
-        address2.line3 shouldBe "ARoad"
-        address2.town shouldBe "ATown"
+        address2.line1 shouldBe "FLAT 10"
+        address2.line2 shouldBe "A APARTMENTS"
+        address2.line3 shouldBe "AROAD"
+        address2.town shouldBe "ATOWN"
         address2.postcode shouldBe "FX4 7AL"
       }
 

@@ -48,26 +48,26 @@ class InMemoryAddressLookupRepository @Inject()(env: Environment, ec: ExecutionC
 object InMemoryAddressLookupRepository {
   val singleAddresses: Seq[DbAddress] = Seq(
     DbAddress("GB11111", List("A HOUSE 27-45", "A STREET"), "LONDON", "FX9 9PY", Some("GB-ENG"), Some("GB"),
-      Some(5840), Some("EN"), None, Some(Location("12.345678", "-12.345678").toString)),
+      Some(5840), Some("en"), None, Some(Location("12.345678", "-12.345678").toString)),
     DbAddress("GB33333", List("A HOUSE 5-7", "A BOULEVARD"), "NEWCASTLE UPON TYNE", "FX1 6JN", Some("GB-ENG"),
-      Some("GB"), Some(4510), Some("EN"), None, Some(Location("12.345678", "-12.345678")
+      Some("GB"), Some(4510), Some("en"), None, Some(Location("12.345678", "-12.345678")
           .toString)),
     DbAddress("GB44444", List("AN ADDRESS WITH A VERY LONG FIRST LINE", "SECOND LINE OF ADDRESS IS JUST AS LONG MAYBE" +
         " LONGER", "THIRD LINE IS NOT THE LONGEST BUT IS STILL VERY LONG"), "LLANFAIRPWLLGWYNGYLLGOGERYCHWYRNDROBWLLLLANTYSILIOGOGOGOCH", "FX2 2TB", Some("GB-WLS"), Some("GB"), Some(915),
-      Some("EN"), None, Some(Location("12.345678", "-12.345678").toString)),
+      Some("en"), None, Some(Location("12.345678", "-12.345678").toString)),
     DbAddress("GB55555", List("AN ADDRESS WITH A PO BOX"), "SOME-TOWN", "FX17 1TB", Some("GB-WLS"), Some("GB"), Some(666),
-      Some("EN"), None, Some(Location("12.345678", "-12.345678").toString), Some("PO BOX " +
+      Some("en"), None, Some(Location("12.345678", "-12.345678").toString), Some("PO BOX " +
           "1234")),
-    DbAddress("GB22222", List("11 A BOULEVARD"), "NEWCASTLE UPON TYNE", "FX1 6JN", Some("GB-ENG"), Some("GB"), Some(4510), Some("EN"), None, Some(Location("12.345678", "-12.345678").toString))
+    DbAddress("GB22222", List("11 A BOULEVARD"), "NEWCASTLE UPON TYNE", "FX1 6JN", Some("GB-ENG"), Some("GB"), Some(4510), Some("en"), None, Some(Location("12.345678", "-12.345678").toString))
   )
 
   val apartmentAddresses: Seq[DbAddress] = (for (i <- 1 to 2517) yield {
-    DbAddress(s"GB100$i", List(s"FLAT $i", "A APARTMENTS", "AROAD"), "ATOWN", "FX4 7AL", Some("GB-ENG"), Some("GB"), Some(3725), Some("EN"), None, None)
+    DbAddress(s"GB100$i", List(s"FLAT $i", "A APARTMENTS", "AROAD"), "ATOWN", "FX4 7AL", Some("GB-ENG"), Some("GB"), Some(3725), Some("en"), None, None)
   })
 
   val boulevardAddresses: Seq[DbAddress] = (for (i <- 1 to 3000) yield {
     DbAddress(s"GB200$i", List(s"$i BANKSIDE"), "ATOWN", "FX4 7AJ",
-      Some("GB-ENG"), Some("GB"), Some(3725), Some("EN"), None, None)
+      Some("GB-ENG"), Some("GB"), Some(3725), Some("en"), None, None)
   })
 
   val extraAddresses: Seq[DbAddress] = singleAddresses ++ apartmentAddresses ++ boulevardAddresses
