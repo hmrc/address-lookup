@@ -96,10 +96,10 @@ class LookupPostSuite()
         val arr = json.as[List[AddressRecord]]
         arr.size shouldBe largePostcodeExampleSize
         val address1 = arr.head
-        address1.address.line1 shouldBe "Flat 1"
-        address1.address.line2 shouldBe "A Apartments"
-        address1.address.line3 shouldBe "ARoad"
-        address1.address.town shouldBe "ATown"
+        address1.address.line1 shouldBe "FLAT 1"
+        address1.address.line2 shouldBe "A APARTMENTS"
+        address1.address.line3 shouldBe "AROAD"
+        address1.address.town shouldBe "ATOWN"
         address1.address.postcode shouldBe "FX4 7AL"
       }
 

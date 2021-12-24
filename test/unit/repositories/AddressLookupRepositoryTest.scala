@@ -33,7 +33,7 @@ class AddressLookupRepositoryTest extends AnyWordSpec with Matchers with GuiceOn
     "findID is called with an id but no filter" should {
       "return an address when a matching one is found" in {
         val expectedId = "GB11111"
-        val expected = DbAddress(expectedId, List("A House 27-45", "A Street"), "London", "FX9 9PY", Some("GB-ENG"), Some("GB"), Some(5840), Some("en"), None, Some(Location("12.345678", "-12.345678").toString))
+        val expected = DbAddress(expectedId, List("A HOUSE 27-45", "A STREET"), "LONDON", "FX9 9PY", Some("GB-ENG"), Some("GB"), Some(5840), Some("en"), None, Some(Location("12.345678", "-12.345678").toString))
         val addressOption = await(lookupService.findID(expectedId))
         addressOption match {
           case List(address) =>
@@ -95,7 +95,7 @@ class AddressLookupRepositoryTest extends AnyWordSpec with Matchers with GuiceOn
     "findUprn is called with a uprn" should {
       "return address when match is found" in {
         val uprn = "44444"
-        val expected = List(DbAddress("GB44444", List("An address with a very long first line", "Second line of address is just as long maybe" + " longer", "Third line is not the longest but is still very long"), "Llanfairpwllgwyngyllgogerychwyrndrobwllllantysiliogogogoch", "FX2 2TB", Some("GB-WLS"), Some("GB"), Some(915), Some("en"), None, Some(Location("12.345678", "-12.345678").toString)))
+        val expected = List(DbAddress("GB44444", List("AN ADDRESS WITH A VERY LONG FIRST LINE", "SECOND LINE OF ADDRESS IS JUST AS LONG MAYBE" + " LONGER", "THIRD LINE IS NOT THE LONGEST BUT IS STILL VERY LONG"), "LLANFAIRPWLLGWYNGYLLGOGERYCHWYRNDROBWLLLLANTYSILIOGOGOGOCH", "FX2 2TB", Some("GB-WLS"), Some("GB"), Some(915), Some("en"), None, Some(Location("12.345678", "-12.345678").toString)))
         val address = await(lookupService.findUprn(uprn))
         address shouldBe expected
       }

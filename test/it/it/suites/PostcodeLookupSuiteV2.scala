@@ -84,10 +84,10 @@ class PostcodeLookupSuiteV2 ()
         val arr = json.asInstanceOf[JsArray].value
         arr.size shouldBe largePostcodeExampleSize
         val address1 = Json.fromJson[AddressRecord](arr.head).get.address
-        address1.line1 shouldBe "Flat 1"
-        address1.line2 shouldBe "A Apartments"
-        address1.line3 shouldBe "ARoad"
-        address1.town shouldBe "ATown"
+        address1.line1 shouldBe "FLAT 1"
+        address1.line2 shouldBe "A APARTMENTS"
+        address1.line3 shouldBe "AROAD"
+        address1.town shouldBe "ATOWN"
         address1.postcode shouldBe "FX4 7AL"
       }
 
