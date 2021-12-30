@@ -25,18 +25,21 @@ object internal {
 
   // Do we need these 2 representations of address ?????
   case class SqlDbAddress(uprn: String,
+                          parentUprn: Option[String],
+                          usrn: Option[String],
+                          orgnisationName: Option[String],
                           line1: Option[String],
                           line2: Option[String],
                           line3: Option[String],
                           subdivision: Option[String],
-                          countrycode: Option[String],
-                          localcustodiancode: Option[String],
+                          countryCode: Option[String],
+                          localCustodianCode: Option[String],
                           language: Option[String],
                           location: Option[String],
                           posttown: Option[String],
                           postcode: Option[String],
-                          poboxnumber: Option[String],
-                          localauthority: Option[String])
+                          poBoxNumber: Option[String],
+                          localAuthority: Option[String])
 
   /**
     * Address typically represents a postal address.
@@ -44,23 +47,22 @@ object internal {
     * For non-UK addresses, 'town' may be absent and there may be an extra line instead.
     */
   // id typically consists of some prefix and the uprn
-  case class DbAddress(
-                          id: String,
-                          lines: List[String],
-                          town: String,
-                          postcode: String,
-                          subdivision: Option[String],
-                          country: Option[String],
-                          localCustodianCode: Option[Int],
-                          language: Option[String],
-                          blpuClass: Option[String],
-                          location: Option[String],
-                          poBox: Option[String] = None,
-                          administrativeArea: Option[String] = None
-                      ) {
-
-    // UPRN is specified to be an integer of up to 12 digits (it can also be assumed to be always positive)
-    def uprn: Long = DbAddress.trimLeadingLetters(id).toLong
+  case class DbAddress(id: String,
+                       uprn: Long,
+                       parentUprn: Option[Long],
+                       usrn: Option[Long],
+                       organisationName: Option[String],
+                       lines: List[String],
+                       town: String,
+                       postcode: String,
+                       subdivision: Option[String],
+                       country: Option[String],
+                       localCustodianCode: Option[Int],
+                       language: Option[String],
+                       blpuClass: Option[String],
+                       location: Option[String],
+                       poBox: Option[String] = None,
+                       administrativeArea: Option[String] = None) {
 
     def linesContainIgnoreCase(filterStr: String): Boolean = {
       val filter = filterStr.toUpperCase
@@ -77,9 +79,7 @@ object internal {
 
     // For use as input to MongoDbObject (hence it's not a Map)
     def tupled: List[(String, Any)] = {
-      List(
-        "lines" -> lines,
-        "postcode" -> postcode) ++
+      List("lines" -> lines, "postcode" -> postcode) ++
           town.toList.map("town" -> _) ++
           subdivision.toList.map("subdivision" -> _) ++
           country.toList.map("country" -> _) ++
@@ -121,15 +121,8 @@ object internal {
 
 
   object DbAddress {
-
     final val English = "en"
     final val Cymraeg = "cy"
-
-    @tailrec
-    private[internal] def trimLeadingLetters(id: String): String = {
-      if (id.isEmpty || Character.isDigit(id.head)) id
-      else trimLeadingLetters(id.tail)
-    }
   }
 
   case class LatLong(lat: Double, long: Double) {

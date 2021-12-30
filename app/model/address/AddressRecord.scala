@@ -43,6 +43,9 @@ object LocalCustodian {
 case class AddressRecord(
                           id: String,
                           uprn: Option[Long],
+                          parentUprn: Option[Long],
+                          usrn: Option[Long],
+                          organisation: Option[String],
                           address: Address,
                           // ISO639-1 code, e.g. 'en' for English
                           // see https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
@@ -72,6 +75,9 @@ object AddressRecord {
     implicit val addressRecordReads: Reads[AddressRecord] = (
         (JsPath \ "id").read[String] and
             (JsPath \ "uprn").readNullable[Long] and
+            (JsPath \ "parentUprn").readNullable[Long] and
+            (JsPath \ "usrn").readNullable[Long] and
+            (JsPath \ "oragnisation").readNullable[String] and
             (JsPath \ "address").read[Address] and
             (JsPath \ "language").read[String] and
             (JsPath \ "localCustodian").readNullable[LocalCustodian] and
@@ -83,6 +89,9 @@ object AddressRecord {
     implicit val addressRecordWrites: Writes[AddressRecord] = (
         (JsPath \ "id").write[String] and
             (JsPath \ "uprn").writeNullable[Long] and
+            (JsPath \ "parentUprn").writeNullable[Long] and
+            (JsPath \ "usrn").writeNullable[Long] and
+            (JsPath \ "organisation").writeNullable[String] and
             (JsPath \ "address").write[Address] and
             (JsPath \ "language").write[String] and
             (JsPath \ "localCustodian").writeNullable[LocalCustodian] and
