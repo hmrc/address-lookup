@@ -155,6 +155,9 @@ class AddressSearchController @Inject()(addressSearch: AddressSearcher, response
         a2.map { ma =>
           AddressSearchAuditEventMatchedAddress(
             ma.uprn.getOrElse("").toString,
+            ma.parentUprn,
+            ma.usrn,
+            ma.organisation,
             ma.address.lines,
             ma.address.town,
             ma.localCustodian,

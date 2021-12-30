@@ -77,7 +77,7 @@ object AddressRecord {
             (JsPath \ "uprn").readNullable[Long] and
             (JsPath \ "parentUprn").readNullable[Long] and
             (JsPath \ "usrn").readNullable[Long] and
-            (JsPath \ "oragnisation").readNullable[String] and
+            (JsPath \ "organisation").readNullable[String] and
             (JsPath \ "address").read[Address] and
             (JsPath \ "language").read[String] and
             (JsPath \ "localCustodian").readNullable[LocalCustodian] and

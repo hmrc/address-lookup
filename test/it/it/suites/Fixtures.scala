@@ -33,7 +33,10 @@ object Fixtures {
   val location1: Location = Location("12.345678", "-12.345678")
   val id1 = "GB11111"
   val urpn1: Some[Long] = Some(11111L)
-  val fx9_9py_terse: AddressRecord = AddressRecord(id1, urpn1, None, None, None, Address(List("A HOUSE 27-45", "A STREET"), "LONDON", "FX9 9PY", Some(England), GB),
+  val parentUprn1 = Some(111110L)
+  val usrn1 = Some(111100L)
+  val organisation1 = Some("some-organisation")
+  val fx9_9py_terse: AddressRecord = AddressRecord(id1, urpn1, parentUprn1, usrn1, organisation1, Address(List("A HOUSE 27-45", "A STREET"), "LONDON", "FX9 9PY", Some(England), GB),
     en, lc5840, Some(location1.toSeq))
 
   // This sample is a length-2 postcode

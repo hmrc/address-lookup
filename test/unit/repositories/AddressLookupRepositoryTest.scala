@@ -34,7 +34,10 @@ class AddressLookupRepositoryTest extends AnyWordSpec with Matchers with GuiceOn
       "return an address when a matching one is found" in {
         val expectedId = "GB11111"
         val expectedUprn = 11111L
-        val expected = DbAddress(expectedId,expectedUprn, None, None, None, List("A HOUSE 27-45", "A STREET"), "LONDON", "FX9 9PY", Some("GB-ENG"), Some("GB"), Some(5840), Some("en"), None, Some(Location("12.345678", "-12.345678").toString))
+        val expectedParentUprn = Some(111110L)
+        val expectedUsrn = Some(111100L)
+        val expectedOrganisation = Some("some-organisation")
+        val expected = DbAddress(expectedId,expectedUprn, expectedParentUprn, expectedUsrn, expectedOrganisation, List("A HOUSE 27-45", "A STREET"), "LONDON", "FX9 9PY", Some("GB-ENG"), Some("GB"), Some(5840), Some("en"), None, Some(Location("12.345678", "-12.345678").toString))
         val addressOption = await(lookupService.findID(expectedId))
         addressOption match {
           case List(address) =>

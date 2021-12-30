@@ -38,24 +38,24 @@ class ResponseProcessorTest extends AnyWordSpec with Matchers {
   val loc11: Location = Location("12.345678", "-12.345678")
   val locZ: Location = Location("12.345678", "-12.345678")
 
-  val dbGB1: DbAddress = DbAddress("GB10001", 10001L, None, None, None , List("1 LINE", "LINE2", "LINE3"), "ATOWN", "FX11 4HG", Some("GB-ENG"), Some("GB"), Some(4510), Some("en"), None, Some(loc1.toString))
-  val dbGB2: DbAddress = DbAddress("GB10002", 10002L, None, None, None, List("2 LINE", "LINE2", "LINE3"), "ATOWN", "FX11 4HG", Some("GB-ENG"), Some("GB"), Some(4510), Some("en"), None, Some(loc2.toString))
-  val dbGB3: DbAddress = DbAddress("GB10003", 10003L, None, None, None, List("3 LINE", "LINE2", "LINE3"), "ATOWN", "FX11 4HG", Some("GB-ENG"), Some("GB"), Some(4510), Some("en"), None, Some(loc3.toString))
-  val dbGB10: DbAddress = DbAddress("GB10004", 10004L, None, None, None, List("10 LINE", "LINE2", "LINE3"), "ATOWN", "FX11 4HG", Some("GB-ENG"), Some("GB"), Some(4510), Some("en"), None, Some(loc10.toString))
-  val dbGB11: DbAddress = DbAddress("GB10005", 10005L, None, None, None, List("11 LINE", "LINE2", "LINE3"), "ATOWN", "FX11 4HG", Some("GB-ENG"), Some("GB"), Some(4510), Some("en"), None, Some(loc11.toString))
-  val dbGBZ: DbAddress = DbAddress("GB10006", 10006L, None, None, None, List("WXYZ1", "WXYZ2", "WXYZ3"), "ATOWN", "FX11 4HG", Some("GB-ENG"), Some("GB"), Some(4510), Some("en"), None, Some(locZ.toString))
+  val dbGB1: DbAddress = DbAddress("GB10001", 10001L, Some(100010L), Some(100011L), Some("some-organisation-gb1") , List("1 LINE", "LINE2", "LINE3"), "ATOWN", "FX11 4HG", Some("GB-ENG"), Some("GB"), Some(4510), Some("en"), None, Some(loc1.toString))
+  val dbGB2: DbAddress = DbAddress("GB10002", 10002L, Some(100020L), Some(100021L), Some("some-organisation-gb2"), List("2 LINE", "LINE2", "LINE3"), "ATOWN", "FX11 4HG", Some("GB-ENG"), Some("GB"), Some(4510), Some("en"), None, Some(loc2.toString))
+  val dbGB3: DbAddress = DbAddress("GB10003", 10003L, Some(100030L), Some(100031L), Some("some-organisation-gb3"), List("3 LINE", "LINE2", "LINE3"), "ATOWN", "FX11 4HG", Some("GB-ENG"), Some("GB"), Some(4510), Some("en"), None, Some(loc3.toString))
+  val dbGB10: DbAddress = DbAddress("GB10004", 10004L, Some(100040L), Some(100041L), Some("some-organisation-gb4"), List("10 LINE", "LINE2", "LINE3"), "ATOWN", "FX11 4HG", Some("GB-ENG"), Some("GB"), Some(4510), Some("en"), None, Some(loc10.toString))
+  val dbGB11: DbAddress = DbAddress("GB10005", 10005L, Some(100050L), Some(100051L), Some("some-organisation-gb5"), List("11 LINE", "LINE2", "LINE3"), "ATOWN", "FX11 4HG", Some("GB-ENG"), Some("GB"), Some(4510), Some("en"), None, Some(loc11.toString))
+  val dbGBZ: DbAddress = DbAddress("GB10006", 10006L, Some(100060L), Some(100061L), Some("some-organisation-gb6"), List("WXYZ1", "WXYZ2", "WXYZ3"), "ATOWN", "FX11 4HG", Some("GB-ENG"), Some("GB"), Some(4510), Some("en"), None, Some(locZ.toString))
 
-  val expGB1M: AddressRecord = AddressRecord("GB10001", Some(10001L), None, None, None, Address(List("1 LINE", "LINE2", "LINE3"), "ATOWN", "FX11 4HG", Some(England), GB), en, lc4510, Some(loc1.toSeq))
+  val expGB1M: AddressRecord = AddressRecord("GB10001", Some(10001L), Some(100010L), Some(100011L), Some("some-organisation-gb1"), Address(List("1 LINE", "LINE2", "LINE3"), "ATOWN", "FX11 4HG", Some(England), GB), en, lc4510, Some(loc1.toSeq))
 
-  val expGB2M: AddressRecord = AddressRecord("GB10002", Some(10002L), None, None, None, Address(List("2 LINE", "LINE2", "LINE3"), "ATOWN", "FX11 4HG", Some(England), GB), en, lc4510, Some(loc2.toSeq))
+  val expGB2M: AddressRecord = AddressRecord("GB10002", Some(10002L), Some(100020L), Some(100021L), Some("some-organisation-gb2"), Address(List("2 LINE", "LINE2", "LINE3"), "ATOWN", "FX11 4HG", Some(England), GB), en, lc4510, Some(loc2.toSeq))
 
-  val expGB3M: AddressRecord = AddressRecord("GB10003", Some(10003L), None, None, None, Address(List("3 LINE", "LINE2", "LINE3"), "ATOWN", "FX11 4HG", Some(England), GB), en, lc4510, Some(loc3.toSeq))
+  val expGB3M: AddressRecord = AddressRecord("GB10003", Some(10003L), Some(100030L), Some(100031L), Some("some-organisation-gb3"), Address(List("3 LINE", "LINE2", "LINE3"), "ATOWN", "FX11 4HG", Some(England), GB), en, lc4510, Some(loc3.toSeq))
 
-  val expGB10M: AddressRecord = AddressRecord("GB10004", Some(10004L), None, None, None, Address(List("10 LINE", "LINE2", "LINE3"), "ATOWN", "FX11 4HG", Some(England), GB), en, lc4510, Some(loc10.toSeq))
+  val expGB10M: AddressRecord = AddressRecord("GB10004", Some(10004L), Some(100040L), Some(100041L), Some("some-organisation-gb4"), Address(List("10 LINE", "LINE2", "LINE3"), "ATOWN", "FX11 4HG", Some(England), GB), en, lc4510, Some(loc10.toSeq))
 
-  val expGB11M: AddressRecord = AddressRecord("GB10005", Some(10005L), None, None, None, Address(List("11 LINE", "LINE2", "LINE3"), "ATOWN", "FX11 4HG", Some(England), GB), en, lc4510, Some(loc11.toSeq))
+  val expGB11M: AddressRecord = AddressRecord("GB10005", Some(10005L), Some(100050L), Some(100051L), Some("some-organisation-gb5"), Address(List("11 LINE", "LINE2", "LINE3"), "ATOWN", "FX11 4HG", Some(England), GB), en, lc4510, Some(loc11.toSeq))
 
-  val expGBZM: AddressRecord = AddressRecord("GB10006", Some(10006L), None, None, None, Address(List("WXYZ1", "WXYZ2", "WXYZ3"), "ATOWN", "FX11 4HG", Some(England), GB), en, lc4510, Some(loc11.toSeq))
+  val expGBZM: AddressRecord = AddressRecord("GB10006", Some(10006L), Some(100060L), Some(100061L), Some("some-organisation-gb6"), Address(List("WXYZ1", "WXYZ2", "WXYZ3"), "ATOWN", "FX11 4HG", Some(England), GB), en, lc4510, Some(loc11.toSeq))
 
   val locNI1: Location = Location("12.345678", "-12.345678")
   val locNI2: Location = Location("12.345678", "-12.345678")
@@ -78,7 +78,7 @@ class ResponseProcessorTest extends AnyWordSpec with Matchers {
   "ResponseProcessor" when {
 
     """given a single DbAddress""" should {
-      """convert the data correctlyand apply the local custodian from the reference data and include the metadata""" in {
+      """convert the data correctly and apply the local custodian from the reference data and include the metadata""" in {
 
         val rp = new ResponseProcessor(refData)
         for (de <- List(dbGB1 -> expGB1M, dbGB2 -> expGB2M, dbGB10 -> expGB10M, dbGB11 -> expGB11M, dbGBZ -> expGBZM,

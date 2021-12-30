@@ -47,7 +47,7 @@ class InMemoryAddressLookupRepository @Inject()(env: Environment, ec: ExecutionC
 
 object InMemoryAddressLookupRepository {
   val singleAddresses: Seq[DbAddress] = Seq(
-    DbAddress("GB11111", 11111L, None, None, None, List("A HOUSE 27-45", "A STREET"), "LONDON", "FX9 9PY", Some("GB-ENG"), Some("GB"), Some(5840), Some("en"), None, Some(Location("12.345678", "-12.345678").toString)),
+    DbAddress("GB11111", 11111L, Some(111110L), Some(111100L), Some("some-organisation"), List("A HOUSE 27-45", "A STREET"), "LONDON", "FX9 9PY", Some("GB-ENG"), Some("GB"), Some(5840), Some("en"), None, Some(Location("12.345678", "-12.345678").toString)),
     DbAddress("GB33333", 33333L, None, None, None, List("A HOUSE 5-7", "A BOULEVARD"), "NEWCASTLE UPON TYNE", "FX1 6JN", Some("GB-ENG"), Some("GB"), Some(4510), Some("en"), None, Some(Location("12.345678", "-12.345678")
               .toString)),
     DbAddress("GB44444", 44444L, None, None, None, List("AN ADDRESS WITH A VERY LONG FIRST LINE", "SECOND LINE OF ADDRESS IS JUST AS LONG MAYBE" +
