@@ -33,7 +33,11 @@ class AddressLookupRepositoryTest extends AnyWordSpec with Matchers with GuiceOn
     "findID is called with an id but no filter" should {
       "return an address when a matching one is found" in {
         val expectedId = "GB11111"
-        val expected = DbAddress(expectedId, List("A HOUSE 27-45", "A STREET"), "LONDON", "FX9 9PY", Some("GB-ENG"), Some("GB"), Some(5840), Some("en"), None, Some(Location("12.345678", "-12.345678").toString))
+        val expectedUprn = 11111L
+        val expectedParentUprn = Some(111110L)
+        val expectedUsrn = Some(111100L)
+        val expectedOrganisation = Some("some-organisation")
+        val expected = DbAddress(expectedId,expectedUprn, expectedParentUprn, expectedUsrn, expectedOrganisation, List("A HOUSE 27-45", "A STREET"), "LONDON", "FX9 9PY", Some("GB-ENG"), Some("GB"), Some(5840), Some("en"), None, Some(Location("12.345678", "-12.345678").toString))
         val addressOption = await(lookupService.findID(expectedId))
         addressOption match {
           case List(address) =>
@@ -51,7 +55,7 @@ class AddressLookupRepositoryTest extends AnyWordSpec with Matchers with GuiceOn
     "findTown is called with a town and no filter" should {
       "return addresses when matches are found" in {
         val town = "ATown"
-        val expected = DbAddress(town, List("A House 27-45", "A Street"), "London", "FX9 9PY", Some("GB-ENG"), Some("GB"), Some(5840), Some("en"), None, Some(Location("12.345678", "-12.345678").toString))
+        val expected = DbAddress(town,0L, None, None, None, List("A House 27-45", "A Street"), "London", "FX9 9PY", Some("GB-ENG"), Some("GB"), Some(5840), Some("en"), None, Some(Location("12.345678", "-12.345678").toString))
         val addresses = await(lookupService.findTown(town))
         addresses should not be empty
         addresses should have length (3000)
@@ -67,7 +71,7 @@ class AddressLookupRepositoryTest extends AnyWordSpec with Matchers with GuiceOn
     "findTown is called with an all lowercase town and no filter" should {
       "return addresses when matches are found" in {
         val town = "atown"
-        val expected = DbAddress(town, List("A House 27-45", "A Street"), "London", "FX9 9PY", Some("GB-ENG"), Some("GB"), Some(5840), Some("en"), None, Some(Location("12.345678", "-12.345678").toString))
+        val expected = DbAddress(town, 0l, None, None, None, List("A House 27-45", "A Street"), "London", "FX9 9PY", Some("GB-ENG"), Some("GB"), Some(5840), Some("en"), None, Some(Location("12.345678", "-12.345678").toString))
         val addresses = await(lookupService.findTown(town))
         addresses should not be empty
         addresses should have length (3000)
@@ -78,7 +82,7 @@ class AddressLookupRepositoryTest extends AnyWordSpec with Matchers with GuiceOn
       "return addresses when matches are found" in {
         val town = "Newcastle upon Tyne"
         val filter = "Boulevard"
-        val expected = DbAddress(town, List("A House 27-45", "A Street"), "London", "FX9 9PY", Some("GB-ENG"), Some("GB"), Some(5840), Some("en"), None, Some(Location("12.345678", "-12.345678").toString))
+        val expected = DbAddress(town, 0l, None, None, None, List("A House 27-45", "A Street"), "London", "FX9 9PY", Some("GB-ENG"), Some("GB"), Some(5840), Some("en"), None, Some(Location("12.345678", "-12.345678").toString))
         val addresses = await(lookupService.findTown(town, Option(filter)))
         addresses should not be empty
         addresses should have length (2)
@@ -94,9 +98,9 @@ class AddressLookupRepositoryTest extends AnyWordSpec with Matchers with GuiceOn
 
     "findUprn is called with a uprn" should {
       "return address when match is found" in {
-        val uprn = "44444"
-        val expected = List(DbAddress("GB44444", List("AN ADDRESS WITH A VERY LONG FIRST LINE", "SECOND LINE OF ADDRESS IS JUST AS LONG MAYBE" + " LONGER", "THIRD LINE IS NOT THE LONGEST BUT IS STILL VERY LONG"), "LLANFAIRPWLLGWYNGYLLGOGERYCHWYRNDROBWLLLLANTYSILIOGOGOGOCH", "FX2 2TB", Some("GB-WLS"), Some("GB"), Some(915), Some("en"), None, Some(Location("12.345678", "-12.345678").toString)))
-        val address = await(lookupService.findUprn(uprn))
+        val uprn = 44444L
+        val expected = List(DbAddress(s"GB$uprn", uprn, None, None, None, List("AN ADDRESS WITH A VERY LONG FIRST LINE", "SECOND LINE OF ADDRESS IS JUST AS LONG MAYBE" + " LONGER", "THIRD LINE IS NOT THE LONGEST BUT IS STILL VERY LONG"), "LLANFAIRPWLLGWYNGYLLGOGERYCHWYRNDROBWLLLLANTYSILIOGOGOGOCH", "FX2 2TB", Some("GB-WLS"), Some("GB"), Some(915), Some("en"), None, Some(Location("12.345678", "-12.345678").toString)))
+        val address = await(lookupService.findUprn(uprn.toString))
         address shouldBe expected
       }
 

@@ -96,7 +96,7 @@ class AddressTest extends AnyFunSuite with Matchers {
     """Given a valid address in a record with a two-letter language,
        then the record should be valid""") {
     val a = Address(List("Line1", "Line2", "Line3"), "ATown", "FX1 1XX", Some(Wales), GB)
-    val ar = address.AddressRecord("abc123", None, a, "en", None, None)
+    val ar = address.AddressRecord("abc123", None, None, None, None, a, "en", None, None)
     ar.isValid shouldBe true
   }
 
@@ -104,7 +104,7 @@ class AddressTest extends AnyFunSuite with Matchers {
     """Given a valid address in a record that does not have a two-letter language,
        then the record should be invalid""") {
     val a = Address(List("Line1", "Line2", "Line3"), "ATown", "FX1 1XX", Some(Wales), GB)
-    val ar = address.AddressRecord("abc123", None, a, "", None, None)
+    val ar = address.AddressRecord("abc123", None, None, None, None, a, "", None, None)
     !ar.isValid shouldBe true
   }
 }

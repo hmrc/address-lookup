@@ -99,23 +99,27 @@ class AddressLookupRepository @Inject()(transactor: Transactor[IO], queryConfig:
   }
 
   private def mapToDbAddress(sqlDbAddress: SqlDbAddress): DbAddress = {
-    DbAddress(
-      "GB" + sqlDbAddress.uprn, //To keep things in line with current output.
-      Seq(
-        sqlDbAddress.line1.map(normaliseAddressLine(_)),
-        sqlDbAddress.line2.map(normaliseAddressLine(_)),
-        sqlDbAddress.line3.map(normaliseAddressLine(_))
-      ).collect { case l if l.isDefined & l.get.nonEmpty => l.get }.toList,
+    DbAddress("GB" + sqlDbAddress.uprn,
+      sqlDbAddress.uprn.toLong,
+      sqlDbAddress.parentUprn.map(_.toLong),
+      sqlDbAddress.usrn.map(_.toLong),
+      sqlDbAddress.orgnisationName,
+      Seq(sqlDbAddress.line1.map(normaliseAddressLine(_)),
+            sqlDbAddress.line2.map(normaliseAddressLine(_)),
+            sqlDbAddress.line3.map(normaliseAddressLine(_))
+      ).collect {
+        case l if l.isDefined & l.get.nonEmpty => l.get }
+       .toList,
       sqlDbAddress.posttown.map(normaliseAddressLine(_)).getOrElse(""),
-      sqlDbAddress.postcode.getOrElse(""), //This should not be a problem as we are searching on a provided postcode so in practice this should exist.
+      sqlDbAddress.postcode.getOrElse(""),
       sqlDbAddress.subdivision,
-      sqlDbAddress.countrycode,
-      sqlDbAddress.localcustodiancode.map(_.toInt),
+      sqlDbAddress.countryCode,
+      sqlDbAddress.localCustodianCode.map(_.toInt),
       sqlDbAddress.language,
       None,
       sqlDbAddress.location,
-      sqlDbAddress.poboxnumber,
-      sqlDbAddress.localauthority)
+      sqlDbAddress.poBoxNumber,
+      sqlDbAddress.localAuthority)
   }
 }
 
@@ -123,18 +127,21 @@ object AddressLookupRepository {
   private val baseQuery =
     sql"""SELECT
          |uprn,
+         |parent_uprn,
+         |usrn,
+         |organisation_name,
          |line1,
          |line2,
          |line3,
          |subdivision,
-         |countrycode,
-         |localcustodiancode,
+         |country_code,
+         |local_custodian_code,
          |language,
          |location,
          |posttown,
          |postcode,
-         |poboxnumber,
-         |localauthority
+         |pobox_number,
+         |local_authority
          |FROM address_lookup """.stripMargin
 
 }

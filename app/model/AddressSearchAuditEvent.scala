@@ -19,7 +19,12 @@ package model
 import model.address.{Country, LocalCustodian, Postcode}
 import play.api.libs.json.Json
 
-case class AddressSearchAuditEventMatchedAddress(uprn: String, lines: Seq[String], town: String,
+case class AddressSearchAuditEventMatchedAddress(uprn: String,
+                                                 parentUprn: Option[Long],
+                                                 usrn: Option[Long],
+                                                 organisation: Option[String],
+                                                 lines: Seq[String],
+                                                 town: String,
                                                  localCustodian: Option[LocalCustodian],
                                                  location: Option[Seq[BigDecimal]],
                                                  administrativeArea: Option[String],

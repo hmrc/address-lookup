@@ -44,9 +44,8 @@ class AddressLookupIdControllerTest extends AnyWordSpec with Matchers with Scala
 
   val shire = Some("Thereshire")
   val addr1Loc = Location("12.345678", "-12.345678")
-  val addr1Db = DbAddress("GB123456", List("10 Test Court", "Test Street", "Tester"), "Testtown upon Tyne", "FX1 1AA",
-    Some("GB-ENG"), Some("GB"), Some(4510), Some("en"), None, Some(addr1Loc.toString))
-  val addr1Ar = AddressRecord("GB123456", Some(123456L), Address(List("10 Test Court", "A Street", "Tester"), "Testtown upon Tyne", "FX1 1AA", Some(England), GB), en, lc4510, Some(addr1Loc.toSeq))
+  val addr1Db = DbAddress("GB123456", 123456, None, None, None, List("10 Test Court", "Test Street", "Tester"), "Testtown upon Tyne", "FX1 1AA", Some("GB-ENG"), Some("GB"), Some(4510), Some("en"), None, Some(addr1Loc.toString))
+  val addr1Ar = AddressRecord("GB123456", Some(123456L), None, None, None, Address(List("10 Test Court", "A Street", "Tester"), "Testtown upon Tyne", "FX1 1AA", Some(England), GB), en, lc4510, Some(addr1Loc.toSeq))
 
   val cc = play.api.test.Helpers.stubControllerComponents()
 
