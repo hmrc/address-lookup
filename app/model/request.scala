@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,7 +44,9 @@ object request {
 
     implicit val reads: Reads[LookupByPostcodeRequest] = (
         (JsPath \ "postcode").read[Postcode] and
-            (JsPath \ "filter").readNullable[String]
+            (JsPath \ "filter").readNullable[String].map(fo =>
+              fo.flatMap(f => if(f.trim.isEmpty) None else Some(f))
+            )
         ) (
       (pc, fo) => LookupByPostcodeRequest.apply(pc, fo))
 
@@ -70,7 +72,9 @@ object request {
   object LookupByPostTownRequest {
     implicit val reads: Reads[LookupByPostTownRequest] = (
         (JsPath \ "posttown").read[String].map(_.toUpperCase) and
-            (JsPath \ "filter").readNullable[String]
+            (JsPath \ "filter").readNullable[String].map(fo =>
+              fo.flatMap(f => if(f.trim.isEmpty) None else Some(f))
+            )
         ) (
       (pt, fo) => LookupByPostTownRequest.apply(pt, fo))
 
