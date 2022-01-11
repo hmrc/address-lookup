@@ -2,6 +2,7 @@
   {
     "id": "GB10092834116",
     "uprn": 10092834116,
+    "parentUprn": 10092833116,
     "address": {
       "lines": [
         "Po Box 77766"

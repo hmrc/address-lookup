@@ -2,6 +2,9 @@
   {
     "id": "GB200000706253",
     "uprn": 200000706253,
+    "parentUprn": 200000706251,
+    "usrn": 300000706253,
+    "organisation": "Some Company",
     "address": {
       "lines": [
         "Test House",

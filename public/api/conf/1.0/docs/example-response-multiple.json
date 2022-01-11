@@ -2,6 +2,8 @@
     {
         "id": "GB200000698110",
         "uprn": 200000698110,
+        "parentUprn": 200000688110,
+        "usrn": 300000698110,
         "address": {
             "lines": [
                 "2 The Test Close"
@@ -26,6 +28,8 @@
     {
         "id": "GB200000708497",
         "uprn": 200000708497,
+        "parentUprn": 200000707497,
+        "usrn": 300000708497,
         "address": {
             "lines": [
                 "4 Test Close"
@@ -50,6 +54,7 @@
     {
         "id": "GB200000704710",
         "uprn": 200000704710,
+        "usrn": 300000704710,
         "address": {
             "lines": [
                 "6 Test Close"
@@ -74,6 +79,8 @@
     {
         "id": "GB200000700558",
         "uprn": 200000700558,
+        "parentUprn": 200000600558,
+        "usrn": 300000700558,
         "address": {
             "lines": [
                 "8 Test Close"
@@ -98,6 +105,7 @@
     {
         "id": "GB200010012154",
         "uprn": 200010012154,
+        "parentUprn": 200010011154,
         "address": {
             "lines": [
                 "Test Lodge",
@@ -122,7 +130,7 @@
     },
     {
         "id": "GB200000706253",
-        "uprn": 200000706253,
+        "parentUprn": 200000705253,
         "address": {
             "lines": [
                 "Test House",
