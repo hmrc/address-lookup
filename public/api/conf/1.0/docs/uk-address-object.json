@@ -14,6 +14,22 @@
                 "type": "number",
                 "minimum": 0
             },
+            "parentUprn": {
+                "description": "Unique property reference number, up to 12 digits",
+                "type": "number",
+                "minimum": 0
+            },
+            "usrn": {
+                "description": "Unique property reference number, up to 12 digits",
+                "type": "number",
+                "minimum": 0
+            },
+            "organisation": {
+                "description": "Organisation associated with this address, if any",
+                "type": "string",
+                "minLength": 0,
+                "maxLength": 60
+            },
             "address": {
                 "description": "Contains a UK-based address",
                 "type": "object",
