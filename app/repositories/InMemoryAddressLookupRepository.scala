@@ -17,7 +17,7 @@
 package repositories
 
 import controllers.services.AddressSearcher
-import model.address.{Location, Outcode, Postcode}
+import model.address.{Country, Location, Outcode, Postcode}
 import model.internal.DbAddress
 import play.api.Environment
 
@@ -27,6 +27,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.io.Source
 
 class InMemoryAddressLookupRepository @Inject()(env: Environment, ec: ExecutionContext) extends AddressSearcher {
+
   import InMemoryAddressLookupRepository._
 
   override def findID(id: String): Future[List[DbAddress]] =
@@ -43,17 +44,27 @@ class InMemoryAddressLookupRepository @Inject()(env: Environment, ec: ExecutionC
 
   override def findOutcode(outcode: Outcode, filter: String): Future[List[DbAddress]] =
     Future.successful(doFilter(dbAddresses.filter(_.postcode.toUpperCase.startsWith(outcode.toString.toUpperCase)), Some(filter)).toList)
+
+  override def findInCountry(countryCode: String, filter: String): Future[List[DbAddress]] = {
+    if (countryCode == Country.GB.code) {
+      Future.successful(doFilter(dbAddresses, Some(filter)).toList.take(3000))
+    }
+    else {
+      Future.successful(List())
+    }
+  }
 }
 
 object InMemoryAddressLookupRepository {
   val singleAddresses: Seq[DbAddress] = Seq(
     DbAddress("GB11111", 11111L, Some(111110L), Some(111100L), Some("some-organisation"), List("A HOUSE 27-45", "A STREET"), "LONDON", "FX9 9PY", Some("GB-ENG"), Some("GB"), Some(5840), Some("en"), None, Some(Location("12.345678", "-12.345678").toString)),
-    DbAddress("GB33333", 33333L, None, None, None, List("A HOUSE 5-7", "A BOULEVARD"), "NEWCASTLE UPON TYNE", "FX1 6JN", Some("GB-ENG"), Some("GB"), Some(4510), Some("en"), None, Some(Location("12.345678", "-12.345678")
-              .toString)),
+    DbAddress("GB33333", 33333L, None, None, None, List("A HOUSE 5-7", "A BOULEVARD"), "NEWCASTLE UPON TYNE", "FX1 6JN", Some("GB-ENG"),
+      Some("GB"), Some(4510), Some("en"), None, Some(Location("12.345678", "-12.345678")
+        .toString)),
     DbAddress("GB44444", 44444L, None, None, None, List("AN ADDRESS WITH A VERY LONG FIRST LINE", "SECOND LINE OF ADDRESS IS JUST AS LONG MAYBE" +
-            " LONGER", "THIRD LINE IS NOT THE LONGEST BUT IS STILL VERY LONG"), "LLANFAIRPWLLGWYNGYLLGOGERYCHWYRNDROBWLLLLANTYSILIOGOGOGOCH", "FX2 2TB", Some("GB-WLS"), Some("GB"), Some(915), Some("en"), None, Some(Location("12.345678", "-12.345678").toString)),
+      " LONGER", "THIRD LINE IS NOT THE LONGEST BUT IS STILL VERY LONG"), "LLANFAIRPWLLGWYNGYLLGOGERYCHWYRNDROBWLLLLANTYSILIOGOGOGOCH", "FX2 2TB", Some("GB-WLS"), Some("GB"), Some(915), Some("en"), None, Some(Location("12.345678", "-12.345678").toString)),
     DbAddress("GB55555", 55555L, None, None, None, List("AN ADDRESS WITH A PO BOX"), "SOME-TOWN", "FX17 1TB", Some("GB-WLS"), Some("GB"), Some(666), Some("en"), None, Some(Location("12.345678", "-12.345678").toString), Some("PO BOX " +
-              "1234")),
+        "1234")),
     DbAddress("GB22222", 22222L, None, None, None, List("11 A BOULEVARD"), "NEWCASTLE UPON TYNE", "FX1 6JN", Some("GB-ENG"), Some("GB"), Some(4510), Some("en"), None, Some(Location("12.345678", "-12.345678").toString))
   )
 
@@ -76,7 +87,7 @@ object InMemoryAddressLookupRepository {
   } ++ extraAddresses
 
   def dbsToFilterText(dbAddress: DbAddress): Set[String] =
-    (dbAddress.lines.mkString(" ") + " " + dbAddress.town + " " + dbAddress.administrativeArea.getOrElse("") + " " + dbAddress.poBox.getOrElse("")).replaceAll("[\\p{Space},]+", " ").split(" ").map(_.toLowerCase).toSet
+    (dbAddress.lines.mkString(" ") + " " + dbAddress.town + " " + dbAddress.administrativeArea.getOrElse("") + " " + dbAddress.poBox.getOrElse("") + " " + dbAddress.postcode).replaceAll("[\\p{Space},]+", " ").split(" ").map(_.toLowerCase).toSet
 
   def doFilter(filteredDbAddresses: Seq[DbAddress], filter: Option[String]): Seq[DbAddress] = {
     val filterTokens =

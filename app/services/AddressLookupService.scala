@@ -33,4 +33,6 @@ class AddressLookupService @Inject()(addressSearcher: AddressSearcher) extends A
   override def findTown(town: String, filter: Option[String]): Future[List[DbAddress]] = addressSearcher.findTown(town, filter)
 
   override def findOutcode(outcode: Outcode, filter: String): Future[List[DbAddress]] = addressSearcher.findOutcode(outcode, filter)
+
+  override def findInCountry(countryCode: String, filter: String): Future[List[DbAddress]] = addressSearcher.findInCountry(countryCode, filter)
 }

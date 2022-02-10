@@ -17,21 +17,21 @@
 package repositories
 
 import cats.effect.IO
+import config.Capitalisation._
+import controllers.services.AddressSearcher
 import doobie.Transactor
 import doobie.implicits._
 import doobie.util.fragment
 import doobie.util.fragment.Fragment
+import model.address.{Country, Outcode, Postcode}
+import model.internal.{DbAddress, SqlDbAddress}
 
 import javax.inject.Inject
-import config.Capitalisation._
-import controllers.services.AddressSearcher
-import model.internal.{DbAddress, SqlDbAddress}
-import model.address.{Outcode, Postcode}
-
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class AddressLookupRepository @Inject()(transactor: Transactor[IO], queryConfig: RdsQueryConfig) extends AddressSearcher {
+
   import AddressLookupRepository._
 
   override def findID(id: String): Future[List[DbAddress]] = findUprn(cleanUprn(id))
@@ -73,6 +73,18 @@ class AddressLookupRepository @Inject()(transactor: Transactor[IO], queryConfig:
       .map(l => l.map(mapToDbAddress))
   }
 
+  override def findInCountry(countryCode: String, filter: String): Future[List[DbAddress]] = {
+    //TODO: This logic is fine here for now but we probably want to introduce another repository for the 3
+    // international dataset when that happens this will need to move up
+
+    if (countryCode == Country.GB.code) {
+      findWithOnlyFilter(Some(filter))
+    }
+    else {
+      Future.successful(List())
+    }
+  }
+
   private def findWithOnlyFilter(filter: Option[String]): Future[List[DbAddress]] = {
     val timeLimit = Fragment(s"SET statement_timeout=${queryConfig.queryTimeoutMillis}", List())
     val limitSql = Fragment(s" LIMIT ${queryConfig.queryResultsLimit}", List())
@@ -83,7 +95,7 @@ class AddressLookupRepository @Inject()(transactor: Transactor[IO], queryConfig:
       }
 
     val toRun = for {
-      _   <- timeLimit.update.run.transact(transactor)
+      _ <- timeLimit.update.run.transact(transactor)
       res <- queryFragmentWithFilter.query[SqlDbAddress].to[List].transact(transactor)
     } yield res
     toRun.unsafeToFuture().map(l => l.map(mapToDbAddress))
