@@ -32,5 +32,7 @@ trait AddressSearcher {
 
   def findTown(town: String, filter: Option[String] = None): Future[List[DbAddress]]
 
+  def findInCountry(countryCode: String, filter: String): Future[List[DbAddress]]
+
   def findOutcode(outcode: Outcode, filter: String): Future[List[DbAddress]]
 }

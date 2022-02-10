@@ -36,8 +36,7 @@ class AddressSearcherMetrics(peer: AddressSearcher, registry: MetricRegistry, ec
   private val findPostcodeFilterTimer: Timer = registry.timer(name(prefix, "findPostcodeFilter"))
   private val findTownFilterTimer: Timer = registry.timer(name(prefix, "findTownFilter"))
   private val findOutcodeTimer: Timer = registry.timer(name(prefix, "findOutcode"))
-  private val searchFuzzyTimer: Timer = registry.timer(name(prefix, "searchFuzzy"))
-  private val searchFuzzyFilterTimer: Timer = registry.timer(name(prefix, "searchFuzzyFilter"))
+  private val findInCountryTimer: Timer = registry.timer(name(prefix, "findInCountry"))
 
   private def timerStop(t: Context, r: List[DbAddress]) = {
     t.stop()
@@ -71,5 +70,10 @@ class AddressSearcherMetrics(peer: AddressSearcher, registry: MetricRegistry, ec
   override def findOutcode(outcode: Outcode, filterStr: String): Future[List[DbAddress]] = {
     val context = findOutcodeTimer.time()
     peer.findOutcode(outcode, filterStr) map (timerStop(context, _))
+  }
+
+  override def findInCountry(countryCode: String, filter: String): Future[List[DbAddress]] = {
+    val context = findInCountryTimer.time()
+    peer.findInCountry(countryCode, filter) map (timerStop(context, _))
   }
 }
