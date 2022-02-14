@@ -18,7 +18,8 @@ package it.suites
 
 import com.codahale.metrics.SharedMetricRegistries
 import it.helper.AppServerTestApi
-import model.address.{AddressRecord, Postcode}
+import it.suites.Fixtures.{fx1_6jn_a_terse, fx1_6jn_b_terse}
+import model.address.AddressRecord
 import org.mockito.ArgumentMatchers.{eq => meq}
 import org.mockito.Mockito.when
 import org.scalatest.wordspec.AnyWordSpec
@@ -26,11 +27,11 @@ import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.json.{JsArray, Json}
+import play.api.libs.json.Json
 import play.api.libs.ws.WSClient
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import play.inject.Bindings
-import repositories.InMemoryAddressLookupRepository.{dbAddresses, doFilter}
+import repositories.InMemoryAddressLookupRepository.dbAddresses
 import services.AddressLookupService
 
 import scala.concurrent.Future
@@ -38,16 +39,15 @@ import scala.concurrent.Future
 class CountryLookupSuiteV2()
   extends AnyWordSpec with GuiceOneServerPerSuite with AppServerTestApi {
 
-  import FixturesV2._
-
   private val largePostcodeExampleSize = 2517
 
   val repository: AddressLookupService = mock[AddressLookupService]
+
   override def fakeApplication(): Application = {
     SharedMetricRegistries.clear()
     new GuiceApplicationBuilder()
-        .overrides(Bindings.bind(classOf[AddressLookupService]).toInstance(repository))
-        .build()
+      .overrides(Bindings.bind(classOf[AddressLookupService]).toInstance(repository))
+      .build()
   }
 
   override val appEndpoint: String = s"http://localhost:$port"
@@ -65,11 +65,11 @@ class CountryLookupSuiteV2()
         val response = post("/country/GB/lookup", """{"filter":"FX1 9PY"}""")
 
         val contentType = response.header("Content-Type").get
-        contentType should startWith ("application/json")
+        contentType should startWith("application/json")
 
         val c = response.header("Cache-Control")
         c should not be empty
-        c.get should include ("max-age=")
+        c.get should include("max-age=")
 
         response.status shouldBe OK
       }
