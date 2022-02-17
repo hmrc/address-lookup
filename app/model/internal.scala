@@ -17,11 +17,20 @@
 package model
 
 import model.address.Postcode
+import play.api.libs.json._
 import util._
 
 import scala.annotation.tailrec
 
 object internal {
+
+  // non-uk
+  case class NonUKAddress(id: String, number: Option[String], street: Option[String], unit: Option[String],
+                          city: Option[String], district: Option[String], region: Option[String],
+                          postcode: Option[String])
+  object NonUKAddress {
+    implicit val format: Format[NonUKAddress] = Json.format[NonUKAddress]
+  }
 
   // Do we need these 2 representations of address ?????
   case class SqlDbAddress(uprn: String,
@@ -132,7 +141,7 @@ object internal {
   object LatLong {
     def apply(location: Option[String]): Option[LatLong] = {
       if (location.isDefined) {
-        val a = location.get.divide(',')
+        val a = location.get.split(',')
         Some(LatLong(a(0).toDouble, a(1).toDouble))
       } else None
     }

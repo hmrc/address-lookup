@@ -24,13 +24,14 @@ import doobie.implicits._
 import doobie.util.fragment
 import doobie.util.fragment.Fragment
 import model.address.{Country, Outcode, Postcode}
-import model.internal.{DbAddress, SqlDbAddress}
+import model.internal.{DbAddress, NonUKAddress, SqlDbAddress}
+import model.response.SupportedCountryCodes
 
 import javax.inject.Inject
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class AddressLookupRepository @Inject()(transactor: Transactor[IO], queryConfig: RdsQueryConfig) extends AddressSearcher {
+class AddressLookupRepository @Inject()(transactor: Transactor[IO], queryConfig: RdsQueryConfig, supportedCountryCodes: SupportedCountryCodes) extends AddressSearcher {
 
   import AddressLookupRepository._
 
@@ -73,16 +74,19 @@ class AddressLookupRepository @Inject()(transactor: Transactor[IO], queryConfig:
       .map(l => l.map(mapToDbAddress))
   }
 
-  override def findInCountry(countryCode: String, filter: String): Future[List[DbAddress]] = {
-    //TODO: This logic is fine here for now but we probably want to introduce another repository for the 3
-    // international dataset when that happens this will need to move up
+  override def supportedCountries: SupportedCountryCodes = supportedCountryCodes
 
-    if (countryCode == Country.GB.code) {
-      findWithOnlyFilter(Some(filter))
-    }
-    else {
-      Future.successful(List())
-    }
+  override def findInCountry(countryCode: String, filter: String): Future[List[NonUKAddress]] = {
+      Fragment.const(
+        s"""
+           |SELECT id, number, street, unit, city, district, region, postcode
+           |FROM ${countryCode.toLowerCase}
+           |WHERE address_lookup_ft_col @@ plainto_tsquery('english', ${filter})
+           |""".stripMargin)
+        .query[NonUKAddress]
+        .to[List]
+        .transact(transactor)
+        .unsafeToFuture()
   }
 
   private def findWithOnlyFilter(filter: Option[String]): Future[List[DbAddress]] = {

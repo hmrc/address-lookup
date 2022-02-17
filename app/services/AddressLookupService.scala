@@ -17,8 +17,9 @@
 package services
 
 import controllers.services.AddressSearcher
-import model.internal.DbAddress
+import model.internal.{DbAddress, NonUKAddress}
 import model.address.{Outcode, Postcode}
+import model.response
 
 import javax.inject.Inject
 import scala.concurrent.Future
@@ -34,5 +35,7 @@ class AddressLookupService @Inject()(addressSearcher: AddressSearcher) extends A
 
   override def findOutcode(outcode: Outcode, filter: String): Future[List[DbAddress]] = addressSearcher.findOutcode(outcode, filter)
 
-  override def findInCountry(countryCode: String, filter: String): Future[List[DbAddress]] = addressSearcher.findInCountry(countryCode, filter)
+  override def supportedCountries: response.SupportedCountryCodes = addressSearcher.supportedCountries
+
+  override def findInCountry(countryCode: String, filter: String): Future[List[NonUKAddress]] = addressSearcher.findInCountry(countryCode, filter)
 }

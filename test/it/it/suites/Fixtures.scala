@@ -16,7 +16,7 @@
 
 package it.suites
 
-import model.internal.DbAddress
+import model.internal.{DbAddress, NonUKAddress}
 import model.address.Country._
 import model.address.{Address, AddressRecord, LocalCustodian, Location}
 
@@ -60,8 +60,8 @@ object Fixtures {
 
   // address with very long lines
   val db_fx2_2tb: DbAddress = DbAddress(id4, uprn4.get, None, None, None, List("AN ADDRESS WITH A VERY LONG FIRST LINE",
-      "SECOND LINE OF ADDRESS IS JUST AS LONG MAYBE LONGER",
-      "THIRD LINE IS NOT THE LONGEST BUT IS STILL VERY LONG"), "LLANFAIRPWLLGWYNGYLLGOGERYCHWYRNDROBWLLLLANTYSILIOGOGOGOCH", "FX2 2TB", Some("GB-WLS"), Some("GB"), Some(915), Some("en"), None, Some(aHouseLocation2.toString))
+    "SECOND LINE OF ADDRESS IS JUST AS LONG MAYBE LONGER",
+    "THIRD LINE IS NOT THE LONGEST BUT IS STILL VERY LONG"), "LLANFAIRPWLLGWYNGYLLGOGERYCHWYRNDROBWLLLLANTYSILIOGOGOGOCH", "FX2 2TB", Some("GB-WLS"), Some("GB"), Some(915), Some("en"), None, Some(aHouseLocation2.toString))
 
   val fx2_2tb: AddressRecord = AddressRecord(id4, uprn4, None, None, None, Address(List("AN ADDRESS WITH A VERY LONG FIRST LINE",
     "SECOND LINE OF ADDRESS IS JUST AS LONG MAYBE LONGER",
@@ -70,4 +70,9 @@ object Fixtures {
     en, lc915, Some(aHouseLocation2.toSeq))
 
   val id5 = "GB55555"
+
+  // non-uk samples used in tests
+  val nukdb_fx1 = NonUKAddress("32714", Some("15"), Some("Allspice Gardens"), None, None, Some("Warwick"), None, Some("WK04"))
+  val nukdb_fx2 = NonUKAddress("12256", Some("14"), Some("Bayfield Road"), None, None, Some("Warwick"), None, Some("WK04"))
+
 }

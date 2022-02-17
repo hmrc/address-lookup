@@ -18,7 +18,9 @@ package repositories
 
 import controllers.services.AddressSearcher
 import model.address.{Country, Location, Outcode, Postcode}
-import model.internal.DbAddress
+import model.internal.{DbAddress, NonUKAddress}
+import model.response
+import model.response.SupportedCountryCodes
 import play.api.Environment
 
 import javax.inject.Inject
@@ -26,7 +28,7 @@ import scala.collection.JavaConverters.asScalaIteratorConverter
 import scala.concurrent.{ExecutionContext, Future}
 import scala.io.Source
 
-class InMemoryAddressLookupRepository @Inject()(env: Environment, ec: ExecutionContext) extends AddressSearcher {
+class InMemoryAddressLookupRepository @Inject()(env: Environment, supportedCountryCodes: SupportedCountryCodes, ec: ExecutionContext) extends AddressSearcher {
 
   import InMemoryAddressLookupRepository._
 
@@ -45,13 +47,12 @@ class InMemoryAddressLookupRepository @Inject()(env: Environment, ec: ExecutionC
   override def findOutcode(outcode: Outcode, filter: String): Future[List[DbAddress]] =
     Future.successful(doFilter(dbAddresses.filter(_.postcode.toUpperCase.startsWith(outcode.toString.toUpperCase)), Some(filter)).toList)
 
-  override def findInCountry(countryCode: String, filter: String): Future[List[DbAddress]] = {
-    if (countryCode == Country.GB.code) {
-      Future.successful(doFilter(dbAddresses, Some(filter)).toList.take(3000))
-    }
-    else {
-      Future.successful(List())
-    }
+  override def supportedCountries: response.SupportedCountryCodes = supportedCountryCodes
+
+  override def findInCountry(countryCode: String, filter: String): Future[List[NonUKAddress]] = {
+      Future.successful(
+        doNonUkFilter(nonUKAddress.get(countryCode.toLowerCase).getOrElse(Seq()), filter).toList
+      )
   }
 }
 
@@ -79,6 +80,7 @@ object InMemoryAddressLookupRepository {
   val extraAddresses: Seq[DbAddress] = singleAddresses ++ apartmentAddresses ++ boulevardAddresses
 
   val cannedData = "/data/testaddresses.csv"
+  val cannedNonUKData = "/data/nonuk-testaddresses.csv"
 
   lazy val dbAddresses: Seq[DbAddress] = {
     val cannedDataFile = Environment.simple().resource(cannedData).get
@@ -86,14 +88,33 @@ object InMemoryAddressLookupRepository {
     splitter.map(CSV.convertCsvLine)
   } ++ extraAddresses
 
+  lazy val nonUKAddress: Map[String, List[NonUKAddress]] = {
+    val cannedNonUKDataFile = Environment.simple().resource(cannedNonUKData).get
+    val splitter = new CsvLineSplitter(Source.fromURL(cannedNonUKDataFile).bufferedReader()).asScala.toSeq
+    splitter.map(CSV.convertNonUKCsvLine)
+  }.groupBy(_._1).mapValues(_.map(_._2).toList)
+
   def dbsToFilterText(dbAddress: DbAddress): Set[String] =
     (dbAddress.lines.mkString(" ") + " " + dbAddress.town + " " + dbAddress.administrativeArea.getOrElse("") + " " + dbAddress.poBox.getOrElse("") + " " + dbAddress.postcode).replaceAll("[\\p{Space},]+", " ").split(" ").map(_.toLowerCase).toSet
+
+  def nonUkDbsToFilterText(nonUkAddress: NonUKAddress): Set[String] =
+    (nonUkAddress.postcode.getOrElse("") + " " + nonUkAddress.city.getOrElse("") + " " + nonUkAddress.region.getOrElse("") + " " + nonUkAddress.unit.getOrElse("") + " " + nonUkAddress.district.getOrElse("") + " " + nonUkAddress.street.getOrElse("") + " " + nonUkAddress.number.getOrElse(""))
+      .replaceAll("[\\p{Space},]+", " ").split(" ").map(_.toLowerCase).toSet
 
   def doFilter(filteredDbAddresses: Seq[DbAddress], filter: Option[String]): Seq[DbAddress] = {
     val filterTokens =
       filter.map(_.toLowerCase.split("[ ]+")).map(_.toSet.filterNot(_.isEmpty)).getOrElse(Set())
     filteredDbAddresses.filter { dba =>
       val dbAddString = dbsToFilterText(dba)
+      filterTokens.subsetOf(dbAddString)
+    }
+  }
+
+  def doNonUkFilter(filteredNonUkAddresses: Seq[NonUKAddress], filter: String): Seq[NonUKAddress] = {
+    val filterTokens =
+      filter.toLowerCase.split("[ ]+").toSet.filterNot(_.isEmpty)
+    filteredNonUkAddresses.filter { dba =>
+      val dbAddString = nonUkDbsToFilterText(dba)
       filterTokens.subsetOf(dbAddString)
     }
   }

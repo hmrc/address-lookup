@@ -18,6 +18,7 @@ import com.google.inject.{AbstractModule, Provides}
 import com.kenshoo.play.metrics.Metrics
 import config.ConfigHelper
 import controllers.services.{AddressSearcher, AddressSearcherMetrics, ReferenceData}
+import model.response.SupportedCountryCodes
 import play.api.inject.ApplicationLifecycle
 import play.api.{Configuration, Environment}
 import repositories.{AddressLookupRepository, InMemoryAddressLookupRepository, RdsQueryConfig, TransactorProvider}
@@ -47,11 +48,12 @@ class Module(environment: Environment, configuration: Configuration) extends Abs
                              configHelper: ConfigHelper, rdsQueryConfig: RdsQueryConfig, executionContext: ExecutionContext, applicationLifecycle: ApplicationLifecycle): AddressSearcher = {
     val dbEnabled = isDbEnabled(configHelper)
 
+    val supportedCountryCodes = configuration.get[SupportedCountryCodes]("supported-country-codes")
     val searcher = if (dbEnabled) {
       val transactor = new TransactorProvider(configuration, applicationLifecycle).get(executionContext)
-      new AddressLookupRepository(transactor, rdsQueryConfig)
+      new AddressLookupRepository(transactor, rdsQueryConfig, supportedCountryCodes)
     } else {
-      new InMemoryAddressLookupRepository(environment, executionContext)
+      new InMemoryAddressLookupRepository(environment, supportedCountryCodes, executionContext)
     }
 
     new AddressSearcherMetrics(new AddressLookupService(searcher), metrics.defaultRegistry, executionContext)
