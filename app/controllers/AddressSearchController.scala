@@ -165,11 +165,11 @@ class AddressSearchController @Inject()(addressSearch: AddressSearcher, response
 
     if (countryCode.isEmpty || "[a-zA-Z]{2}".r.unapplySeq(countryCode).isEmpty) {
       Future.successful {
-        badRequest("BAD-COUNTRYCODE", "origin" -> origin, "error" -> s"missing or badly-formed $countryCode parameter")
+        badRequest("BAD-COUNTRYCODE", "origin" -> origin, "error" -> s"missing or badly-formed country code")
       }
     } else if (Country.find(countryCode).isEmpty) {
       Future.successful {
-        notFound("UNSUPPORTED-COUNTRYCODE", "origin" -> origin, "error" -> s"missing or badly-formed $countryCode parameter")
+        notFound("UNSUPPORTED-COUNTRYCODE", "origin" -> origin, "error" -> s"unsupported country code")
       }
     }
     else {
