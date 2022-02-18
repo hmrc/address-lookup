@@ -74,6 +74,22 @@ class CountryLookupSuiteV2()
         response.status shouldBe OK
       }
 
+      "give a successful response for great britain if countrycode is provided in lower case" in {
+        when(repository.findInCountry(meq("GB"), meq("FX1 9PY"))).thenReturn(
+          Future.successful(dbAddresses.filter(_.postcode == "FX1 9PY").toList))
+
+        val response = post("/country/gb/lookup", """{"filter":"FX1 9PY"}""")
+
+        val contentType = response.header("Content-Type").get
+        contentType should startWith("application/json")
+
+        val c = response.header("Cache-Control")
+        c should not be empty
+        c.get should include("max-age=")
+
+        response.status shouldBe OK
+      }
+
       "give a successful response for an unknown postcode" in {
         when(repository.findInCountry(meq("GB"), meq("ZZ10 9ZZ"))).thenReturn(
           Future.successful(dbAddresses.filter(_.postcode == "ZZ10 9ZZ").toList))
@@ -101,6 +117,26 @@ class CountryLookupSuiteV2()
     }
 
     "client error" should {
+      "give a 404 response for an unknown country" in {
+        val response = post("/country/QQ/lookup", """{"filter":"ZZ10 9ZZ"}""")
+        response.status shouldBe NOT_FOUND
+      }
+
+      "give a bad request for an country code that is too long" in {
+        val response = post("/country/QQQ/lookup", """{"filter":"ZZ10 9ZZ"}""")
+        response.status shouldBe BAD_REQUEST
+      }
+
+      "give a bad request for an country code that is too short" in {
+        val response = post("/country/Q/lookup", """{"filter":"ZZ10 9ZZ"}""")
+        response.status shouldBe BAD_REQUEST
+      }
+
+      "give a bad request for an badly formed country code" in {
+        val response = post("/country/22/lookup", """{"filter":"ZZ10 9ZZ"}""")
+        response.status shouldBe BAD_REQUEST
+      }
+
       "give a bad request when the origin header is absent" in {
         val path = "/country/GB/lookup"
         val response = await(wsClient.url(appEndpoint + path).withMethod("POST").withBody("""{"filter":"FX1 4AB"}""").execute())

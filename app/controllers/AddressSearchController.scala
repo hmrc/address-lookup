@@ -17,7 +17,7 @@
 package controllers
 
 import controllers.services.{AddressSearcher, ResponseProcessor}
-import model.address.{AddressRecord, Postcode}
+import model.address.{AddressRecord, Country, Postcode}
 import model.request.{LookupByCountryRequest, LookupByPostTownRequest, LookupByPostcodeRequest, LookupByUprnRequest}
 import model.{AddressSearchAuditEvent, AddressSearchAuditEventMatchedAddress, AddressSearchAuditEventRequestDetails}
 import play.api.libs.json.{JsError, JsSuccess, Json}
@@ -86,7 +86,7 @@ class AddressSearchController @Inject()(addressSearch: AddressSearcher, response
         case Success(json) => json.validate[LookupByCountryRequest] match {
           case JsSuccess(lookupByCountryRequest, _) =>
             val origin = getOriginHeaderIfSatisfactory(request.headers)
-            searchByCountry(request, countryCode, lookupByCountryRequest.filter, origin)
+            searchByCountry(request, countryCode.toUpperCase(), lookupByCountryRequest.filter, origin)
           case JsError(errors) =>
             Future.successful(BadRequest(JsError.toJson(errors)))
         }
@@ -163,11 +163,16 @@ class AddressSearchController @Inject()(addressSearch: AddressSearcher, response
   private[controllers] def searchByCountry[A](request: Request[A], countryCode: String, filter: String, origin: String): Future[Result] = {
     implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequest(request)
 
-    if (countryCode.isEmpty) {
+    if (countryCode.isEmpty || "[a-zA-Z]{2}".r.unapplySeq(countryCode).isEmpty) {
       Future.successful {
         badRequest("BAD-COUNTRYCODE", "origin" -> origin, "error" -> s"missing or badly-formed $countryCode parameter")
       }
-    } else {
+    } else if (Country.find(countryCode).isEmpty) {
+      Future.successful {
+        notFound("UNSUPPORTED-COUNTRYCODE", "origin" -> origin, "error" -> s"missing or badly-formed $countryCode parameter")
+      }
+    }
+    else {
       import model.address.AddressRecord.formats._
 
       addressSearch.findInCountry(countryCode, filter).map {

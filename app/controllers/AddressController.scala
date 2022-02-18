@@ -50,6 +50,11 @@ abstract class AddressController(cc: ControllerComponents) extends BackendContro
     BadRequest(keyVal(data.last))
   }
 
+  protected final def notFound(tag: String, data: (String, String)*): Result = {
+    logEvent(tag, data: _*)
+    NotFound(keyVal(data.last))
+  }
+
   protected final def logEvent(tag: String, data: (String, String)*) {
     val formatted = data.map(keyVal).mkString(" ")
     logger.info(s"$tag $formatted")

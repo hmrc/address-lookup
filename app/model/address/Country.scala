@@ -56,6 +56,7 @@ object Country {
   val NorthernIreland = Country("GB-NIR", "Northern Ireland")
 
   private val all = List(UK, GB, GG, IM, JE, England, Scotland, Wales, Cymru, NorthernIreland)
+  def supported = all
 
   def find(code: String): Option[Country] = all.find(_.code == code)
 
