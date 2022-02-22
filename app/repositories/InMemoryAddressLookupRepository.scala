@@ -16,12 +16,12 @@
 
 package repositories
 
-import controllers.services.AddressSearcher
-import model.address.{Country, Location, Outcode, Postcode}
+import model.address.{Location, Outcode, Postcode}
 import model.internal.{DbAddress, NonUKAddress}
 import model.response
 import model.response.SupportedCountryCodes
 import play.api.Environment
+import services.AddressSearcher
 
 import javax.inject.Inject
 import scala.collection.JavaConverters.asScalaIteratorConverter

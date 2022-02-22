@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package controllers.services
+package services
 
 import model.address.{Address, AddressRecord, LocalCustodian, Location}
 import model.internal.DbAddress

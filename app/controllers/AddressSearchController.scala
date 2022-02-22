@@ -16,13 +16,12 @@
 
 package controllers
 
-import controllers.services.{AddressSearcher, ResponseProcessor}
-import model.address.{AddressRecord, Country, Postcode}
-import model.internal.NonUKAddress
+import model.address.{AddressRecord, Postcode}
 import model.request.{LookupByCountryRequest, LookupByPostTownRequest, LookupByPostcodeRequest, LookupByUprnRequest}
 import model.{AddressSearchAuditEvent, AddressSearchAuditEventMatchedAddress, AddressSearchAuditEventRequestDetails}
 import play.api.libs.json.{JsError, JsSuccess, Json}
 import play.api.mvc._
+import services.{AddressSearcher, ResponseProcessor}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.http.HeaderCarrierConverter

@@ -17,8 +17,8 @@
 package repositories
 
 import config.Capitalisation.normaliseAddressLine
-import model.internal.{DbAddress, NonUKAddress}
 import model.address.Postcode
+import model.internal.{DbAddress, NonUKAddress}
 import util._
 
 object CSV {

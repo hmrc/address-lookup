@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package controllers.services
+package services
 
 import model.address.{Outcode, Postcode}
 import model.internal.{DbAddress, NonUKAddress}

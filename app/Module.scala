@@ -17,12 +17,11 @@
 import com.google.inject.{AbstractModule, Provides}
 import com.kenshoo.play.metrics.Metrics
 import config.ConfigHelper
-import controllers.services.{AddressSearcher, AddressSearcherMetrics, ReferenceData}
 import model.response.SupportedCountryCodes
 import play.api.inject.ApplicationLifecycle
 import play.api.{Configuration, Environment}
 import repositories.{AddressLookupRepository, InMemoryAddressLookupRepository, RdsQueryConfig, TransactorProvider}
-import services.AddressLookupService
+import services.{AddressLookupService, AddressSearcher, AddressSearcherMetrics, ReferenceData}
 
 import javax.inject.Singleton
 import scala.concurrent.ExecutionContext

@@ -16,9 +16,9 @@
 
 package it.suites
 
-import model.internal.{DbAddress, NonUKAddress}
 import model.address.Country._
 import model.address.{Address, AddressRecord, LocalCustodian, Location}
+import model.internal.{DbAddress, NonUKAddress}
 
 object Fixtures {
   private val lc4510 = Some(LocalCustodian(4510, "NEWCASTLE UPON TYNE"))

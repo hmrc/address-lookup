@@ -16,7 +16,6 @@
 
 package controllers
 
-import controllers.services.{ReferenceData, ResponseProcessor}
 import model.address.{Address, AddressRecord, LocalCustodian, Location}
 import model.internal.DbAddress
 import org.mockito.Mockito._
@@ -27,6 +26,7 @@ import org.scalatestplus.mockito.MockitoSugar
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import repositories.AddressLookupRepository
+import services.{ReferenceData, ResponseProcessor}
 import uk.gov.hmrc.http.UpstreamErrorResponse
 import util.Utils._
 

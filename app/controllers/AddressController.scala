@@ -19,8 +19,8 @@ package controllers
 import com.typesafe.config.ConfigFactory
 import play.api.Logger
 import play.api.mvc.{ControllerComponents, Headers, Result}
-import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.http.UpstreamErrorResponse
+import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 abstract class AddressController(cc: ControllerComponents) extends BackendController(cc) {
 

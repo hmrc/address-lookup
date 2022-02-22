@@ -14,19 +14,18 @@
  * limitations under the License.
  */
 
-package controllers.services
+package services
 
 import com.codahale.metrics.Timer.Context
 import com.codahale.metrics.{MetricRegistry, Timer}
-import model.internal.DbAddress
 import model.address.{Outcode, Postcode}
+import model.internal.DbAddress
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.{verify, when}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.test.Helpers._
-import services.AddressLookupService
 
 import scala.concurrent.Future
 

@@ -16,7 +16,6 @@
 
 package it.helper
 
-import java.util.concurrent.TimeUnit
 import akka.util.ByteString
 import com.typesafe.config.ConfigFactory
 import org.scalatest.matchers.should.Matchers
@@ -25,6 +24,7 @@ import play.api.http.Status
 import play.api.libs.ws._
 import play.api.test.Helpers._
 
+import java.util.concurrent.TimeUnit
 import scala.annotation.tailrec
 import scala.concurrent.duration.Duration
 

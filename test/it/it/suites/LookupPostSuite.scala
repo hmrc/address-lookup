@@ -17,7 +17,6 @@
 package it.suites
 
 import com.codahale.metrics.SharedMetricRegistries
-import controllers.services.AddressSearcher
 import it.helper.AppServerTestApi
 import model.address.{AddressRecord, Postcode}
 import org.mockito.ArgumentMatchers.{eq => meq}
@@ -32,7 +31,7 @@ import play.api.libs.ws.WSClient
 import play.api.test.Helpers._
 import play.inject.Bindings
 import repositories.InMemoryAddressLookupRepository.{dbAddresses, singleAddresses}
-import services.AddressLookupService
+import services.{AddressLookupService, AddressSearcher}
 
 import scala.concurrent.Future
 

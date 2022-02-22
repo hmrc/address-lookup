@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 
-package controllers.services
+package services
 
+import model.address.{AddressRecord, AddressRecordConverter}
 import model.internal.DbAddress
 
 import javax.inject.Inject
-import model.address.AddressRecordConverter
-import model.address.{AddressRecord, AddressRecordConverter}
 
 class ResponseProcessor @Inject()(referenceData: ReferenceData) {
 

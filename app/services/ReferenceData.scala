@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-package controllers.services
+package services
+
+import com.github.tototoshi.csv.CSVReader
+import config.Capitalisation
+import model.address.ReferenceItem
 
 import java.util.NoSuchElementException
 import java.util.zip.GZIPInputStream
-import com.github.tototoshi.csv.CSVReader
-import config.{Capitalisation, _}
-import model.address.ReferenceItem
-
 import scala.collection.mutable.ListBuffer
 import scala.io.{Codec, Source}
 

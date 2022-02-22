@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package controllers.services
+package services
 
 import com.codahale.metrics.MetricRegistry.name
 import com.codahale.metrics.Timer.Context

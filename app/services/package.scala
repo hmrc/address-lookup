@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-package controllers
-
 import scala.collection.mutable
 
 package object services {

@@ -16,10 +16,10 @@
 
 package controllers
 
-import controllers.services.{AddressSearcher, ResponseProcessor}
 import model.address.Postcode
 import play.api.libs.json._
 import play.api.mvc._
+import services.{AddressSearcher, ResponseProcessor}
 
 import java.net.URLDecoder
 import javax.inject.Inject

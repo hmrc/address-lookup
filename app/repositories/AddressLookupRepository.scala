@@ -18,14 +18,14 @@ package repositories
 
 import cats.effect.IO
 import config.Capitalisation._
-import controllers.services.AddressSearcher
 import doobie.Transactor
 import doobie.implicits._
 import doobie.util.fragment
 import doobie.util.fragment.Fragment
-import model.address.{Country, Outcode, Postcode}
+import model.address.{Outcode, Postcode}
 import model.internal.{DbAddress, NonUKAddress, SqlDbAddress}
 import model.response.SupportedCountryCodes
+import services.AddressSearcher
 
 import javax.inject.Inject
 import scala.concurrent.ExecutionContext.Implicits.global

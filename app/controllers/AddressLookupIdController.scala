@@ -16,10 +16,10 @@
 
 package controllers
 
-import controllers.services.{AddressSearcher, ResponseProcessor}
 import model.address.AddressRecord
 import play.api.libs.json.Json
 import play.api.mvc._
+import services.{AddressSearcher, ResponseProcessor}
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}

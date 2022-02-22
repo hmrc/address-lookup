@@ -17,11 +17,10 @@
 package controllers
 
 import akka.stream.Materializer
-import controllers.services.{AddressSearcher, ReferenceData, ResponseProcessor}
-import model.{AddressSearchAuditEvent, AddressSearchAuditEventMatchedAddress, AddressSearchAuditEventRequestDetails}
 import model.address._
 import model.internal.DbAddress
 import model.request.{LookupByPostTownRequest, LookupByPostcodeRequest, LookupByUprnRequest}
+import model.{AddressSearchAuditEvent, AddressSearchAuditEventMatchedAddress, AddressSearchAuditEventRequestDetails}
 import org.mockito.ArgumentMatchers.{any, eq => meq}
 import org.mockito.Mockito._
 import org.scalatest.matchers.should.Matchers
@@ -36,6 +35,7 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import play.api.{Application, inject}
 import repositories.AddressLookupRepository
+import services.{AddressSearcher, ReferenceData, ResponseProcessor}
 import uk.gov.hmrc.http.UpstreamErrorResponse
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import util.Utils._

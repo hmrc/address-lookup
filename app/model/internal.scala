@@ -18,9 +18,6 @@ package model
 
 import model.address.Postcode
 import play.api.libs.json._
-import util._
-
-import scala.annotation.tailrec
 
 object internal {
 

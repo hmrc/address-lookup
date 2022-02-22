@@ -16,9 +16,8 @@
 
 package services
 
-import controllers.services.AddressSearcher
-import model.internal.{DbAddress, NonUKAddress}
 import model.address.{Outcode, Postcode}
+import model.internal.{DbAddress, NonUKAddress}
 import model.response
 
 import javax.inject.Inject
