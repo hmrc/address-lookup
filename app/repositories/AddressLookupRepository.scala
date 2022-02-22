@@ -80,7 +80,7 @@ class AddressLookupRepository @Inject()(transactor: Transactor[IO], queryConfig:
       Fragment.const(
         s"""
            |SELECT id, number, street, unit, city, district, region, postcode
-           |FROM ${countryCode.toLowerCase}
+           |FROM ${countryCode}
            |WHERE address_lookup_ft_col @@ plainto_tsquery('english', ${filter})
            |""".stripMargin)
         .query[NonUKAddress]

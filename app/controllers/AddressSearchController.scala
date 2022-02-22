@@ -92,7 +92,7 @@ class AddressSearchController @Inject()(addressSearch: AddressSearcher, response
         case Success(json)      => json.validate[LookupByCountryRequest] match {
           case JsSuccess(lookupByCountryRequest, _) =>
             val origin = getOriginHeaderIfSatisfactory(request.headers)
-            searchByCountry(request, countryCode.toUpperCase(), lookupByCountryRequest.filter, origin)
+            searchByCountry(request, countryCode.toLowerCase(), lookupByCountryRequest.filter, origin)
           case JsError(errors)                      =>
             Future.successful(BadRequest(JsError.toJson(errors)))
         }
@@ -173,14 +173,18 @@ class AddressSearchController @Inject()(addressSearch: AddressSearcher, response
       Future.successful {
         badRequest("BAD-COUNTRYCODE", "origin" -> origin, "error" -> s"missing or badly-formed country code")
       }
-    } else if (!addressSearch.supportedCountries.nonAbp.contains(countryCode.toLowerCase)) {
+    } else if (addressSearch.supportedCountries.abp.contains(countryCode)) {
       Future.successful {
-        badRequest("UNSUPPORTED-COUNTRYCODE", "origin" -> origin, "error" -> s"country code  $countryCode unsupported")
+        badRequest("ABP-COUNTRYCODE", "origin" -> origin, "error" -> s"country code $countryCode is abp.")
+      }
+    } else if (!addressSearch.supportedCountries.nonAbp.contains(countryCode)) {
+      Future.successful {
+        notFound("UNSUPPORTED-COUNTRYCODE", "origin" -> origin, "error" -> s"country code  $countryCode unsupported")
       }
     } else {
       import model.internal.NonUKAddress._
 
-      addressSearch.findInCountry(countryCode.toLowerCase, filter).map {
+      addressSearch.findInCountry(countryCode, filter).map {
         a =>
           val userAgent = request.headers.get("User-Agent")
 

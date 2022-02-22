@@ -18,8 +18,7 @@ package it.suites
 
 import com.codahale.metrics.SharedMetricRegistries
 import it.helper.AppServerTestApi
-import it.suites.Fixtures.{fx1_6jn_a_terse, fx1_6jn_b_terse, nukdb_fx1, nukdb_fx2}
-import model.address.AddressRecord
+import it.suites.Fixtures.{nukdb_fx1, nukdb_fx2}
 import model.internal.NonUKAddress
 import org.mockito.ArgumentMatchers.{eq => meq}
 import org.mockito.Mockito.when
@@ -32,15 +31,13 @@ import play.api.libs.json.Json
 import play.api.libs.ws.WSClient
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import play.inject.Bindings
-import repositories.InMemoryAddressLookupRepository.{dbAddresses, nonUKAddress}
+import repositories.InMemoryAddressLookupRepository.nonUKAddress
 import services.AddressLookupService
 
 import scala.concurrent.Future
 
 class CountryLookupSuiteV2()
   extends AnyWordSpec with GuiceOneServerPerSuite with AppServerTestApi {
-
-  private val largePostcodeExampleSize = 2517
 
   val repository: AddressLookupService = mock[AddressLookupService]
 
@@ -102,9 +99,9 @@ class CountryLookupSuiteV2()
     }
 
     "client error" should {
-      "give a 404 response for an unknown country" in {
+      "give a not found for an unknown country" in {
         val response = post("/country/QQ/lookup", """{"filter":"ZZ10 9ZZ"}""")
-        response.status shouldBe BAD_REQUEST
+        response.status shouldBe NOT_FOUND
       }
 
       "give a bad request for an country code that is too long" in {
