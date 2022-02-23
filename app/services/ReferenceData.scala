@@ -17,7 +17,6 @@
 package services
 
 import com.github.tototoshi.csv.CSVReader
-import config.Capitalisation
 import model.address.ReferenceItem
 
 import java.util.NoSuchElementException
@@ -92,11 +91,5 @@ object ReferenceData {
     println(s"Loading $resource took ${time}ms")
 
     outputBuffer.toMap
-  }
-
-  private def capitalise(v: String): String = {
-    val c = Capitalisation.normaliseAddressLine(v)
-    // the place-name normaliser doesn't know about Unitary Authorities
-    if (v.endsWith(" UA")) c.substring(0, c.length - 2) + "UA" else c
   }
 }

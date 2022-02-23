@@ -25,7 +25,7 @@ import model.response
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class AddressSearcherMetrics(peer: AddressSearcher, registry: MetricRegistry, ec: ExecutionContext) extends AddressSearcher {
+class AddressSearcherMetrics(peer: ABPAddressSearcher with NonABPAddressSearcher, registry: MetricRegistry, ec: ExecutionContext) extends ABPAddressSearcher with NonABPAddressSearcher {
 
   private implicit val xec = ec
 

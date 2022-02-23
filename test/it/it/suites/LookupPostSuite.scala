@@ -31,7 +31,7 @@ import play.api.libs.ws.WSClient
 import play.api.test.Helpers._
 import play.inject.Bindings
 import repositories.InMemoryAddressLookupRepository.{dbAddresses, singleAddresses}
-import services.{AddressLookupService, AddressSearcher}
+import services.{AddressLookupService, ABPAddressSearcher}
 
 import scala.concurrent.Future
 
@@ -44,7 +44,7 @@ class LookupPostSuite()
   override def fakeApplication(): Application = {
     SharedMetricRegistries.clear()
     new GuiceApplicationBuilder()
-        .overrides(Bindings.bind(classOf[AddressSearcher]).toInstance(repository))
+        .overrides(Bindings.bind(classOf[ABPAddressSearcher]).toInstance(repository))
         .build()
   }
 

@@ -21,7 +21,7 @@ import model.request.{LookupByCountryRequest, LookupByPostTownRequest, LookupByP
 import model.{AddressSearchAuditEvent, AddressSearchAuditEventMatchedAddress, AddressSearchAuditEventRequestDetails}
 import play.api.libs.json.{JsError, JsSuccess, Json}
 import play.api.mvc._
-import services.{AddressSearcher, ResponseProcessor}
+import services.{ABPAddressSearcher, NonABPAddressSearcher, ResponseProcessor}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
@@ -30,8 +30,9 @@ import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
-class AddressSearchController @Inject()(addressSearch: AddressSearcher, responseProcessor: ResponseProcessor,
-                                        auditConnector: AuditConnector, ec: ExecutionContext, cc: ControllerComponents)
+class AddressSearchController @Inject()(addressSearch: ABPAddressSearcher, nonABPAddressSearcher: NonABPAddressSearcher,
+                                        responseProcessor: ResponseProcessor, auditConnector: AuditConnector, ec: ExecutionContext,
+                                        cc: ControllerComponents)
   extends AddressController(cc) {
 
   import model.AddressSearchAuditEvent._
@@ -81,7 +82,7 @@ class AddressSearchController @Inject()(addressSearch: AddressSearcher, response
 
   def supportedCountries(): Action[AnyContent] = Action.async {
     import model.response.SupportedCountryCodes._
-    Future.successful(Ok(Json.toJson(addressSearch.supportedCountries)))
+    Future.successful(Ok(Json.toJson(nonABPAddressSearcher.supportedCountries)))
   }
 
   def searchByCountry(countryCode: String): Action[String] = Action.async(parse.tolerantText) {
@@ -166,27 +167,23 @@ class AddressSearchController @Inject()(addressSearch: AddressSearcher, response
   }
 
   private[controllers] def searchByCountry[A](request: Request[A], countryCode: String, filter: String, origin: String): Future[Result] = {
-    implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequest(request)
-
     if (countryCode.isEmpty || "[a-zA-Z]{2}".r.unapplySeq(countryCode).isEmpty) {
       Future.successful {
         badRequest("BAD-COUNTRYCODE", "origin" -> origin, "error" -> s"missing or badly-formed country code")
       }
-    } else if (addressSearch.supportedCountries.abp.contains(countryCode)) {
+    } else if (nonABPAddressSearcher.supportedCountries.abp.contains(countryCode)) {
       Future.successful {
         badRequest("ABP-COUNTRYCODE", "origin" -> origin, "error" -> s"country code $countryCode is abp.")
       }
-    } else if (!addressSearch.supportedCountries.nonAbp.contains(countryCode)) {
+    } else if (!nonABPAddressSearcher.supportedCountries.nonAbp.contains(countryCode)) {
       Future.successful {
         notFound("UNSUPPORTED-COUNTRYCODE", "origin" -> origin, "error" -> s"country code  $countryCode unsupported")
       }
     } else {
       import model.internal.NonUKAddress._
 
-      addressSearch.findInCountry(countryCode, filter).map {
+      nonABPAddressSearcher.findInCountry(countryCode, filter).map {
         a =>
-          val userAgent = request.headers.get("User-Agent")
-
           logEvent("LOOKUP", origin, a.size, List("countryCode" -> countryCode, "filter" -> filter))
           Ok(Json.toJson(a))
       }

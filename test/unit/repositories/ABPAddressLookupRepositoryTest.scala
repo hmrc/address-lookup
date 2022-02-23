@@ -24,7 +24,7 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.test.Helpers._
 import services.AddressLookupService
 
-class AddressLookupRepositoryTest extends AnyWordSpec with Matchers with GuiceOneAppPerSuite {
+class ABPAddressLookupRepositoryTest extends AnyWordSpec with Matchers with GuiceOneAppPerSuite {
 
   "AddressLookupService" when {
 

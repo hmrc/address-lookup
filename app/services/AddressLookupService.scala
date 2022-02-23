@@ -23,7 +23,7 @@ import model.response
 import javax.inject.Inject
 import scala.concurrent.Future
 
-class AddressLookupService @Inject()(addressSearcher: AddressSearcher) extends AddressSearcher {
+class AddressLookupService @Inject()(addressSearcher: ABPAddressSearcher, nonABPAddressSearcher: NonABPAddressSearcher) extends ABPAddressSearcher with NonABPAddressSearcher {
   override def findID(id: String): Future[List[DbAddress]] = addressSearcher.findID(id)
 
   override def findUprn(uprn: String): Future[List[DbAddress]] = addressSearcher.findUprn(uprn)
@@ -34,7 +34,7 @@ class AddressLookupService @Inject()(addressSearcher: AddressSearcher) extends A
 
   override def findOutcode(outcode: Outcode, filter: String): Future[List[DbAddress]] = addressSearcher.findOutcode(outcode, filter)
 
-  override def supportedCountries: response.SupportedCountryCodes = addressSearcher.supportedCountries
+  override def supportedCountries: response.SupportedCountryCodes = nonABPAddressSearcher.supportedCountries
 
-  override def findInCountry(countryCode: String, filter: String): Future[List[NonUKAddress]] = addressSearcher.findInCountry(countryCode, filter)
+  override def findInCountry(countryCode: String, filter: String): Future[List[NonUKAddress]] = nonABPAddressSearcher.findInCountry(countryCode, filter)
 }

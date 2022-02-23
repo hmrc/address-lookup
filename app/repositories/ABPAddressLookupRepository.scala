@@ -21,19 +21,17 @@ import config.Capitalisation._
 import doobie.Transactor
 import doobie.implicits._
 import doobie.util.fragment
-import doobie.util.fragment.Fragment
 import model.address.{Outcode, Postcode}
-import model.internal.{DbAddress, NonUKAddress, SqlDbAddress}
-import model.response.SupportedCountryCodes
-import services.AddressSearcher
+import model.internal.{DbAddress, SqlDbAddress}
+import services.ABPAddressSearcher
 
 import javax.inject.Inject
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class AddressLookupRepository @Inject()(transactor: Transactor[IO], queryConfig: RdsQueryConfig, supportedCountryCodes: SupportedCountryCodes) extends AddressSearcher {
+class ABPAddressLookupRepository @Inject()(transactor: Transactor[IO], queryConfig: RdsQueryConfig) extends ABPAddressSearcher {
 
-  import AddressLookupRepository._
+  import ABPAddressLookupRepository._
 
   override def findID(id: String): Future[List[DbAddress]] = findUprn(cleanUprn(id))
 
@@ -74,37 +72,6 @@ class AddressLookupRepository @Inject()(transactor: Transactor[IO], queryConfig:
       .map(l => l.map(mapToDbAddress))
   }
 
-  override def supportedCountries: SupportedCountryCodes = supportedCountryCodes
-
-  override def findInCountry(countryCode: String, filter: String): Future[List[NonUKAddress]] = {
-      Fragment.const(
-        s"""
-           |SELECT id, number, street, unit, city, district, region, postcode
-           |FROM ${countryCode}
-           |WHERE address_lookup_ft_col @@ plainto_tsquery('english', ${filter})
-           |""".stripMargin)
-        .query[NonUKAddress]
-        .to[List]
-        .transact(transactor)
-        .unsafeToFuture()
-  }
-
-  private def findWithOnlyFilter(filter: Option[String]): Future[List[DbAddress]] = {
-    val timeLimit = Fragment(s"SET statement_timeout=${queryConfig.queryTimeoutMillis}", List())
-    val limitSql = Fragment(s" LIMIT ${queryConfig.queryResultsLimit}", List())
-
-    val queryFragmentWithFilter =
-      filterOptToTsQueryOpt(filter).foldLeft(baseQuery) { case (a, f) =>
-        a ++ sql" WHERE " ++ f ++ limitSql
-      }
-
-    val toRun = for {
-      _ <- timeLimit.update.run.transact(transactor)
-      res <- queryFragmentWithFilter.query[SqlDbAddress].to[List].transact(transactor)
-    } yield res
-    toRun.unsafeToFuture().map(l => l.map(mapToDbAddress))
-  }
-
   private def cleanUprn(uprn: String): String = uprn.replaceFirst("^[Gg][Bb]", "")
 
   private def filterOptToTsQueryOpt(filterOpt: Option[String]): Option[fragment.Fragment] =
@@ -139,7 +106,7 @@ class AddressLookupRepository @Inject()(transactor: Transactor[IO], queryConfig:
   }
 }
 
-object AddressLookupRepository {
+object ABPAddressLookupRepository {
   private val baseQuery =
     sql"""SELECT
          |uprn,

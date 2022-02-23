@@ -21,14 +21,14 @@ import model.internal.{DbAddress, NonUKAddress}
 import model.response
 import model.response.SupportedCountryCodes
 import play.api.Environment
-import services.AddressSearcher
+import services.{ABPAddressSearcher, NonABPAddressSearcher}
 
 import javax.inject.Inject
 import scala.collection.JavaConverters.asScalaIteratorConverter
 import scala.concurrent.{ExecutionContext, Future}
 import scala.io.Source
 
-class InMemoryAddressLookupRepository @Inject()(env: Environment, supportedCountryCodes: SupportedCountryCodes, ec: ExecutionContext) extends AddressSearcher {
+class InMemoryAddressLookupRepository @Inject()(env: Environment, supportedCountryCodes: SupportedCountryCodes, ec: ExecutionContext) extends ABPAddressSearcher with NonABPAddressSearcher {
 
   import InMemoryAddressLookupRepository._
 

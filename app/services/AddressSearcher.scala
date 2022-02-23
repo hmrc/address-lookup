@@ -23,8 +23,7 @@ import model.response.SupportedCountryCodes
 import scala.concurrent.Future
 
 
-trait AddressSearcher {
-
+trait ABPAddressSearcher {
   def findID(id: String): Future[List[DbAddress]]
 
   def findUprn(uprn: String): Future[List[DbAddress]]
@@ -33,9 +32,13 @@ trait AddressSearcher {
 
   def findTown(town: String, filter: Option[String] = None): Future[List[DbAddress]]
 
-  def supportedCountries: SupportedCountryCodes
-
-  def findInCountry(countryCode: String, filter: String): Future[List[NonUKAddress]]
-
   def findOutcode(outcode: Outcode, filter: String): Future[List[DbAddress]]
 }
+
+trait NonABPAddressSearcher {
+  def findInCountry(countryCode: String, filter: String): Future[List[NonUKAddress]]
+
+  def supportedCountries: SupportedCountryCodes
+}
+
+//trait AddressSearcher extends ABPAddressSearcher with NonABPAddressSearcher {}
