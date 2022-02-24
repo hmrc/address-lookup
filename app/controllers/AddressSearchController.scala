@@ -152,14 +152,15 @@ class AddressSearchController @Inject()(addressSearch: ABPAddressRepository, non
       }
     } else {
       import model.address.AddressRecord.formats._
+      val casedPosttown = posttown.toUpperCase
 
-      addressSearch.findTown(posttown, filter).map {
+      addressSearch.findTown(casedPosttown, filter).map {
         a =>
           val userAgent = request.headers.get("User-Agent")
           val a2 = responseProcessor.convertAddressList(a)
 
           if (a2.nonEmpty) {
-            auditAddressSearch(userAgent, a2, postTown = Some(posttown), filter = filter)
+            auditAddressSearch(userAgent, a2, postTown = Some(casedPosttown), filter = filter)
           }
 
           logEvent("LOOKUP", origin, a2.size, List(Some("posttown" -> posttown), filter.map(f => "filter" -> f)).flatten)
