@@ -26,4 +26,9 @@ package object util {
       }
     }
   }
+
+  implicit class NullableString(s: String) {
+    def emptyToNull: String = if(s.trim.isEmpty) null else s.trim
+    def emptyToNone: Option[String] = Option(emptyToNull)
+  }
 }

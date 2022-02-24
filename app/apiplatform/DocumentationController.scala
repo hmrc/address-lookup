@@ -18,11 +18,11 @@ package apiplatform
 
 import config.ConfigHelper
 import controllers.Assets
-import javax.inject.Inject
 import play.api.http.{ContentTypes, MimeTypes}
 import play.api.mvc.{Action, AnyContent, Codec, ControllerComponents}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
+import javax.inject.Inject
 import scala.concurrent.Future
 
 class DocumentationController @Inject()(assets: Assets, cc: ControllerComponents, configHelper: ConfigHelper) extends BackendController(cc) {

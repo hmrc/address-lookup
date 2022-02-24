@@ -71,7 +71,7 @@ object request {
 
   object LookupByPostTownRequest {
     implicit val reads: Reads[LookupByPostTownRequest] = (
-        (JsPath \ "posttown").read[String].map(_.toUpperCase) and
+        (JsPath \ "posttown").read[String] and
             (JsPath \ "filter").readNullable[String].map(fo =>
               fo.flatMap(f => if(f.trim.isEmpty) None else Some(f))
             )

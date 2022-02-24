@@ -41,7 +41,7 @@ object Country {
     implicit val countryWrites: Writes[Country] = Json.writes[Country]
   }
   // note that "GB" is the official ISO code for UK, although "UK" is a reserved synonym and is less confusing
-  @deprecated("GB is the official ISO code for UK")
+  @deprecated("GB is the official ISO code for UK", "")
   val UK = Country("UK", "United Kingdom")
 
   val GB = Country("GB", "United Kingdom") // special case provided for in ISO-3166
@@ -56,7 +56,7 @@ object Country {
   val NorthernIreland = Country("GB-NIR", "Northern Ireland")
 
   private val all = List(UK, GB, GG, IM, JE, England, Scotland, Wales, Cymru, NorthernIreland)
-  def supported = all
+  def supported: List[Country] = all
 
   def find(code: String): Option[Country] = all.find(_.code == code)
 

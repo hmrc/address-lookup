@@ -16,18 +16,19 @@
 
 package controllers
 
-import controllers.services.{AddressSearcher, ResponseProcessor}
 import model.address.AddressRecord
 import play.api.libs.json.Json
 import play.api.mvc._
+import repositories.ABPAddressRepository
+import services.ResponseProcessor
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
-class AddressLookupIdController @Inject()(addressSearch: AddressSearcher, responseProcessor: ResponseProcessor,
+class AddressLookupIdController @Inject()(abpAddressSearch: ABPAddressRepository, responseProcessor: ResponseProcessor,
                                           ec: ExecutionContext, cc: ControllerComponents)
-    extends AddressController(cc) {
+  extends AddressController(cc) {
 
   implicit private val xec: ExecutionContext = ec
 
@@ -38,7 +39,7 @@ class AddressLookupIdController @Inject()(addressSearch: AddressSearcher, respon
   private[controllers] def findByIdRequest[A](request: Request[A], id: String): Future[Result] = {
     getOriginHeaderIfSatisfactory(request.headers)
 
-    Try(addressSearch.findID(id).map { a =>
+    Try(abpAddressSearch.findID(id).map { a =>
       import AddressRecord.formats._
       a.headOption.fold(NotFound(s"id matched nothing")) { ad =>
         Ok(Json.toJson(responseProcessor.convertAddress(ad)))

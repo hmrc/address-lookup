@@ -14,21 +14,23 @@
  * limitations under the License.
  */
 
-package controllers.services
+package services
 
 import com.codahale.metrics.MetricRegistry.name
 import com.codahale.metrics.Timer.Context
 import com.codahale.metrics.{MetricRegistry, Timer}
 import model.address.{Outcode, Postcode}
-import model.internal.DbAddress
+import model.internal.{DbAddress, NonUKAddress}
+import model.response
+import repositories.{ABPAddressRepository, NonABPAddressRepository}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class AddressSearcherMetrics(peer: AddressSearcher, registry: MetricRegistry, ec: ExecutionContext) extends AddressSearcher {
+class ABPAddressRepositoryMetrics(peer: ABPAddressRepository, registry: MetricRegistry, ec: ExecutionContext) extends ABPAddressRepository {
 
   private implicit val xec = ec
 
-  private val prefix = peer.getClass.getSimpleName
+  private val prefix = "AddressLookupService"
   private val findIdTimer: Timer = registry.timer(name(prefix, "findId"))
   private val findUprnTimer: Timer = registry.timer(name(prefix, "findUprn"))
   private val findPostcodeTimer: Timer = registry.timer(name(prefix, "findPostcode"))
@@ -36,9 +38,8 @@ class AddressSearcherMetrics(peer: AddressSearcher, registry: MetricRegistry, ec
   private val findPostcodeFilterTimer: Timer = registry.timer(name(prefix, "findPostcodeFilter"))
   private val findTownFilterTimer: Timer = registry.timer(name(prefix, "findTownFilter"))
   private val findOutcodeTimer: Timer = registry.timer(name(prefix, "findOutcode"))
-  private val findInCountryTimer: Timer = registry.timer(name(prefix, "findInCountry"))
 
-  private def timerStop(t: Context, r: List[DbAddress]) = {
+  private def timerStop[T](t: Context, r: T) = {
     t.stop()
     r
   }
@@ -71,9 +72,6 @@ class AddressSearcherMetrics(peer: AddressSearcher, registry: MetricRegistry, ec
     val context = findOutcodeTimer.time()
     peer.findOutcode(outcode, filterStr) map (timerStop(context, _))
   }
-
-  override def findInCountry(countryCode: String, filter: String): Future[List[DbAddress]] = {
-    val context = findInCountryTimer.time()
-    peer.findInCountry(countryCode, filter) map (timerStop(context, _))
-  }
 }
+
+

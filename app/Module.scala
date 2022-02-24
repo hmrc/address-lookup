@@ -17,11 +17,11 @@
 import com.google.inject.{AbstractModule, Provides}
 import com.kenshoo.play.metrics.Metrics
 import config.ConfigHelper
-import controllers.services.{AddressSearcher, AddressSearcherMetrics, ReferenceData}
+import model.response.SupportedCountryCodes
 import play.api.inject.ApplicationLifecycle
 import play.api.{Configuration, Environment}
-import repositories.{AddressLookupRepository, InMemoryAddressLookupRepository, RdsQueryConfig, TransactorProvider}
-import services.AddressLookupService
+import repositories._
+import services.{ABPAddressRepositoryMetrics, NonABPAddressRepositoryMetrics, ReferenceData}
 
 import javax.inject.Singleton
 import scala.concurrent.ExecutionContext
@@ -29,6 +29,11 @@ import scala.concurrent.ExecutionContext
 class Module(environment: Environment, configuration: Configuration) extends AbstractModule {
 
   override def configure(): Unit = {}
+
+  @Provides
+  @Singleton
+  def provideSupportedCountryCodes(configuration: Configuration): SupportedCountryCodes =
+    configuration.get[SupportedCountryCodes]("supported-country-codes")
 
   @Provides
   @Singleton
@@ -43,19 +48,41 @@ class Module(environment: Environment, configuration: Configuration) extends Abs
 
   @Provides
   @Singleton
-  def provideAddressSearcher(metrics: Metrics, configuration: Configuration,
-                             configHelper: ConfigHelper, rdsQueryConfig: RdsQueryConfig, executionContext: ExecutionContext, applicationLifecycle: ApplicationLifecycle): AddressSearcher = {
+  def provideAbpAddressRepository(metrics: Metrics, configHelper: ConfigHelper,
+                                  rdsQueryConfig: RdsQueryConfig, executionContext: ExecutionContext,
+                                  applicationLifecycle: ApplicationLifecycle,
+                                  inMemoryABPAddressRepository: InMemoryABPAddressRepository): ABPAddressRepository = {
+
     val dbEnabled = isDbEnabled(configHelper)
 
-    val searcher = if (dbEnabled) {
+    val repository: ABPAddressRepository = if (dbEnabled) {
       val transactor = new TransactorProvider(configuration, applicationLifecycle).get(executionContext)
-      new AddressLookupRepository(transactor, rdsQueryConfig)
+      new PostgresABPAddressRepository(transactor, rdsQueryConfig)
     } else {
-      new InMemoryAddressLookupRepository(environment, executionContext)
+      inMemoryABPAddressRepository
     }
 
-    new AddressSearcherMetrics(new AddressLookupService(searcher), metrics.defaultRegistry, executionContext)
+    new ABPAddressRepositoryMetrics(repository, metrics.defaultRegistry, executionContext)
   }
+
+  @Provides
+  @Singleton
+  def provideNonAbpAddressRepository(metrics: Metrics, configuration: Configuration, configHelper: ConfigHelper,
+                                     executionContext: ExecutionContext, applicationLifecycle: ApplicationLifecycle,
+                                     inMemoryNonABPAddressRepository: InMemoryNonABPAddressRepository): NonABPAddressRepository = {
+
+    val dbEnabled = isDbEnabled(configHelper)
+
+    val repository: NonABPAddressRepository = if (dbEnabled) {
+      val transactor = new TransactorProvider(configuration, applicationLifecycle).get(executionContext)
+      new PostgresNonABPAddressRepository(transactor)
+    } else {
+      inMemoryNonABPAddressRepository
+    }
+
+    new NonABPAddressRepositoryMetrics(repository, metrics.defaultRegistry, executionContext)
+  }
+
 
   private def isDbEnabled(configHelper: ConfigHelper): Boolean =
     configHelper.getConfigString("address-lookup-rds.enabled").getOrElse("false").toBoolean

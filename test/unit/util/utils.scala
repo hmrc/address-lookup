@@ -20,7 +20,7 @@ import com.typesafe.config.ConfigFactory
 import org.scalatest.{Tag, TagAnnotation}
 import play.api.test.FakeRequest
 
-import java.lang.annotation.{ElementType, Inherited, Retention, RetentionPolicy, Target}
+import java.lang.annotation._
 
 
 object Utils {

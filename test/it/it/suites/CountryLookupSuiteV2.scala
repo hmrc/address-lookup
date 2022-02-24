@@ -18,8 +18,8 @@ package it.suites
 
 import com.codahale.metrics.SharedMetricRegistries
 import it.helper.AppServerTestApi
-import it.suites.Fixtures.{fx1_6jn_a_terse, fx1_6jn_b_terse}
-import model.address.AddressRecord
+import it.suites.Fixtures.{nukdb_fx1, nukdb_fx2}
+import model.internal.NonUKAddress
 import org.mockito.ArgumentMatchers.{eq => meq}
 import org.mockito.Mockito.when
 import org.scalatest.wordspec.AnyWordSpec
@@ -31,22 +31,20 @@ import play.api.libs.json.Json
 import play.api.libs.ws.WSClient
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import play.inject.Bindings
-import repositories.InMemoryAddressLookupRepository.dbAddresses
-import services.AddressLookupService
+import repositories.InMemoryAddressTestData.nonUKAddress
+import repositories.NonABPAddressRepository
 
 import scala.concurrent.Future
 
 class CountryLookupSuiteV2()
   extends AnyWordSpec with GuiceOneServerPerSuite with AppServerTestApi {
 
-  private val largePostcodeExampleSize = 2517
-
-  val repository: AddressLookupService = mock[AddressLookupService]
+  val repository: NonABPAddressRepository = mock[NonABPAddressRepository]
 
   override def fakeApplication(): Application = {
     SharedMetricRegistries.clear()
     new GuiceApplicationBuilder()
-      .overrides(Bindings.bind(classOf[AddressLookupService]).toInstance(repository))
+      .overrides(Bindings.bind(classOf[NonABPAddressRepository]).toInstance(repository))
       .build()
   }
 
@@ -54,31 +52,15 @@ class CountryLookupSuiteV2()
   override val wsClient: WSClient = app.injector.instanceOf[WSClient]
 
   "country specific lookup" when {
-    import AddressRecord.formats._
+    import NonUKAddress._
 
     "successful" should {
 
-      "give a successful response for great britain" in {
-        when(repository.findInCountry(meq("GB"), meq("FX1 9PY"))).thenReturn(
-          Future.successful(dbAddresses.filter(_.postcode == "FX1 9PY").toList))
+      "give a successful response for bermuda" in {
+        when(repository.findInCountry(meq("bm"), meq("HM02"))).thenReturn(
+          Future.successful(nonUKAddress.getOrElse("bm", Seq()).filter(_.postcode.contains("HM02")).toList))
 
-        val response = post("/country/GB/lookup", """{"filter":"FX1 9PY"}""")
-
-        val contentType = response.header("Content-Type").get
-        contentType should startWith("application/json")
-
-        val c = response.header("Cache-Control")
-        c should not be empty
-        c.get should include("max-age=")
-
-        response.status shouldBe OK
-      }
-
-      "give a successful response for great britain if countrycode is provided in lower case" in {
-        when(repository.findInCountry(meq("GB"), meq("FX1 9PY"))).thenReturn(
-          Future.successful(dbAddresses.filter(_.postcode == "FX1 9PY").toList))
-
-        val response = post("/country/gb/lookup", """{"filter":"FX1 9PY"}""")
+        val response = post("/country/BM/lookup", """{"filter":"HM02"}""")
 
         val contentType = response.header("Content-Type").get
         contentType should startWith("application/json")
@@ -91,33 +73,33 @@ class CountryLookupSuiteV2()
       }
 
       "give a successful response for an unknown postcode" in {
-        when(repository.findInCountry(meq("GB"), meq("ZZ10 9ZZ"))).thenReturn(
-          Future.successful(dbAddresses.filter(_.postcode == "ZZ10 9ZZ").toList))
+        when(repository.findInCountry(meq("bm"), meq("HM99"))).thenReturn(
+          Future.successful(nonUKAddress.getOrElse("bm", Seq()).filter(_.postcode.contains("HM99")).toList))
 
-        val response = post("/country/GB/lookup", """{"filter":"ZZ10 9ZZ"}""")
+        val response = post("/country/BM/lookup", """{"filter":"HM99"}""")
         response.status shouldBe OK
         response.body shouldBe "[]"
       }
 
       "give sorted results when two addresses are returned" in {
-        when(repository.findInCountry(meq("GB"), meq("FX1 6JN"))).thenReturn(
-          Future.successful(dbAddresses.filter(_.postcode == "FX1 6JN").toList))
+        when(repository.findInCountry(meq("bm"), meq("WK04"))).thenReturn(
+          Future.successful(nonUKAddress.getOrElse("bm", Seq()).filter(_.postcode.contains("WK04")).toList))
 
-        val response = post("/country/GB/lookup", """{"filter":"FX1 6JN"}""")
+        val response = post("/country/BM/lookup", """{"filter":"WK04"}""")
 
         val body = response.body
         body should startWith("[{")
         body should endWith("}]")
 
         val json = Json.parse(body)
-        val seq = Json.fromJson[Seq[AddressRecord]](json).get
+        val seq = Json.fromJson[Seq[NonUKAddress]](json).get
         seq.size shouldBe 2
-        seq shouldBe Seq(fx1_6jn_a_terse, fx1_6jn_b_terse)
+        seq shouldBe Seq(nukdb_fx1, nukdb_fx2)
       }
     }
 
     "client error" should {
-      "give a 404 response for an unknown country" in {
+      "give a not found for an unknown country" in {
         val response = post("/country/QQ/lookup", """{"filter":"ZZ10 9ZZ"}""")
         response.status shouldBe NOT_FOUND
       }

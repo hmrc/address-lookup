@@ -17,11 +17,11 @@
 package controllers
 
 import akka.stream.Materializer
-import controllers.services.{AddressSearcher, ReferenceData, ResponseProcessor}
-import model.{AddressSearchAuditEvent, AddressSearchAuditEventMatchedAddress, AddressSearchAuditEventRequestDetails}
 import model.address._
 import model.internal.DbAddress
 import model.request.{LookupByPostTownRequest, LookupByPostcodeRequest, LookupByUprnRequest}
+import model.response.SupportedCountryCodes
+import model.{AddressSearchAuditEvent, AddressSearchAuditEventMatchedAddress, AddressSearchAuditEventRequestDetails}
 import org.mockito.ArgumentMatchers.{any, eq => meq}
 import org.mockito.Mockito._
 import org.scalatest.matchers.should.Matchers
@@ -35,7 +35,8 @@ import play.api.mvc.Request
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import play.api.{Application, inject}
-import repositories.AddressLookupRepository
+import repositories.{ABPAddressRepository, NonABPAddressRepository, PostgresABPAddressRepository, PostgresNonABPAddressRepository}
+import services.{ReferenceData, ResponseProcessor}
 import uk.gov.hmrc.http.UpstreamErrorResponse
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import util.Utils._
@@ -70,12 +71,14 @@ class AddressSearchControllerTest extends AnyWordSpec with Matchers with GuiceOn
   val addressAr1 = AddressRecord("GB100005", Some(100005L), Some(10000500L), Some(1000050L), Some("gb-oragnisation-5"), Address(List("Test Road"), "ATown", "FX11 7LX", Some(England), GB), en, Some(LocalCustodian(2935, "Testland")), Some(Location("12.345678", "-12.345678").toSeq), Some("TestLocalAuthority"))
   val addressAr2 = AddressRecord("GB100006", Some(100006L), Some(10000600L), Some(1000060L), Some("gb-oragnisation-6"), Address(List("Test Station", "Test Road"), "ATown", "FX11 7LA", Some(England), GB), en, Some(LocalCustodian(2935, "Testland")), Some(Location("12.345678", "-12.345678").toSeq), Some("TestLocalAuthority"))
 
-  val searcher: AddressLookupRepository = mock[AddressLookupRepository]
+  val abpSearcher: PostgresABPAddressRepository = mock[PostgresABPAddressRepository]
+  val nonAbpSearcher: PostgresNonABPAddressRepository = mock[PostgresNonABPAddressRepository]
   val mockAuditConnector = mock[AuditConnector]
 
   override implicit lazy val app: Application = {
     new GuiceApplicationBuilder()
-        .overrides(inject.bind[AddressSearcher].toInstance(searcher))
+        .overrides(inject.bind[ABPAddressRepository].toInstance(abpSearcher))
+        .overrides(inject.bind[NonABPAddressRepository].toInstance(nonAbpSearcher))
         .overrides(inject.bind[AuditConnector].toInstance(mockAuditConnector))
         .build()
   }
@@ -115,7 +118,7 @@ class AddressSearchControllerTest extends AnyWordSpec with Matchers with GuiceOn
       """ in {
         clearInvocations(mockAuditConnector)
 
-        when(searcher.findTown(meq("TESTTOWN"), meq(Some("Test Street")))).thenReturn(Future(List(dx1A, dx1B, dx1C)))
+        when(abpSearcher.findTown(meq("TESTTOWN"), meq(Some("Test Street")))).thenReturn(Future(List(dx1A, dx1B, dx1C)))
 
         val jsonPayload = Json.toJson(LookupByPostTownRequest("Testtown", Some("Test Street")))
         val request = FakeRequest("POST", "/lookup/by-post-town")
@@ -144,7 +147,7 @@ class AddressSearchControllerTest extends AnyWordSpec with Matchers with GuiceOn
       """ in {
         clearInvocations(mockAuditConnector)
 
-        when(searcher.findTown(meq("TESTTOWN"), meq(None))) thenReturn Future(List())
+        when(abpSearcher.findTown(meq("TESTTOWN"), meq(None))) thenReturn Future(List())
 
         val jsonPayload = Json.toJson(LookupByPostTownRequest("Testtown", None))
         val request = FakeRequest("POST", "/lookup/by-post-town")
@@ -167,7 +170,7 @@ class AddressSearchControllerTest extends AnyWordSpec with Matchers with GuiceOn
        and log the lookup including the size of the result list
       """ in {
         clearInvocations(mockAuditConnector)
-        when(searcher.findPostcode(Postcode("FX11 4HG"), Some("FOO"))) thenReturn Future(List(addr1Db))
+        when(abpSearcher.findPostcode(Postcode("FX11 4HG"), Some("FOO"))) thenReturn Future(List(addr1Db))
         val jsonPayload = Json.toJson(LookupByPostcodeRequest(Postcode("FX11 4HG"), Some("FOO")))
         val request = FakeRequest("POST", "/lookup")
           .withBody(jsonPayload.toString)
@@ -183,7 +186,7 @@ class AddressSearchControllerTest extends AnyWordSpec with Matchers with GuiceOn
        and log the lookup including the size of the result list
       """ in {
         clearInvocations(mockAuditConnector)
-        when(searcher.findPostcode(Postcode("FX11 4HG"), None)) thenReturn Future(List(addr1Db))
+        when(abpSearcher.findPostcode(Postcode("FX11 4HG"), None)) thenReturn Future(List(addr1Db))
         val jsonPayload = Json.toJson(LookupByPostcodeRequest(Postcode("FX11 4HG"), None))
         val request = FakeRequest("POST", "/lookup")
           .withBody(jsonPayload.toString)
@@ -200,7 +203,7 @@ class AddressSearchControllerTest extends AnyWordSpec with Matchers with GuiceOn
       """ in {
         clearInvocations(mockAuditConnector)
 
-        when(searcher.findPostcode(meq(Postcode("FX11 4HG")), meq(Some("Test Street")))) thenReturn Future(List(dx1A, dx1B, dx1C))
+        when(abpSearcher.findPostcode(meq(Postcode("FX11 4HG")), meq(Some("Test Street")))) thenReturn Future(List(dx1A, dx1B, dx1C))
         val jsonPayload = Json.toJson(LookupByPostcodeRequest(Postcode("FX11 4HG"), Some("Test Street")))
         val request = FakeRequest("POST", "/lookup")
           .withBody(jsonPayload.toString)
@@ -228,7 +231,7 @@ class AddressSearchControllerTest extends AnyWordSpec with Matchers with GuiceOn
       """ in {
         clearInvocations(mockAuditConnector)
 
-        when(searcher.findPostcode(meq(Postcode("FX11 4HX")), meq(None))) thenReturn Future(List())
+        when(abpSearcher.findPostcode(meq(Postcode("FX11 4HX")), meq(None))) thenReturn Future(List())
         val jsonPayload = Json.toJson(LookupByPostcodeRequest(Postcode("FX11 4HX")))
         val request = FakeRequest("POST", "/lookup")
           .withBody(jsonPayload.toString)
@@ -247,7 +250,7 @@ class AddressSearchControllerTest extends AnyWordSpec with Matchers with GuiceOn
     "give success" when {
       """search is called with a valid uprn""" in {
         import LookupByUprnRequest._
-        when(searcher.findUprn(meq("0123456789"))).thenReturn(Future.successful(List()))
+        when(abpSearcher.findUprn(meq("0123456789"))).thenReturn(Future.successful(List()))
         val jsonPayload = Json.toJson(LookupByUprnRequest("0123456789"))
         val request = FakeRequest("POST", "/lookup/by-uprn")
         .withBody(jsonPayload.toString)
@@ -260,7 +263,7 @@ class AddressSearchControllerTest extends AnyWordSpec with Matchers with GuiceOn
 
     "give bad request" when {
       """search is called with an invalid uprn""" in {
-        val controller = new AddressSearchController(searcher, new ResponseStub(Nil), mockAuditConnector, ec, cc)
+        val controller = new AddressSearchController(abpSearcher, nonAbpSearcher, new ResponseStub(Nil), mockAuditConnector, ec, cc, SupportedCountryCodes(List(), List()))
         val jsonPayload = Json.toJson(LookupByUprnRequest("GB0123456789"))
         val request = FakeRequest("POST", "/lookup/by-uprn")
         .withBody(jsonPayload.toString)

@@ -16,12 +16,14 @@
 
 package controllers
 
-import controllers.services.{AddressSearcher, ResponseProcessor}
-import model.address.{AddressRecord, Country, Postcode}
+import model.address.{AddressRecord, Postcode}
 import model.request.{LookupByCountryRequest, LookupByPostTownRequest, LookupByPostcodeRequest, LookupByUprnRequest}
+import model.response.SupportedCountryCodes
 import model.{AddressSearchAuditEvent, AddressSearchAuditEventMatchedAddress, AddressSearchAuditEventRequestDetails}
 import play.api.libs.json.{JsError, JsSuccess, Json}
 import play.api.mvc._
+import repositories.{ABPAddressRepository, NonABPAddressRepository}
+import services.ResponseProcessor
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
@@ -30,8 +32,9 @@ import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
-class AddressSearchController @Inject()(addressSearch: AddressSearcher, responseProcessor: ResponseProcessor,
-                                        auditConnector: AuditConnector, ec: ExecutionContext, cc: ControllerComponents)
+class AddressSearchController @Inject()(addressSearch: ABPAddressRepository, nonABPAddressSearcher: NonABPAddressRepository,
+                                        responseProcessor: ResponseProcessor, auditConnector: AuditConnector, ec: ExecutionContext,
+                                        cc: ControllerComponents, supportedCountryCodes: SupportedCountryCodes)
   extends AddressController(cc) {
 
   import model.AddressSearchAuditEvent._
@@ -40,11 +43,11 @@ class AddressSearchController @Inject()(addressSearch: AddressSearcher, response
 
   def search(): Action[String] = Action.async(parse.tolerantText) {
     request =>
-      Json.parse(request.body).validate[LookupByPostcodeRequest] match {
+      Json.parse(request.body).validate[LookupByPostcodeRequest](LookupByPostcodeRequest.reads) match {
         case JsSuccess(lookupByPostcodeRequest, _) =>
           val origin = getOriginHeaderIfSatisfactory(request.headers)
           searchByPostcode(request, lookupByPostcodeRequest.postcode, lookupByPostcodeRequest.filter, origin)
-        case JsError(errors) =>
+        case JsError(errors)                       =>
           Future.successful(BadRequest(JsError.toJson(errors)))
       }
   }
@@ -53,11 +56,11 @@ class AddressSearchController @Inject()(addressSearch: AddressSearcher, response
     request =>
       val maybeJson = Try(Json.parse(request.body))
       maybeJson match {
-        case Success(json) => json.validate[LookupByUprnRequest] match {
+        case Success(json)      => json.validate[LookupByUprnRequest] match {
           case JsSuccess(lookupByUprnRequest, _) =>
             val origin = getOriginHeaderIfSatisfactory(request.headers)
             searchByUprn(request, lookupByUprnRequest.uprn, origin)
-          case JsError(errors) =>
+          case JsError(errors)                   =>
             Future.successful(BadRequest(JsError.toJson(errors)))
         }
         case Failure(exception) => Future.successful(BadRequest("""{"obj":[{"msg":["error.payload.missing"],"args":[]}]}"""))
@@ -68,26 +71,31 @@ class AddressSearchController @Inject()(addressSearch: AddressSearcher, response
     request =>
       val maybeJson = Try(Json.parse(request.body))
       maybeJson match {
-        case Success(json) => json.validate[LookupByPostTownRequest] match {
+        case Success(json)      => json.validate[LookupByPostTownRequest] match {
           case JsSuccess(lookupByTownRequest, _) =>
             val origin = getOriginHeaderIfSatisfactory(request.headers)
             searchByTown(request, lookupByTownRequest.posttown, lookupByTownRequest.filter, origin)
-          case JsError(errors) =>
+          case JsError(errors)                   =>
             Future.successful(BadRequest(JsError.toJson(errors)))
         }
         case Failure(exception) => Future.successful(BadRequest("""{"obj":[{"msg":["error.payload.missing"],"args":[]}]}"""))
       }
   }
 
+  def supportedCountries(): Action[AnyContent] = Action.async {
+    import model.response.SupportedCountryCodes._
+    Future.successful(Ok(Json.toJson(supportedCountryCodes)))
+  }
+
   def searchByCountry(countryCode: String): Action[String] = Action.async(parse.tolerantText) {
     request =>
       val maybeJson = Try(Json.parse(request.body))
       maybeJson match {
-        case Success(json) => json.validate[LookupByCountryRequest] match {
+        case Success(json)      => json.validate[LookupByCountryRequest] match {
           case JsSuccess(lookupByCountryRequest, _) =>
             val origin = getOriginHeaderIfSatisfactory(request.headers)
-            searchByCountry(request, countryCode.toUpperCase(), lookupByCountryRequest.filter, origin)
-          case JsError(errors) =>
+            searchByCountry(countryCode.toLowerCase(), lookupByCountryRequest.filter, origin)
+          case JsError(errors)                      =>
             Future.successful(BadRequest(JsError.toJson(errors)))
         }
         case Failure(exception) => Future.successful(BadRequest("""{"obj":[{"msg":["error.payload.missing"],"args":[]}]}"""))
@@ -160,32 +168,26 @@ class AddressSearchController @Inject()(addressSearch: AddressSearcher, response
     }
   }
 
-  private[controllers] def searchByCountry[A](request: Request[A], countryCode: String, filter: String, origin: String): Future[Result] = {
-    implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequest(request)
-
+  private[controllers] def searchByCountry[A](countryCode: String, filter: String, origin: String): Future[Result] = {
     if (countryCode.isEmpty || "[a-zA-Z]{2}".r.unapplySeq(countryCode).isEmpty) {
       Future.successful {
         badRequest("BAD-COUNTRYCODE", "origin" -> origin, "error" -> s"missing or badly-formed country code")
       }
-    } else if (Country.find(countryCode).isEmpty) {
+    } else if (supportedCountryCodes.abp.contains(countryCode)) {
       Future.successful {
-        notFound("UNSUPPORTED-COUNTRYCODE", "origin" -> origin, "error" -> s"unsupported country code")
+        badRequest("ABP-COUNTRYCODE", "origin" -> origin, "error" -> s"country code $countryCode is abp.")
       }
-    }
-    else {
-      import model.address.AddressRecord.formats._
+    } else if (!supportedCountryCodes.nonAbp.contains(countryCode)) {
+      Future.successful {
+        notFound("UNSUPPORTED-COUNTRYCODE", "origin" -> origin, "error" -> s"country code  $countryCode unsupported")
+      }
+    } else {
+      import model.internal.NonUKAddress._
 
-      addressSearch.findInCountry(countryCode, filter).map {
+      nonABPAddressSearcher.findInCountry(countryCode, filter).map {
         a =>
-          val userAgent = request.headers.get("User-Agent")
-          val a2 = responseProcessor.convertAddressList(a)
-
-          if (a2.nonEmpty) {
-            auditAddressSearch(userAgent, a2, filter = Some(filter))
-          }
-
-          logEvent("LOOKUP", origin, a2.size, List("countryCode" -> countryCode,"filter" -> filter))
-          Ok(Json.toJson(a2))
+          logEvent("LOOKUP", origin, a.size, List("countryCode" -> countryCode, "filter" -> filter))
+          Ok(Json.toJson(a))
       }
     }
   }

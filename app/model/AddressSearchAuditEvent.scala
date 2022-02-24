@@ -16,7 +16,8 @@
 
 package model
 
-import model.address.{Country, LocalCustodian, Postcode}
+import model.address.{Country, LocalCustodian}
+import play.api.libs.json._
 import play.api.libs.json.Json
 
 case class AddressSearchAuditEventMatchedAddress(uprn: String,

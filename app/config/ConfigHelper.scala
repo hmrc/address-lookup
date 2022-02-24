@@ -16,10 +16,10 @@
 
 package config
 
-import javax.inject.Singleton
-
 import com.google.inject.Inject
 import play.api.{Configuration, Environment}
+
+import javax.inject.Singleton
 
 @Singleton
 class ConfigHelper @Inject() (config: Configuration, env: Environment) {

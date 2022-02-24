@@ -17,8 +17,9 @@
 package repositories
 
 import config.Capitalisation.normaliseAddressLine
-import model.internal.DbAddress
 import model.address.Postcode
+import model.internal.{DbAddress, NonUKAddress}
+import util._
 
 object CSV {
   def convertCsvLine(line: Array[String]): DbAddress = {
@@ -42,6 +43,23 @@ object CSV {
       val lcc = if (line.length > 10) blankToOption(trim(line(10))).map(_.toInt) else None
       val poBox = if (line.length > 11) blankToOption(trim(line(11))) else None
       DbAddress(id,uprn,parentUprn,usrn,organisationName, lines, line4, postcode, subdivision, Some("GB"), lcc, Some("en"), None, None, poBox)
+    }
+  }
+
+  def convertNonUKCsvLine(line: Array[String]): (String, NonUKAddress) = {
+    if (line.length != 10) {
+      throw new RuntimeException("Incorrect input line: " + line.mkString)
+    } else {
+      val country = line(9)
+      val id: String = line(8)
+      val number: Option[String] = line(1).emptyToNone
+      val street: Option[String] = line(2).emptyToNone
+      val unit: Option[String] = line(3).emptyToNone
+      val city: Option[String] = line(4).emptyToNone
+      val district: Option[String] = line(5).emptyToNone
+      val region: Option[String] = line(6).emptyToNone
+      val postcode: Option[String] = line(7).emptyToNone
+      (country, NonUKAddress(id, number, street, unit, city, district, region, postcode))
     }
   }
 

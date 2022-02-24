@@ -17,7 +17,6 @@
 package it.suites
 
 import com.codahale.metrics.SharedMetricRegistries
-import controllers.services.AddressSearcher
 import it.helper.AppServerTestApi
 import model.address.{AddressRecord, Postcode}
 import org.mockito.ArgumentMatchers.{eq => meq}
@@ -31,8 +30,8 @@ import play.api.libs.json.Json
 import play.api.libs.ws.WSClient
 import play.api.test.Helpers._
 import play.inject.Bindings
-import repositories.InMemoryAddressLookupRepository.{dbAddresses, singleAddresses}
-import services.AddressLookupService
+import repositories.ABPAddressRepository
+import repositories.InMemoryAddressTestData.{dbAddresses, singleAddresses}
 
 import scala.concurrent.Future
 
@@ -41,11 +40,11 @@ class LookupPostSuite()
 
   private val largePostcodeExampleSize = 2517
 
-  val repository: AddressLookupService = mock[AddressLookupService]
+  val repository: ABPAddressRepository = mock[ABPAddressRepository]
   override def fakeApplication(): Application = {
     SharedMetricRegistries.clear()
     new GuiceApplicationBuilder()
-        .overrides(Bindings.bind(classOf[AddressSearcher]).toInstance(repository))
+        .overrides(Bindings.bind(classOf[ABPAddressRepository]).toInstance(repository))
         .build()
   }
 
