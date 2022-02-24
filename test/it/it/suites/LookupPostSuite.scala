@@ -30,8 +30,8 @@ import play.api.libs.json.Json
 import play.api.libs.ws.WSClient
 import play.api.test.Helpers._
 import play.inject.Bindings
-import repositories.InMemoryAddressLookupRepository.{dbAddresses, singleAddresses}
-import services.{AddressLookupService, ABPAddressSearcher}
+import repositories.ABPAddressRepository
+import repositories.InMemoryAddressTestData.{dbAddresses, singleAddresses}
 
 import scala.concurrent.Future
 
@@ -40,11 +40,11 @@ class LookupPostSuite()
 
   private val largePostcodeExampleSize = 2517
 
-  val repository: AddressLookupService = mock[AddressLookupService]
+  val repository: ABPAddressRepository = mock[ABPAddressRepository]
   override def fakeApplication(): Application = {
     SharedMetricRegistries.clear()
     new GuiceApplicationBuilder()
-        .overrides(Bindings.bind(classOf[ABPAddressSearcher]).toInstance(repository))
+        .overrides(Bindings.bind(classOf[ABPAddressRepository]).toInstance(repository))
         .build()
   }
 

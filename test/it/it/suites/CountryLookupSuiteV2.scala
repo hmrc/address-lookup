@@ -31,20 +31,20 @@ import play.api.libs.json.Json
 import play.api.libs.ws.WSClient
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import play.inject.Bindings
-import repositories.InMemoryAddressLookupRepository.nonUKAddress
-import services.AddressLookupService
+import repositories.InMemoryAddressTestData.nonUKAddress
+import repositories.NonABPAddressRepository
 
 import scala.concurrent.Future
 
 class CountryLookupSuiteV2()
   extends AnyWordSpec with GuiceOneServerPerSuite with AppServerTestApi {
 
-  val repository: AddressLookupService = mock[AddressLookupService]
+  val repository: NonABPAddressRepository = mock[NonABPAddressRepository]
 
   override def fakeApplication(): Application = {
     SharedMetricRegistries.clear()
     new GuiceApplicationBuilder()
-      .overrides(Bindings.bind(classOf[AddressLookupService]).toInstance(repository))
+      .overrides(Bindings.bind(classOf[NonABPAddressRepository]).toInstance(repository))
       .build()
   }
 
@@ -57,7 +57,7 @@ class CountryLookupSuiteV2()
     "successful" should {
 
       "give a successful response for bermuda" in {
-        when(repository.findInCountry(meq("BM"), meq("HM02"))).thenReturn(
+        when(repository.findInCountry(meq("bm"), meq("HM02"))).thenReturn(
           Future.successful(nonUKAddress.getOrElse("bm", Seq()).filter(_.postcode.contains("HM02")).toList))
 
         val response = post("/country/BM/lookup", """{"filter":"HM02"}""")
@@ -73,7 +73,7 @@ class CountryLookupSuiteV2()
       }
 
       "give a successful response for an unknown postcode" in {
-        when(repository.findInCountry(meq("BM"), meq("HM99"))).thenReturn(
+        when(repository.findInCountry(meq("bm"), meq("HM99"))).thenReturn(
           Future.successful(nonUKAddress.getOrElse("bm", Seq()).filter(_.postcode.contains("HM99")).toList))
 
         val response = post("/country/BM/lookup", """{"filter":"HM99"}""")
@@ -82,7 +82,7 @@ class CountryLookupSuiteV2()
       }
 
       "give sorted results when two addresses are returned" in {
-        when(repository.findInCountry(meq("BM"), meq("WK04"))).thenReturn(
+        when(repository.findInCountry(meq("bm"), meq("WK04"))).thenReturn(
           Future.successful(nonUKAddress.getOrElse("bm", Seq()).filter(_.postcode.contains("WK04")).toList))
 
         val response = post("/country/BM/lookup", """{"filter":"WK04"}""")

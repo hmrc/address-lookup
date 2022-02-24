@@ -19,15 +19,16 @@ package controllers
 import model.address.AddressRecord
 import play.api.libs.json.Json
 import play.api.mvc._
-import services.{ABPAddressSearcher, NonABPAddressSearcher, ResponseProcessor}
+import repositories.ABPAddressRepository
+import services.ResponseProcessor
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
-class AddressLookupIdController @Inject()(abpAddressSearch: ABPAddressSearcher, nonABPAddressSearcher: NonABPAddressSearcher, responseProcessor: ResponseProcessor,
+class AddressLookupIdController @Inject()(abpAddressSearch: ABPAddressRepository, responseProcessor: ResponseProcessor,
                                           ec: ExecutionContext, cc: ControllerComponents)
-    extends AddressController(cc) {
+  extends AddressController(cc) {
 
   implicit private val xec: ExecutionContext = ec
 

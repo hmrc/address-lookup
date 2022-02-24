@@ -25,7 +25,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import repositories.{ABPAddressLookupRepository, NonABPAddressLookupRepository}
+import repositories.{PostgresABPAddressRepository, PostgresNonABPAddressRepository}
 import services.{ReferenceData, ResponseProcessor}
 import uk.gov.hmrc.http.UpstreamErrorResponse
 import util.Utils._
@@ -54,8 +54,8 @@ class AddressLookupIdControllerTest extends AnyWordSpec with Matchers with Scala
   }
 
   class Context {
-    val abpSearcher = mock[ABPAddressLookupRepository]
-    val nonAbpSearcher = mock[NonABPAddressLookupRepository]
+    val abpSearcher = mock[PostgresABPAddressRepository]
+    val nonAbpSearcher = mock[PostgresNonABPAddressRepository]
   }
 
   "postcode lookup" should {
@@ -66,7 +66,7 @@ class AddressLookupIdControllerTest extends AnyWordSpec with Matchers with Scala
        it should give a 'bad request' response via the appropriate exception
        and not log any error
       """ in new Context {
-        val addressLookupController = new AddressLookupIdController(abpSearcher, nonAbpSearcher, new ResponseStub(Nil), ec, cc)
+        val addressLookupController = new AddressLookupIdController(abpSearcher, new ResponseStub(Nil), ec, cc)
         val request = FakeRequest("GET", "http://localhost:9000/v2/uk/addresses/123456")
 
         val e = intercept[UpstreamErrorResponse] {
@@ -84,7 +84,7 @@ class AddressLookupIdControllerTest extends AnyWordSpec with Matchers with Scala
        and log the lookup including the size=1
       """ in new Context {
         when(abpSearcher.findID("GB123456")) thenReturn Future(List(addr1Db))
-        val addressLookupController = new AddressLookupIdController(abpSearcher, nonAbpSearcher, new ResponseStub(List(addr1Ar)), ec, cc)
+        val addressLookupController = new AddressLookupIdController(abpSearcher, new ResponseStub(List(addr1Ar)), ec, cc)
         val request = FakeRequest("GET", "http://localhost:9000/v2/uk/addresses/GB123456").withHeadersOrigin
 
         val result = await(addressLookupController.findByIdRequest(request, "GB123456"))
@@ -96,7 +96,7 @@ class AddressLookupIdControllerTest extends AnyWordSpec with Matchers with Scala
        and log the lookup including the size=0
       """ in new Context {
         when(abpSearcher.findID("GB1010101010")) thenReturn Future(List())
-        val addressLookupController = new AddressLookupIdController(abpSearcher, nonAbpSearcher, new ResponseStub(Nil), ec, cc)
+        val addressLookupController = new AddressLookupIdController(abpSearcher, new ResponseStub(Nil), ec, cc)
         val request = FakeRequest("GET", "http://localhost:9000/v2/uk/addresses/GB1010101010").withHeadersOrigin
 
         val result = await(addressLookupController.findByIdRequest(request, "GB1010101010"))

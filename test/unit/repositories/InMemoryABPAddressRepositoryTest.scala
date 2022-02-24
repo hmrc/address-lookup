@@ -22,13 +22,12 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.test.Helpers._
-import services.AddressLookupService
 
-class ABPAddressLookupRepositoryTest extends AnyWordSpec with Matchers with GuiceOneAppPerSuite {
+class InMemoryABPAddressRepositoryTest extends AnyWordSpec with Matchers with GuiceOneAppPerSuite {
 
   "AddressLookupService" when {
 
-    val lookupService = app.injector.instanceOf[AddressLookupService]
+    val lookupService = app.injector.instanceOf[ABPAddressRepository]
 
     "findID is called with an id but no filter" should {
       "return an address when a matching one is found" in {
