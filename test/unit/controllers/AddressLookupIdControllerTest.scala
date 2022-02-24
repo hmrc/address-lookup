@@ -25,7 +25,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import repositories.{ABPAddressLookupRepository, NonABPAddressLookupRepository}
+import repositories.{PostgresABPAddressRepository, PostgresNonABPAddressRepository}
 import services.{ReferenceData, ResponseProcessor}
 import uk.gov.hmrc.http.UpstreamErrorResponse
 import util.Utils._
@@ -54,8 +54,8 @@ class AddressLookupIdControllerTest extends AnyWordSpec with Matchers with Scala
   }
 
   class Context {
-    val abpSearcher = mock[ABPAddressLookupRepository]
-    val nonAbpSearcher = mock[NonABPAddressLookupRepository]
+    val abpSearcher = mock[PostgresABPAddressRepository]
+    val nonAbpSearcher = mock[PostgresNonABPAddressRepository]
   }
 
   "postcode lookup" should {

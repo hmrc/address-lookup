@@ -22,14 +22,11 @@ import doobie.implicits._
 import doobie.util.fragment.Fragment
 import model.internal.NonUKAddress
 import model.response.SupportedCountryCodes
-import services.NonABPAddressSearcher
 
 import javax.inject.Inject
 import scala.concurrent.Future
 
-class NonABPAddressLookupRepository @Inject()(transactor: Transactor[IO], queryConfig: RdsQueryConfig, supportedCountryCodes: SupportedCountryCodes) extends NonABPAddressSearcher {
-
-  override def supportedCountries: SupportedCountryCodes = supportedCountryCodes
+class PostgresNonABPAddressRepository @Inject()(transactor: Transactor[IO]) extends NonABPAddressRepository {
 
   override def findInCountry(countryCode: String, filter: String): Future[List[NonUKAddress]] = {
       Fragment.const(

@@ -26,16 +26,17 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.test.Helpers._
+import repositories.ABPAddressRepository
 
 import scala.concurrent.Future
 
-class AddressSearcherMetricsTest extends AnyWordSpec with Matchers with MockitoSugar {
+class ABPAddressRepositoryMetricsTest extends AnyWordSpec with Matchers with MockitoSugar {
 
   val dummyGBDbAddr1 = DbAddress("GB123456", 123456L, None, None, None, List("Line1", "Line2", "Line3"), "ATOWN", "FX30 4HG", Some("GB-ENG"), Some("GB"), Some(4510), Some("en"), None, Some("12.34567,-12.34567"))
   implicit val ec = scala.concurrent.ExecutionContext.global
 
   class TestContext {
-    val peer = mock[AddressLookupService]
+    val peer = mock[ABPAddressRepository]
 
     val context = mock[Context]
 
@@ -45,7 +46,7 @@ class AddressSearcherMetricsTest extends AnyWordSpec with Matchers with MockitoS
     val registry = mock[MetricRegistry]
     when(registry.timer(anyString())) thenReturn timer
 
-    val asm = new AddressSearcherMetrics(peer, registry, ec)
+    val asm = new ABPAddressRepositoryMetrics(peer, registry, ec)
   }
 
   "AddressSearchMetrics" when {

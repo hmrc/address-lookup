@@ -28,8 +28,8 @@ import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.ws.WSClient
 import play.inject.Bindings
-import repositories.InMemoryAddressLookupRepository.{dbAddresses, doFilter}
-import services.AddressLookupService
+import repositories.InMemoryAddressTestData.{dbAddresses, doFilter}
+import repositories.{ABPAddressRepository, InMemoryABPAddressRepository}
 
 import scala.concurrent.Future
 
@@ -38,11 +38,11 @@ class MetricsSuiteV2()
 
   private val className = "AddressLookupService"
 
-  val repository: AddressLookupService = mock[AddressLookupService]
+  val repository: InMemoryABPAddressRepository = mock[InMemoryABPAddressRepository]
   override def fakeApplication(): Application = {
     SharedMetricRegistries.clear()
     new GuiceApplicationBuilder()
-        .overrides(Bindings.bind(classOf[AddressLookupService]).toInstance(repository))
+        .overrides(Bindings.bind(classOf[InMemoryABPAddressRepository]).toInstance(repository))
         .build()
   }
 

@@ -23,15 +23,14 @@ import doobie.implicits._
 import doobie.util.fragment
 import model.address.{Outcode, Postcode}
 import model.internal.{DbAddress, SqlDbAddress}
-import services.ABPAddressSearcher
 
 import javax.inject.Inject
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class ABPAddressLookupRepository @Inject()(transactor: Transactor[IO], queryConfig: RdsQueryConfig) extends ABPAddressSearcher {
+class PostgresABPAddressRepository @Inject()(transactor: Transactor[IO], queryConfig: RdsQueryConfig) extends ABPAddressRepository {
 
-  import ABPAddressLookupRepository._
+  import PostgresABPAddressRepository._
 
   override def findID(id: String): Future[List[DbAddress]] = findUprn(cleanUprn(id))
 
@@ -106,7 +105,7 @@ class ABPAddressLookupRepository @Inject()(transactor: Transactor[IO], queryConf
   }
 }
 
-object ABPAddressLookupRepository {
+object PostgresABPAddressRepository {
   private val baseQuery =
     sql"""SELECT
          |uprn,

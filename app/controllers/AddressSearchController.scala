@@ -18,10 +18,12 @@ package controllers
 
 import model.address.{AddressRecord, Postcode}
 import model.request.{LookupByCountryRequest, LookupByPostTownRequest, LookupByPostcodeRequest, LookupByUprnRequest}
+import model.response.SupportedCountryCodes
 import model.{AddressSearchAuditEvent, AddressSearchAuditEventMatchedAddress, AddressSearchAuditEventRequestDetails}
 import play.api.libs.json.{JsError, JsSuccess, Json}
 import play.api.mvc._
-import services.{ABPAddressSearcher, NonABPAddressSearcher, ResponseProcessor}
+import repositories.{ABPAddressRepository, NonABPAddressRepository}
+import services.ResponseProcessor
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
@@ -30,9 +32,9 @@ import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
-class AddressSearchController @Inject()(addressSearch: ABPAddressSearcher, nonABPAddressSearcher: NonABPAddressSearcher,
+class AddressSearchController @Inject()(addressSearch: ABPAddressRepository, nonABPAddressSearcher: NonABPAddressRepository,
                                         responseProcessor: ResponseProcessor, auditConnector: AuditConnector, ec: ExecutionContext,
-                                        cc: ControllerComponents)
+                                        cc: ControllerComponents, supportedCountryCodes: SupportedCountryCodes)
   extends AddressController(cc) {
 
   import model.AddressSearchAuditEvent._
@@ -82,7 +84,7 @@ class AddressSearchController @Inject()(addressSearch: ABPAddressSearcher, nonAB
 
   def supportedCountries(): Action[AnyContent] = Action.async {
     import model.response.SupportedCountryCodes._
-    Future.successful(Ok(Json.toJson(nonABPAddressSearcher.supportedCountries)))
+    Future.successful(Ok(Json.toJson(supportedCountryCodes)))
   }
 
   def searchByCountry(countryCode: String): Action[String] = Action.async(parse.tolerantText) {
@@ -171,11 +173,11 @@ class AddressSearchController @Inject()(addressSearch: ABPAddressSearcher, nonAB
       Future.successful {
         badRequest("BAD-COUNTRYCODE", "origin" -> origin, "error" -> s"missing or badly-formed country code")
       }
-    } else if (nonABPAddressSearcher.supportedCountries.abp.contains(countryCode)) {
+    } else if (supportedCountryCodes.abp.contains(countryCode)) {
       Future.successful {
         badRequest("ABP-COUNTRYCODE", "origin" -> origin, "error" -> s"country code $countryCode is abp.")
       }
-    } else if (!nonABPAddressSearcher.supportedCountries.nonAbp.contains(countryCode)) {
+    } else if (!supportedCountryCodes.nonAbp.contains(countryCode)) {
       Future.successful {
         notFound("UNSUPPORTED-COUNTRYCODE", "origin" -> origin, "error" -> s"country code  $countryCode unsupported")
       }

@@ -22,10 +22,11 @@ import com.codahale.metrics.{MetricRegistry, Timer}
 import model.address.{Outcode, Postcode}
 import model.internal.{DbAddress, NonUKAddress}
 import model.response
+import repositories.{ABPAddressRepository, NonABPAddressRepository}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class AddressSearcherMetrics(peer: ABPAddressSearcher with NonABPAddressSearcher, registry: MetricRegistry, ec: ExecutionContext) extends ABPAddressSearcher with NonABPAddressSearcher {
+class ABPAddressRepositoryMetrics(peer: ABPAddressRepository, registry: MetricRegistry, ec: ExecutionContext) extends ABPAddressRepository {
 
   private implicit val xec = ec
 
@@ -73,15 +74,6 @@ class AddressSearcherMetrics(peer: ABPAddressSearcher with NonABPAddressSearcher
     val context = findOutcodeTimer.time()
     peer.findOutcode(outcode, filterStr) map (timerStop(context, _))
   }
-
-  override def supportedCountries: response.SupportedCountryCodes = {
-    val context = supportedCountriesTimer.time()
-    timerStop(context, peer.supportedCountries)
-  }
-
-
-  override def findInCountry(countryCode: String, filter: String): Future[List[NonUKAddress]] = {
-    val context = findInCountryTimer.time()
-    peer.findInCountry(countryCode, filter) map (timerStop(context, _))
-  }
 }
+
+

@@ -30,19 +30,19 @@ import play.api.libs.json.{JsArray, Json}
 import play.api.libs.ws.WSClient
 import play.api.test.Helpers._
 import play.inject.Bindings
-import repositories.InMemoryAddressLookupRepository.{dbAddresses, doFilter}
-import services.AddressLookupService
+import repositories.ABPAddressRepository
+import repositories.InMemoryAddressTestData.{dbAddresses, doFilter}
 
 import scala.concurrent.Future
 
 class TownLookupPostSuite()
   extends AnyWordSpec with GuiceOneServerPerSuite with AppServerTestApi {
 
-  val repository: AddressLookupService = mock[AddressLookupService]
+  val repository: ABPAddressRepository = mock[ABPAddressRepository]
   override def fakeApplication(): Application = {
     SharedMetricRegistries.clear()
     new GuiceApplicationBuilder()
-        .overrides(Bindings.bind(classOf[AddressLookupService]).toInstance(repository))
+        .overrides(Bindings.bind(classOf[ABPAddressRepository]).toInstance(repository))
         .build()
   }
 

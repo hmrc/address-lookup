@@ -31,20 +31,20 @@ import play.api.libs.json.Json
 import play.api.libs.ws.WSClient
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import play.inject.Bindings
-import repositories.InMemoryAddressLookupRepository.nonUKAddress
-import services.AddressLookupService
+import repositories.InMemoryAddressTestData.nonUKAddress
+import repositories.NonABPAddressRepository
 
 import scala.concurrent.Future
 
 class CountryLookupSuiteV2()
   extends AnyWordSpec with GuiceOneServerPerSuite with AppServerTestApi {
 
-  val repository: AddressLookupService = mock[AddressLookupService]
+  val repository: NonABPAddressRepository = mock[NonABPAddressRepository]
 
   override def fakeApplication(): Application = {
     SharedMetricRegistries.clear()
     new GuiceApplicationBuilder()
-      .overrides(Bindings.bind(classOf[AddressLookupService]).toInstance(repository))
+      .overrides(Bindings.bind(classOf[NonABPAddressRepository]).toInstance(repository))
       .build()
   }
 

@@ -19,8 +19,10 @@ package it.suites
 import com.codahale.metrics.SharedMetricRegistries
 import it.helper.AppServerTestApi
 import model.address.{AddressRecord, Postcode}
-import org.mockito.ArgumentMatchers.{eq => meq}
-import org.mockito.Mockito.when
+import org.mockito.ArgumentMatchers.{any, eq => meq}
+import org.mockito.Mockito
+import org.mockito.Mockito.{times, when}
+import org.mockito.internal.verification.Times
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
@@ -30,8 +32,8 @@ import play.api.libs.json.{JsArray, Json}
 import play.api.libs.ws.WSClient
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import play.inject.Bindings
-import repositories.InMemoryAddressLookupRepository.{dbAddresses, doFilter}
-import services.AddressLookupService
+import repositories.ABPAddressRepository
+import repositories.InMemoryAddressTestData.{dbAddresses, doFilter}
 
 import scala.concurrent.Future
 
@@ -42,11 +44,12 @@ class PostcodeLookupSuiteV2 ()
 
   private val largePostcodeExampleSize = 2517
 
-  val repository: AddressLookupService = mock[AddressLookupService]
+  val repository: ABPAddressRepository = mock[ABPAddressRepository]
+
   override def fakeApplication(): Application = {
     SharedMetricRegistries.clear()
     new GuiceApplicationBuilder()
-        .overrides(Bindings.bind(classOf[AddressLookupService]).toInstance(repository))
+        .overrides(Bindings.bind(classOf[ABPAddressRepository]).toInstance(repository))
         .build()
   }
 
@@ -59,11 +62,13 @@ class PostcodeLookupSuiteV2 ()
     "successful" should {
 
       "give a successful response for a known postcode - uk route" in {
-        when(repository.findPostcode(meq(Postcode("fx1 9py")), meq(None))).thenReturn(
+        when(repository.findPostcode(any(), any())).thenReturn(
           Future.successful(dbAddresses.filter(_.postcode == "FX1 9PY").toList))
 
         val response = post("/lookup", """{"postcode":"fx1 9py"}""")
         response.status shouldBe OK
+
+        Mockito.verify(repository, times(1)).findPostcode(meq(Postcode("fx1 9py")), meq(None))
       }
 
       "give a successful response for a known postcode - old style 'X-Origin'" in {
