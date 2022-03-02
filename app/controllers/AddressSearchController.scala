@@ -176,11 +176,11 @@ class AddressSearchController @Inject()(addressSearch: ABPAddressRepository, non
       }
     } else if (supportedCountryCodes.abp.contains(countryCode)) {
       Future.successful {
-        badRequest("ABP-COUNTRYCODE", "origin" -> origin, "error" -> s"country code $countryCode is abp.")
+        badRequest("ABP-COUNTRYCODE", "origin" -> origin, "error" -> s"country code is abp.")
       }
     } else if (!supportedCountryCodes.nonAbp.contains(countryCode)) {
       Future.successful {
-        notFound("UNSUPPORTED-COUNTRYCODE", "origin" -> origin, "error" -> s"country code  $countryCode unsupported")
+        notFound("UNSUPPORTED-COUNTRYCODE", "origin" -> origin, "error" -> s"country code unsupported")
       }
     } else {
       import model.internal.NonUKAddress._
