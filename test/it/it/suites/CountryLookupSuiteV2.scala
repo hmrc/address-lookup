@@ -19,9 +19,12 @@ package it.suites
 import com.codahale.metrics.SharedMetricRegistries
 import it.helper.AppServerTestApi
 import it.suites.Fixtures.{nukdb_fx1, nukdb_fx2}
+import model.{NonUKAddressSearchAuditEvent, NonUKAddressSearchAuditEventMatchedAddress, NonUKAddressSearchAuditEventRequestDetails}
 import model.internal.NonUKAddress
-import org.mockito.ArgumentMatchers.{eq => meq}
-import org.mockito.Mockito.when
+import org.mockito.ArgumentMatchers.{any, eq => meq}
+import org.mockito.Mockito
+import org.mockito.Mockito.{verify, _}
+import org.mockito.internal.verification._
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
@@ -33,6 +36,7 @@ import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import play.inject.Bindings
 import repositories.InMemoryAddressTestData.nonUKAddress
 import repositories.NonABPAddressRepository
+import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 
 import scala.concurrent.Future
 
@@ -40,11 +44,13 @@ class CountryLookupSuiteV2()
   extends AnyWordSpec with GuiceOneServerPerSuite with AppServerTestApi {
 
   val repository: NonABPAddressRepository = mock[NonABPAddressRepository]
+  val auditConnector: AuditConnector = mock[AuditConnector]
 
   override def fakeApplication(): Application = {
     SharedMetricRegistries.clear()
     new GuiceApplicationBuilder()
       .overrides(Bindings.bind(classOf[NonABPAddressRepository]).toInstance(repository))
+      .overrides(Bindings.bind(classOf[AuditConnector]).toInstance(auditConnector))
       .build()
   }
 
@@ -70,6 +76,16 @@ class CountryLookupSuiteV2()
         c.get should include("max-age=")
 
         response.status shouldBe OK
+
+        val expectedAuditValues = NonUKAddressSearchAuditEvent(Some("xyz"),
+          NonUKAddressSearchAuditEventRequestDetails(Some("HM02")),6,List(
+            NonUKAddressSearchAuditEventMatchedAddress("11781",Some("1"),Some("Abri Lane"),None,None,Some("Pembroke"),None,Some("HM02"),"bm"),
+            NonUKAddressSearchAuditEventMatchedAddress("13731",Some("11"),Some("Abri Lane"),None,None,Some("Pembroke"),None,Some("HM02"),"bm"),
+            NonUKAddressSearchAuditEventMatchedAddress("9260",Some("10"),Some("Arlington Avenue"),None,None,Some("Pembroke"),None,Some("HM02"),"bm"),
+            NonUKAddressSearchAuditEventMatchedAddress("15989",Some("5"),Some("Abri Lane"),None,None,Some("Pembroke"),None,Some("HM02"),"bm"),
+            NonUKAddressSearchAuditEventMatchedAddress("15059",Some("3"),Some("Abri Lane"),None,None,Some("Pembroke"),None,Some("HM02"),"bm"),
+            NonUKAddressSearchAuditEventMatchedAddress("9259",Some("12"),Some("Arlington Avenue"),None,None,Some("Pembroke"),None,Some("HM02"),"bm")))
+        Mockito.verify(auditConnector).sendExplicitAudit(meq("NonUKAddressSearch"), meq(expectedAuditValues))(any(),any(),any())
       }
 
       "give a successful response for an unknown postcode" in {
