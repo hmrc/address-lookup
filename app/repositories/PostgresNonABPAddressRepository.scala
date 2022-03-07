@@ -32,8 +32,8 @@ class PostgresNonABPAddressRepository @Inject()(transactor: Transactor[IO]) exte
       Fragment.const(
         s"""
            |SELECT id, number, street, unit, city, district, region, postcode
-           |FROM ${countryCode}
-           |WHERE address_lookup_ft_col @@ plainto_tsquery('english', ${filter})
+           |FROM $countryCode
+           |WHERE address_lookup_ft_col @@ plainto_tsquery('english', '$filter')
            |""".stripMargin)
         .query[NonUKAddress]
         .to[List]
