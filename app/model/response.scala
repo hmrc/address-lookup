@@ -38,5 +38,6 @@ object response {
     }
 
     implicit val writes: Writes[SupportedCountryCodes] = Json.writes[SupportedCountryCodes]
+    implicit val reads: Reads[SupportedCountryCodes] = Json.reads[SupportedCountryCodes]
   }
 }
