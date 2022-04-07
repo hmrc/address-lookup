@@ -79,12 +79,12 @@ class CountryLookupSuiteV2()
 
         val expectedAuditValues = NonUKAddressSearchAuditEvent(Some("xyz"),
           NonUKAddressSearchAuditEventRequestDetails(Some("HM02")),6,List(
-            NonUKAddressSearchAuditEventMatchedAddress("11781",Some("1"),Some("Abri Lane"),None,None,Some("Pembroke"),None,Some("HM02"),"bm"),
-            NonUKAddressSearchAuditEventMatchedAddress("13731",Some("11"),Some("Abri Lane"),None,None,Some("Pembroke"),None,Some("HM02"),"bm"),
-            NonUKAddressSearchAuditEventMatchedAddress("9260",Some("10"),Some("Arlington Avenue"),None,None,Some("Pembroke"),None,Some("HM02"),"bm"),
-            NonUKAddressSearchAuditEventMatchedAddress("15989",Some("5"),Some("Abri Lane"),None,None,Some("Pembroke"),None,Some("HM02"),"bm"),
-            NonUKAddressSearchAuditEventMatchedAddress("15059",Some("3"),Some("Abri Lane"),None,None,Some("Pembroke"),None,Some("HM02"),"bm"),
-            NonUKAddressSearchAuditEventMatchedAddress("9259",Some("12"),Some("Arlington Avenue"),None,None,Some("Pembroke"),None,Some("HM02"),"bm")))
+            NonUKAddressSearchAuditEventMatchedAddress(Some("11781"), Some("1"), Some("Abri Lane"), None, None, Some("Pembroke"), None, Some("HM02"), "bm"),
+            NonUKAddressSearchAuditEventMatchedAddress(Some("13731"), Some("11"), Some("Abri Lane"), None, None, Some("Pembroke"), None, Some("HM02"), "bm"),
+            NonUKAddressSearchAuditEventMatchedAddress(Some("9260"), Some("10"), Some("Arlington Avenue"), None, None, Some("Pembroke"), None, Some("HM02"), "bm"),
+            NonUKAddressSearchAuditEventMatchedAddress(Some("15989"), Some("5"), Some("Abri Lane"), None, None, Some("Pembroke"), None, Some("HM02"), "bm"),
+            NonUKAddressSearchAuditEventMatchedAddress(Some("15059"), Some("3"), Some("Abri Lane"), None, None, Some("Pembroke"), None, Some("HM02"), "bm"),
+            NonUKAddressSearchAuditEventMatchedAddress(Some("9259"), Some("12"), Some("Arlington Avenue"), None, None, Some("Pembroke"), None, Some("HM02"), "bm")))
         Mockito.verify(auditConnector).sendExplicitAudit(meq("NonUKAddressSearch"), meq(expectedAuditValues))(any(),any(),any())
       }
 

@@ -72,7 +72,7 @@ object Fixtures {
   val id5 = "GB55555"
 
   // non-uk samples used in tests
-  val nukdb_fx1 = NonUKAddress("32714", Some("15"), Some("Allspice Gardens"), None, None, Some("Warwick"), None, Some("WK04"))
-  val nukdb_fx2 = NonUKAddress("12256", Some("14"), Some("Bayfield Road"), None, None, Some("Warwick"), None, Some("WK04"))
+  val nukdb_fx1 = NonUKAddress(Some("32714"), Some("15"), Some("Allspice Gardens"), None, None, Some("Warwick"), None, Some("WK04"))
+  val nukdb_fx2 = NonUKAddress(Some("12256"), Some("14"), Some("Bayfield Road"), None, None, Some("Warwick"), None, Some("WK04"))
 
 }
