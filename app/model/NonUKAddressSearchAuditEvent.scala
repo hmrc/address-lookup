@@ -19,15 +19,7 @@ package model
 import play.api.libs.json._
 import play.api.libs.json.Json
 
-case class NonUKAddressSearchAuditEventMatchedAddress(id: String,
-                                                      number: Option[String],
-                                                      street: Option[String],
-                                                      unit: Option[String],
-                                                      city: Option[String],
-                                                      district: Option[String],
-                                                      region: Option[String],
-                                                      postCode: Option[String],
-                                                      country: String)
+case class NonUKAddressSearchAuditEventMatchedAddress(id: Option[String], number: Option[String], street: Option[String], unit: Option[String], city: Option[String], district: Option[String], region: Option[String], postCode: Option[String], country: String)
 
 case class NonUKAddressSearchAuditEventRequestDetails(filter: Option[String])
 
