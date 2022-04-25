@@ -29,18 +29,17 @@ class PostgresNonABPAddressRepository @Inject()(transactor: Transactor[IO], quer
 
   override def findInCountry(countryCode: String, filter: String): Future[List[NonUKAddress]] = {
     val timeLimit = csql(s"SET statement_timeout=${queryConfig.queryTimeoutMillis};")
-    val limitSql = csql(s" LIMIT ${queryConfig.queryResultsLimit};")
 
     val querySql = csql(
       s"""
          |SELECT id, number, street, unit, city, district, region, postcode
-         |FROM $countryCode
-         |WHERE address_lookup_ft_col @@ plainto_tsquery('english', '$filter');
-         |""".stripMargin)
+         |  FROM $countryCode
+         | WHERE address_lookup_ft_col @@ plainto_tsquery('english', '$filter')
+         | LIMIT ${queryConfig.queryResultsLimit};""".stripMargin)
 
     (for {
-        _     <- timeLimit.update.run.transact(transactor)
-        res   <- (querySql ++ limitSql).query[NonUKAddress].to[List].transact(transactor)
-      } yield res).unsafeToFuture()
+      _     <- timeLimit.update.run.transact(transactor)
+      res   <- querySql.query[NonUKAddress].to[List].transact(transactor)
+    } yield res).unsafeToFuture()
   }
 }
