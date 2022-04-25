@@ -19,9 +19,8 @@ package repositories
 import cats.effect.IO
 import doobie.Transactor
 import doobie.implicits._
-import doobie.util.fragment.Fragment
+import doobie.util.fragment.Fragment.{const => csql}
 import model.internal.NonUKAddress
-import model.response.SupportedCountryCodes
 
 import javax.inject.Inject
 import scala.concurrent.Future
@@ -29,20 +28,19 @@ import scala.concurrent.Future
 class PostgresNonABPAddressRepository @Inject()(transactor: Transactor[IO], queryConfig: RdsQueryConfig) extends NonABPAddressRepository {
 
   override def findInCountry(countryCode: String, filter: String): Future[List[NonUKAddress]] = {
-    val timeLimit = Fragment(s"SET statement_timeout=${queryConfig.queryTimeoutMillis};", List())
-    val limitSql = Fragment(s" LIMIT ${queryConfig.queryResultsLimit};", List())
+    val timeLimit = csql(s"SET statement_timeout=${queryConfig.queryTimeoutMillis};")
+    val limitSql = csql(s" LIMIT ${queryConfig.queryResultsLimit};")
 
-    (timeLimit ++
-    Fragment.const(
+    val querySql = csql(
       s"""
          |SELECT id, number, street, unit, city, district, region, postcode
          |FROM $countryCode
          |WHERE address_lookup_ft_col @@ plainto_tsquery('english', '$filter');
          |""".stripMargin)
-      ++ limitSql)
-      .query[NonUKAddress]
-        .to[List]
-        .transact(transactor)
-        .unsafeToFuture()
+
+    (for {
+        _     <- timeLimit.update.run.transact(transactor)
+        res   <- (querySql ++ limitSql).query[NonUKAddress].to[List].transact(transactor)
+      } yield res).unsafeToFuture()
   }
 }
