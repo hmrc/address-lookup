@@ -68,14 +68,15 @@ class Module(environment: Environment, configuration: Configuration) extends Abs
   @Provides
   @Singleton
   def provideNonAbpAddressRepository(metrics: Metrics, configuration: Configuration, configHelper: ConfigHelper,
-                                     executionContext: ExecutionContext, applicationLifecycle: ApplicationLifecycle,
+                                     rdsQueryConfig: RdsQueryConfig, executionContext: ExecutionContext,
+                                     applicationLifecycle: ApplicationLifecycle,
                                      inMemoryNonABPAddressRepository: InMemoryNonABPAddressRepository): NonABPAddressRepository = {
 
     val dbEnabled = isDbEnabled(configHelper)
 
     val repository: NonABPAddressRepository = if (dbEnabled) {
       val transactor = new TransactorProvider(configuration, applicationLifecycle).get(executionContext)
-      new PostgresNonABPAddressRepository(transactor)
+      new PostgresNonABPAddressRepository(transactor, rdsQueryConfig)
     } else {
       inMemoryNonABPAddressRepository
     }

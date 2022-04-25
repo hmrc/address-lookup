@@ -26,15 +26,20 @@ import model.response.SupportedCountryCodes
 import javax.inject.Inject
 import scala.concurrent.Future
 
-class PostgresNonABPAddressRepository @Inject()(transactor: Transactor[IO]) extends NonABPAddressRepository {
+class PostgresNonABPAddressRepository @Inject()(transactor: Transactor[IO], queryConfig: RdsQueryConfig) extends NonABPAddressRepository {
 
   override def findInCountry(countryCode: String, filter: String): Future[List[NonUKAddress]] = {
+    val timeLimit = Fragment(s"SET statement_timeout=${queryConfig.queryTimeoutMillis};", List())
+    val limitSql = Fragment(s" LIMIT ${queryConfig.queryResultsLimit};", List())
+
+    (timeLimit ++
     Fragment.const(
       s"""
          |SELECT id, number, street, unit, city, district, region, postcode
          |FROM $countryCode
-         |WHERE address_lookup_ft_col @@ plainto_tsquery('english', '$filter')
+         |WHERE address_lookup_ft_col @@ plainto_tsquery('english', '$filter');
          |""".stripMargin)
+      ++ limitSql)
       .query[NonUKAddress]
         .to[List]
         .transact(transactor)
