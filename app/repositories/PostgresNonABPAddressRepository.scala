@@ -32,7 +32,7 @@ class PostgresNonABPAddressRepository @Inject()(transactor: Transactor[IO], quer
 
     val querySql = csql(
       s"""
-         |SELECT CONCAT('${countryCode.toUpperCase}', hash), number, street, unit, city, district, region, postcode
+         |SELECT cip_id, number, street, unit, city, district, region, postcode
          |  FROM $countryCode
          | WHERE address_lookup_ft_col @@ plainto_tsquery('english', '$filter')
          | LIMIT ${queryConfig.queryResultsLimit};""".stripMargin)
