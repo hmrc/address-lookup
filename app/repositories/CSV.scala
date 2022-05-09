@@ -51,7 +51,7 @@ object CSV {
       throw new RuntimeException("Incorrect input line: " + line.mkString)
     } else {
       val country = line(9)
-      val id: Option[String] = line(0).emptyToNone.map(h => s"${country.toUpperCase}$h")
+      val id: Option[String] = line(0).emptyToNone
       val number: Option[String] = line(1).emptyToNone
       val street: Option[String] = line(2).emptyToNone
       val unit: Option[String] = line(3).emptyToNone
