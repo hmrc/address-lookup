@@ -34,7 +34,7 @@ class PostgresNonABPAddressRepository @Inject()(transactor: Transactor[IO], quer
       s"""
          |SELECT cip_id, number, street, unit, city, district, region, postcode
          |  FROM $countryCode
-         | WHERE address_lookup_ft_col @@ plainto_tsquery('english', '$filter')
+         | WHERE nonuk_address_lookup_ft_col @@ plainto_tsquery('english', '$filter')
          | LIMIT ${queryConfig.queryResultsLimit};""".stripMargin)
 
     (for {
