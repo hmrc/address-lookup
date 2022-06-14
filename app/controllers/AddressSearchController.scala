@@ -195,6 +195,9 @@ class AddressSearchController @Inject()(addressSearch: ABPAddressRepository, non
           auditNonUKAddressSearch(userAgent, a, countryCode, Option(filter))
           logEvent("LOOKUP", origin, a.size, List("countryCode" -> countryCode, "filter" -> filter))
           Ok(Json.toJson(a))
+      }.recover{
+        case e: Throwable => logEvent("LOOKUP-NONUK-ERROR", "errorMessage" -> e.getMessage)
+          ExpectationFailed
       }
     }
   }
