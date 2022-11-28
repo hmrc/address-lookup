@@ -43,6 +43,7 @@ import util.Utils._
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
+import scala.util.Success
 
 class AddressSearchControllerTest extends AnyWordSpec with Matchers with GuiceOneAppPerSuite with MockitoSugar {
 

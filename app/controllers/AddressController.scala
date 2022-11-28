@@ -22,6 +22,9 @@ import play.api.mvc.{ControllerComponents, Headers, Result}
 import uk.gov.hmrc.http.UpstreamErrorResponse
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
+import scala.concurrent.Future
+import scala.util.Try
+
 abstract class AddressController(cc: ControllerComponents) extends BackendController(cc) {
 
   private val logger = Logger(this.getClass.getSimpleName)
