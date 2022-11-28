@@ -24,7 +24,9 @@ import repositories._
 import services.{ABPAddressRepositoryMetrics, NonABPAddressRepositoryMetrics, ReferenceData}
 
 import javax.inject.Singleton
-import scala.concurrent.ExecutionContext
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Try
 
 class Module(environment: Environment, configuration: Configuration) extends AbstractModule {
 
@@ -64,6 +66,14 @@ class Module(environment: Environment, configuration: Configuration) extends Abs
 
     new ABPAddressRepositoryMetrics(repository, metrics.defaultRegistry, executionContext)
   }
+
+  @Provides
+  def provideCIPPostgresConnectionTestResult(executionContext: ExecutionContext,
+                                             applicationLifecycle: ApplicationLifecycle): Try[Future[Int]] =
+    Try {
+      val transactor = new TransactorProvider(configuration, applicationLifecycle, "cip-address-lookup-rds").get(executionContext)
+      new CIPPostgresABPAddressRepository(transactor).testConnection
+    }
 
   @Provides
   @Singleton

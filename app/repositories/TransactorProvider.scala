@@ -25,12 +25,12 @@ import play.api.inject.ApplicationLifecycle
 import java.util.concurrent.Executors
 import scala.concurrent.ExecutionContext
 
-class TransactorProvider (configuration: Configuration, applicationLifecycle: ApplicationLifecycle) {
+class TransactorProvider (configuration: Configuration, applicationLifecycle: ApplicationLifecycle, val configPath: String = "address-lookup-rds") {
 
   def get(ec: ExecutionContext): Transactor[IO] = {
     implicit val cs: ContextShift[IO] = IO.contextShift(ec)
 
-    val dbConfig = configuration.get[Configuration]("address-lookup-rds")
+    val dbConfig = configuration.get[Configuration](configPath)
 
     val hikariTransactorResource = HikariTransactor.newHikariTransactor[IO](
       dbConfig.get[String]("driver"),
