@@ -17,7 +17,6 @@
 package repositories
 
 import cats.effect.IO
-import config.Capitalisation._
 import doobie.Transactor
 import doobie.implicits._
 import play.api.Logger

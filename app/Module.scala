@@ -56,9 +56,16 @@ class Module(environment: Environment, configuration: Configuration) extends Abs
                                   inMemoryABPAddressRepository: InMemoryABPAddressRepository): ABPAddressRepository = {
 
     val dbEnabled = isDbEnabled(configHelper)
+    val cipPaasDbEnabled = isCipPaasDbEnabled(configHelper)
 
     val repository: ABPAddressRepository = if (dbEnabled) {
-      val transactor = new TransactorProvider(configuration, applicationLifecycle).get(executionContext)
+      val transactor = if (cipPaasDbEnabled) {
+        new TransactorProvider(configuration, applicationLifecycle, "cip-address-lookup-rds").get(executionContext)
+      }
+      else {
+        new TransactorProvider(configuration, applicationLifecycle).get(executionContext)
+      }
+
       new PostgresABPAddressRepository(transactor, rdsQueryConfig)
     } else {
       inMemoryABPAddressRepository
@@ -97,6 +104,9 @@ class Module(environment: Environment, configuration: Configuration) extends Abs
 
   private def isDbEnabled(configHelper: ConfigHelper): Boolean =
     configHelper.getConfigString("address-lookup-rds.enabled").getOrElse("false").toBoolean
+
+  private def isCipPaasDbEnabled(configHelper: ConfigHelper): Boolean =
+    configHelper.getConfigString("cip-address-lookup-rds.enabled").getOrElse("false").toBoolean
 
   @Provides
   @Singleton
