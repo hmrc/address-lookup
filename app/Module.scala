@@ -90,9 +90,16 @@ class Module(environment: Environment, configuration: Configuration) extends Abs
                                      inMemoryNonABPAddressRepository: InMemoryNonABPAddressRepository): NonABPAddressRepository = {
 
     val dbEnabled = isDbEnabled(configHelper)
+    val cipPaasDbEnabled = isCipPaasDbEnabled(configHelper)
 
     val repository: NonABPAddressRepository = if (dbEnabled) {
-      val transactor = new TransactorProvider(configuration, applicationLifecycle).get(executionContext)
+      val transactor = if (cipPaasDbEnabled) {
+        new TransactorProvider(configuration, applicationLifecycle, "cip-address-lookup-rds").get(executionContext)
+      }
+      else {
+        new TransactorProvider(configuration, applicationLifecycle).get(executionContext)
+      }
+
       new PostgresNonABPAddressRepository(transactor, rdsQueryConfig)
     } else {
       inMemoryNonABPAddressRepository
