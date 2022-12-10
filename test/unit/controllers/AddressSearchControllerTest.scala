@@ -36,14 +36,13 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import play.api.{Application, inject}
 import repositories.{ABPAddressRepository, NonABPAddressRepository, PostgresABPAddressRepository, PostgresNonABPAddressRepository}
-import services.{ReferenceData, ResponseProcessor}
+import services.{CheckAddressDataScheduler, ReferenceData, ResponseProcessor}
 import uk.gov.hmrc.http.UpstreamErrorResponse
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import util.Utils._
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.util.Success
 
 class AddressSearchControllerTest extends AnyWordSpec with Matchers with GuiceOneAppPerSuite with MockitoSugar {
 
@@ -75,12 +74,16 @@ class AddressSearchControllerTest extends AnyWordSpec with Matchers with GuiceOn
   val abpSearcher: PostgresABPAddressRepository = mock[PostgresABPAddressRepository]
   val nonAbpSearcher: PostgresNonABPAddressRepository = mock[PostgresNonABPAddressRepository]
   val mockAuditConnector = mock[AuditConnector]
+  val mockCheckAddressDataScheduler = mock[CheckAddressDataScheduler]
+
+  //when(mockCheckAddressDataScheduler.enable()).thenReturn(Unit)
 
   override implicit lazy val app: Application = {
     new GuiceApplicationBuilder()
         .overrides(inject.bind[ABPAddressRepository].toInstance(abpSearcher))
         .overrides(inject.bind[NonABPAddressRepository].toInstance(nonAbpSearcher))
         .overrides(inject.bind[AuditConnector].toInstance(mockAuditConnector))
+        .overrides(inject.bind[CheckAddressDataScheduler].toInstance(mockCheckAddressDataScheduler))
         .build()
   }
 
@@ -264,7 +267,9 @@ class AddressSearchControllerTest extends AnyWordSpec with Matchers with GuiceOn
 
     "give bad request" when {
       """search is called with an invalid uprn""" in {
-        val controller = new AddressSearchController(abpSearcher, nonAbpSearcher, new ResponseStub(Nil), mockAuditConnector, ec, cc, SupportedCountryCodes(List(), List()))
+
+        val scheduler = app.injector.instanceOf[CheckAddressDataScheduler]
+        val controller = new AddressSearchController(abpSearcher, nonAbpSearcher, new ResponseStub(Nil), mockAuditConnector, ec, cc, SupportedCountryCodes(List(), List()), scheduler)
         val jsonPayload = Json.toJson(LookupByUprnRequest("GB0123456789"))
         val request = FakeRequest("POST", "/lookup/by-uprn")
         .withBody(jsonPayload.toString)

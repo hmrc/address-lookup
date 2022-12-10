@@ -41,4 +41,7 @@ class ConfigHelper @Inject() (config: Configuration, env: Environment) {
     val modeKey = s"$env.mode.$key"
     config.getOptional[String](modeKey).orElse(config.getOptional[String](key))
   }
+
+  def isCipPaasDbEnabled(): Boolean =
+    getConfigString("cip-address-lookup-rds.enabled").getOrElse("false").toBoolean
 }

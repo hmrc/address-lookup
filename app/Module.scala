@@ -56,7 +56,7 @@ class Module(environment: Environment, configuration: Configuration) extends Abs
                                   inMemoryABPAddressRepository: InMemoryABPAddressRepository): ABPAddressRepository = {
 
     val dbEnabled = isDbEnabled(configHelper)
-    val cipPaasDbEnabled = isCipPaasDbEnabled(configHelper)
+    val cipPaasDbEnabled = configHelper.isCipPaasDbEnabled()
 
     val repository: ABPAddressRepository = if (dbEnabled) {
       val transactor = if (cipPaasDbEnabled) {
@@ -90,7 +90,7 @@ class Module(environment: Environment, configuration: Configuration) extends Abs
                                      inMemoryNonABPAddressRepository: InMemoryNonABPAddressRepository): NonABPAddressRepository = {
 
     val dbEnabled = isDbEnabled(configHelper)
-    val cipPaasDbEnabled = isCipPaasDbEnabled(configHelper)
+    val cipPaasDbEnabled = configHelper.isCipPaasDbEnabled()
 
     val repository: NonABPAddressRepository = if (dbEnabled) {
       val transactor = if (cipPaasDbEnabled) {
@@ -111,9 +111,6 @@ class Module(environment: Environment, configuration: Configuration) extends Abs
 
   private def isDbEnabled(configHelper: ConfigHelper): Boolean =
     configHelper.getConfigString("address-lookup-rds.enabled").getOrElse("false").toBoolean
-
-  private def isCipPaasDbEnabled(configHelper: ConfigHelper): Boolean =
-    configHelper.getConfigString("cip-address-lookup-rds.enabled").getOrElse("false").toBoolean
 
   @Provides
   @Singleton

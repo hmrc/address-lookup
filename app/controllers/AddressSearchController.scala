@@ -20,11 +20,11 @@ import model.address.{AddressRecord, Postcode}
 import model.internal.NonUKAddress
 import model.request.{LookupByCountryRequest, LookupByPostTownRequest, LookupByPostcodeRequest, LookupByUprnRequest}
 import model.response.SupportedCountryCodes
-import model.{AddressSearchAuditEvent, AddressSearchAuditEventMatchedAddress, AddressSearchAuditEventRequestDetails, NonUKAddressSearchAuditEvent, NonUKAddressSearchAuditEventMatchedAddress, NonUKAddressSearchAuditEventRequestDetails}
+import model._
 import play.api.libs.json.{JsError, JsSuccess, Json}
 import play.api.mvc._
 import repositories.{ABPAddressRepository, NonABPAddressRepository}
-import services.ResponseProcessor
+import services.{CheckAddressDataScheduler, ResponseProcessor}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
@@ -35,12 +35,15 @@ import scala.util.{Failure, Success, Try}
 
 class AddressSearchController @Inject()(addressSearch: ABPAddressRepository, nonABPAddressSearcher: NonABPAddressRepository,
                                         responseProcessor: ResponseProcessor, auditConnector: AuditConnector, ec: ExecutionContext,
-                                        cc: ControllerComponents, supportedCountryCodes: SupportedCountryCodes, postgresTestResult: Try[Future[Int]] = Success(Future.successful(1)))
+                                        cc: ControllerComponents, supportedCountryCodes: SupportedCountryCodes,
+                                        scheduler: CheckAddressDataScheduler, postgresTestResult: Try[Future[Int]] = Success(Future.successful(1)))
   extends AddressController(cc) {
 
   import model.AddressSearchAuditEvent._
 
   implicit private val xec: ExecutionContext = ec
+
+  scheduler.enable()
 
   def search(): Action[String] = Action.async(parse.tolerantText) {
     request =>
