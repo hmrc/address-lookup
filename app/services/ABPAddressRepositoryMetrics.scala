@@ -18,11 +18,10 @@ package services
 
 import com.codahale.metrics.MetricRegistry.name
 import com.codahale.metrics.Timer.Context
-import com.codahale.metrics.{MetricRegistry, Timer}
+import com.codahale.metrics.{Meter, MetricRegistry, Timer}
 import model.address.{Outcode, Postcode}
-import model.internal.{DbAddress, NonUKAddress}
-import model.response
-import repositories.{ABPAddressRepository, NonABPAddressRepository}
+import model.internal.DbAddress
+import repositories.ABPAddressRepository
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -39,6 +38,8 @@ class ABPAddressRepositoryMetrics(peer: ABPAddressRepository, registry: MetricRe
   private val findTownFilterTimer: Timer = registry.timer(name(prefix, "findTownFilter"))
   private val findOutcodeTimer: Timer = registry.timer(name(prefix, "findOutcode"))
 
+  private val addressSearchHits: Meter = registry.meter(name(prefix, "searchResults"))
+
   private def timerStop[T](t: Context, r: T) = {
     t.stop()
     r
@@ -49,28 +50,45 @@ class ABPAddressRepositoryMetrics(peer: ABPAddressRepository, registry: MetricRe
     peer.findID(id) map {
       r =>
         context.stop()
+        addressSearchHits.mark(r.length)
         r
     }
   }
 
   override def findUprn(uprn: String): Future[List[DbAddress]] = {
     val context = findUprnTimer.time()
-    peer.findUprn(uprn) map (timerStop(context, _))
+    peer.findUprn(uprn) map { r =>
+      timerStop(context, r)
+      addressSearchHits.mark(r.length)
+      r
+    }
   }
 
   override def findPostcode(postcode: Postcode, filterStr: Option[String]): Future[List[DbAddress]] = {
     val context = if (filterStr.isDefined) findPostcodeFilterTimer.time() else findPostcodeTimer.time()
-    peer.findPostcode(postcode, filterStr) map (timerStop(context, _))
+    peer.findPostcode(postcode, filterStr) map { r =>
+      timerStop(context, r)
+      addressSearchHits.mark(r.length)
+      r
+    }
   }
 
   override def findTown(town: String, filterStr: Option[String]): Future[List[DbAddress]] = {
     val context = if (filterStr.isDefined) findTownFilterTimer.time() else findTownTimer.time()
-    peer.findTown(town, filterStr) map (timerStop(context, _))
+    peer.findTown(town, filterStr) map { r =>
+      timerStop(context, r)
+      addressSearchHits.mark(r.length)
+      r
+    }
   }
 
   override def findOutcode(outcode: Outcode, filterStr: String): Future[List[DbAddress]] = {
     val context = findOutcodeTimer.time()
-    peer.findOutcode(outcode, filterStr) map (timerStop(context, _))
+    peer.findOutcode(outcode, filterStr) map { r =>
+      timerStop(context, r)
+      addressSearchHits.mark(r.length)
+      r
+    }
   }
 }
 

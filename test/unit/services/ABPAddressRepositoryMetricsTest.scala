@@ -17,7 +17,7 @@
 package services
 
 import com.codahale.metrics.Timer.Context
-import com.codahale.metrics.{MetricRegistry, Timer}
+import com.codahale.metrics.{Meter, MetricRegistry, Timer}
 import model.address.{Outcode, Postcode}
 import model.internal.DbAddress
 import org.mockito.ArgumentMatchers.anyString
@@ -43,9 +43,12 @@ class ABPAddressRepositoryMetricsTest extends AnyWordSpec with Matchers with Moc
     val timer = mock[Timer]
     when(timer.time()) thenReturn context
 
+    val meter = mock[Meter]
+
     val registry = mock[MetricRegistry]
     when(registry.timer(anyString())) thenReturn timer
-
+    when(registry.meter(anyString())) thenReturn meter
+    
     val asm = new ABPAddressRepositoryMetrics(peer, registry, ec)
   }
 
