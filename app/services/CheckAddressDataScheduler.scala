@@ -56,10 +56,10 @@ class CheckABPMainlandDataJob @Inject()(addressSearch: ABPAddressRepository) ext
 class CheckABPIslandsDataJob @Inject()(addressSearch: ABPAddressRepository) extends ScheduledJob {
   private val logger = Logger(this.getClass.getSimpleName)
 
-  override def name: String = "check-abp-mainland-data"
+  override def name: String = "check-abp-islands-data"
 
   override def execute(implicit ec: ExecutionContext): Future[Result] =
-    addressSearch.findPostcode(Postcode("W14 9HR"), None).map { results =>
+    addressSearch.findPostcode(Postcode("IM2 2BZ"), None).map { results =>
       if (results.nonEmpty) {
         val message = "Mainland address data integrity check PASSED"
         logger.info(message)
