@@ -59,7 +59,7 @@ object InMemoryAddressTestData {
     val cannedNonUKDataFile = Environment.simple().resource(cannedNonUKData).get
     val splitter = new CsvLineSplitter(Source.fromURL(cannedNonUKDataFile).bufferedReader()).asScala.toSeq
     splitter.map(CSV.convertNonUKCsvLine)
-  }.groupBy(_._1).mapValues(_.map(_._2).toList)
+  }.groupBy(_._1).view.mapValues(_.map(_._2).toList).toMap
 
   def dbsToFilterText(dbAddress: DbAddress): Set[String] =
     (dbAddress.lines.mkString(" ") + " " + dbAddress.town + " " + dbAddress.administrativeArea.getOrElse("") + " " + dbAddress.poBox.getOrElse("") + " " + dbAddress.postcode).replaceAll("[\\p{Space},]+", " ").split(" ").map(_.toLowerCase).toSet

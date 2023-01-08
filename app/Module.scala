@@ -24,7 +24,6 @@ import repositories._
 import services.{ABPAddressRepositoryMetrics, NonABPAddressRepositoryMetrics, ReferenceData}
 
 import javax.inject.Singleton
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
@@ -51,9 +50,10 @@ class Module(environment: Environment, configuration: Configuration) extends Abs
   @Provides
   @Singleton
   def provideAbpAddressRepository(metrics: Metrics, configHelper: ConfigHelper,
-                                  rdsQueryConfig: RdsQueryConfig, executionContext: ExecutionContext,
+                                  rdsQueryConfig: RdsQueryConfig,
                                   applicationLifecycle: ApplicationLifecycle,
-                                  inMemoryABPAddressRepository: InMemoryABPAddressRepository): ABPAddressRepository = {
+                                  inMemoryABPAddressRepository: InMemoryABPAddressRepository)
+                                 (implicit executionContext: ExecutionContext) : ABPAddressRepository = {
 
     val dbEnabled = isDbEnabled(configHelper)
     val cipPaasDbEnabled = configHelper.isCipPaasDbEnabled()
@@ -75,8 +75,7 @@ class Module(environment: Environment, configuration: Configuration) extends Abs
   }
 
   @Provides
-  def provideCIPPostgresConnectionTestResult(executionContext: ExecutionContext,
-                                             applicationLifecycle: ApplicationLifecycle): Try[Future[Int]] =
+  def provideCIPPostgresConnectionTestResult(applicationLifecycle: ApplicationLifecycle)(implicit executionContext: ExecutionContext) : Try[Future[Int]] =
     Try {
       val transactor = new TransactorProvider(configuration, applicationLifecycle, "cip-address-lookup-rds").get(executionContext)
       new CIPPostgresABPAddressRepository(transactor).testConnection

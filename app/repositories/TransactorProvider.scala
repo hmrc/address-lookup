@@ -16,7 +16,7 @@
 
 package repositories
 
-import cats.effect.{ContextShift, IO}
+import cats.effect.{Blocker, ContextShift, IO}
 import doobie.Transactor
 import doobie.hikari.HikariTransactor
 import play.api.Configuration
@@ -37,8 +37,8 @@ class TransactorProvider (configuration: Configuration, applicationLifecycle: Ap
       dbConfig.get[String]("url"),
       dbConfig.get[String]("username"),
       dbConfig.get[String]("password"),
-      ExecutionContext.fromExecutor(Executors.newFixedThreadPool(10)), // waiting for connections
-      ExecutionContext.fromExecutor(Executors.newCachedThreadPool()) // executing db calls, bounded by hikari connection pool size
+      ExecutionContext.fromExecutor(Executors.newFixedThreadPool(10)),
+      Blocker.liftExecutorService(Executors.newCachedThreadPool()) // executing db calls, bounded by hikari connection pool size
     )
 
     val (transactor, releaseResource) = hikariTransactorResource.allocated.unsafeRunSync()
