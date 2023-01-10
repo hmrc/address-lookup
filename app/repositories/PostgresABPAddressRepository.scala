@@ -25,10 +25,9 @@ import model.address.{Outcode, Postcode}
 import model.internal.{DbAddress, SqlDbAddress}
 
 import javax.inject.Inject
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
-class PostgresABPAddressRepository @Inject()(transactor: Transactor[IO], queryConfig: RdsQueryConfig) extends ABPAddressRepository {
+class PostgresABPAddressRepository @Inject()(transactor: Transactor[IO], queryConfig: RdsQueryConfig)(implicit ec: ExecutionContext) extends ABPAddressRepository {
 
   import PostgresABPAddressRepository._
 

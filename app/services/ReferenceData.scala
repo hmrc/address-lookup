@@ -19,7 +19,6 @@ package services
 import com.github.tototoshi.csv.CSVReader
 import model.address.ReferenceItem
 
-import java.util.NoSuchElementException
 import java.util.zip.GZIPInputStream
 import scala.collection.mutable.ListBuffer
 import scala.io.{Codec, Source}
@@ -88,7 +87,7 @@ object ReferenceData {
     }
 
     val time = System.currentTimeMillis() - start
-    println(s"Loading $resource took ${time}ms")
+    // println(s"Loading $resource took ${time}ms")
 
     outputBuffer.toMap
   }
