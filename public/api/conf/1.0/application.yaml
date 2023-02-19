@@ -1,0 +1,54 @@
+openapi: 3.0.0
+info:
+  title: Address Verification
+  contact: {}
+  version: '1.0'
+  description:
+    $ref: 'docs/overview.md'
+servers:
+  - url: https://test-api.service.hmrc.gov.uk/misc/address-verification
+    description: Sandbox
+  - url: https://api.service.hmrc.gov.uk/test/misc/address-verification
+    description: Production
+paths:
+  /lookup:
+    post:
+      summary: Lookup address
+      description: >
+        Lookup of postal and BFPO (British Forces Post Office) address details within the UK
+      operationId: AddressVerificationLookup
+      security:
+        - applicationRestricted: [ ]
+      parameters: []
+      requestBody:
+        description: ''
+        content:
+          application/json:
+            schema:
+              $ref: 'docs/post-request.json'
+            example:
+              $ref: 'docs/example-post-request.json'
+        required: true
+      responses:
+        '200':
+          description: ''
+          headers: { }
+          content:
+            application/json:
+              schema:
+                $ref: 'docs/uk-address-object.json'
+              example:
+                $ref: 'docs/example-response.json'
+      deprecated: false
+components:
+  securitySchemes:
+    applicationRestricted:
+      type: oauth2
+      description: |
+        HMRC supports OAuth 2.0 for authenticating application restricted API requests using an OAuth 2.0 Bearer Token in the AUTHORIZATION header.
+        See https://developer.service.hmrc.gov.uk/api-documentation/docs/authorisation/application-restricted-endpoints for details.
+      flows:
+        clientCredentials:
+          tokenUrl: https://api.service.hmrc.gov.uk/oauth/token
+          scopes: { }
+  schemas:
