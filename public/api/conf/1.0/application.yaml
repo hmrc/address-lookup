@@ -8,7 +8,7 @@ info:
 servers:
   - url: https://test-api.service.hmrc.gov.uk/misc/address-verification
     description: Sandbox
-  - url: https://api.service.hmrc.gov.uk/test/misc/address-verification
+  - url: https://api.service.hmrc.gov.uk/misc/address-verification
     description: Production
 paths:
   /lookup:
