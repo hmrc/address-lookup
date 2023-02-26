@@ -24,8 +24,7 @@ import repositories._
 import services.{ABPAddressRepositoryMetrics, NonABPAddressRepositoryMetrics, ReferenceData}
 
 import javax.inject.Singleton
-import scala.concurrent.{ExecutionContext, Future}
-import scala.util.Try
+import scala.concurrent.ExecutionContext
 
 class Module(environment: Environment, configuration: Configuration) extends AbstractModule {
 
@@ -55,17 +54,10 @@ class Module(environment: Environment, configuration: Configuration) extends Abs
                                   inMemoryABPAddressRepository: InMemoryABPAddressRepository)
                                  (implicit executionContext: ExecutionContext) : ABPAddressRepository = {
 
-    val dbEnabled = isDbEnabled(configHelper)
-    val cipPaasDbEnabled = configHelper.isCipPaasDbEnabled()
+    val dbEnabled = configHelper.isCipPaasDbEnabled()
 
     val repository: ABPAddressRepository = if (dbEnabled) {
-      val transactor = if (cipPaasDbEnabled) {
-        new TransactorProvider(configuration, applicationLifecycle, "cip-address-lookup-rds").get(executionContext)
-      }
-      else {
-        new TransactorProvider(configuration, applicationLifecycle).get(executionContext)
-      }
-
+      val transactor = new TransactorProvider(configuration, applicationLifecycle, "cip-address-lookup-rds").get(executionContext)
       new PostgresABPAddressRepository(transactor, rdsQueryConfig)
     } else {
       inMemoryABPAddressRepository
@@ -75,30 +67,16 @@ class Module(environment: Environment, configuration: Configuration) extends Abs
   }
 
   @Provides
-  def provideCIPPostgresConnectionTestResult(applicationLifecycle: ApplicationLifecycle)(implicit executionContext: ExecutionContext) : Try[Future[Int]] =
-    Try {
-      val transactor = new TransactorProvider(configuration, applicationLifecycle, "cip-address-lookup-rds").get(executionContext)
-      new CIPPostgresABPAddressRepository(transactor).testConnection
-    }
-
-  @Provides
   @Singleton
   def provideNonAbpAddressRepository(metrics: Metrics, configuration: Configuration, configHelper: ConfigHelper,
                                      rdsQueryConfig: RdsQueryConfig, executionContext: ExecutionContext,
                                      applicationLifecycle: ApplicationLifecycle,
                                      inMemoryNonABPAddressRepository: InMemoryNonABPAddressRepository): NonABPAddressRepository = {
 
-    val dbEnabled = isDbEnabled(configHelper)
-    val cipPaasDbEnabled = configHelper.isCipPaasDbEnabled()
+    val dbEnabled = configHelper.isCipPaasDbEnabled()
 
     val repository: NonABPAddressRepository = if (dbEnabled) {
-      val transactor = if (cipPaasDbEnabled) {
-        new TransactorProvider(configuration, applicationLifecycle, "cip-address-lookup-rds").get(executionContext)
-      }
-      else {
-        new TransactorProvider(configuration, applicationLifecycle).get(executionContext)
-      }
-
+      val transactor = new TransactorProvider(configuration, applicationLifecycle, "cip-address-lookup-rds").get(executionContext)
       new PostgresNonABPAddressRepository(transactor, rdsQueryConfig)
     } else {
       inMemoryNonABPAddressRepository
@@ -106,10 +84,6 @@ class Module(environment: Environment, configuration: Configuration) extends Abs
 
     new NonABPAddressRepositoryMetrics(repository, metrics.defaultRegistry, executionContext)
   }
-
-
-  private def isDbEnabled(configHelper: ConfigHelper): Boolean =
-    configHelper.getConfigString("address-lookup-rds.enabled").getOrElse("false").toBoolean
 
   @Provides
   @Singleton

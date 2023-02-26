@@ -36,7 +36,7 @@ import scala.util.{Failure, Success, Try}
 class AddressSearchController @Inject()(addressSearch: ABPAddressRepository, nonABPAddressSearcher: NonABPAddressRepository,
                                         responseProcessor: ResponseProcessor, auditConnector: AuditConnector, ec: ExecutionContext,
                                         cc: ControllerComponents, supportedCountryCodes: SupportedCountryCodes,
-                                        scheduler: CheckAddressDataScheduler, postgresTestResult: Try[Future[Int]] = Success(Future.successful(1)))
+                                        scheduler: CheckAddressDataScheduler)
   extends AddressController(cc) {
 
   import model.AddressSearchAuditEvent._

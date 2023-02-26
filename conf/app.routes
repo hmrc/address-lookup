@@ -10,5 +10,5 @@ GET         /admin/metrics                        com.kenshoo.play.metrics.Metri
 POST        /lookup                               controllers.AddressSearchController.search()
 POST        /lookup/by-post-town                  controllers.AddressSearchController.searchByPostTown()
 POST        /lookup/by-uprn                       controllers.AddressSearchController.searchByUprn()
-GET         /country                            controllers.AddressSearchController.supportedCountries()
-POST        /country/:countryCode/lookup        controllers.AddressSearchController.searchByCountry(countryCode: String)
+GET         /country                              controllers.AddressSearchController.supportedCountries()
+POST        /country/:countryCode/lookup          controllers.AddressSearchController.searchByCountry(countryCode: String)
