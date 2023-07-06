@@ -22,7 +22,6 @@ import model.address.{AddressRecord, Postcode}
 import org.mockito.ArgumentMatchers.{any, eq => meq}
 import org.mockito.Mockito
 import org.mockito.Mockito.{times, when}
-import org.mockito.internal.verification.Times
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
@@ -37,7 +36,7 @@ import repositories.InMemoryAddressTestData.{dbAddresses, doFilter}
 
 import scala.concurrent.Future
 
-class PostcodeLookupSuiteV2 ()
+class PostcodeLookupSuiteV2()
   extends AnyWordSpec with GuiceOneServerPerSuite with AppServerTestApi {
 
   import Fixtures._
@@ -49,8 +48,11 @@ class PostcodeLookupSuiteV2 ()
   override def fakeApplication(): Application = {
     SharedMetricRegistries.clear()
     new GuiceApplicationBuilder()
-        .overrides(Bindings.bind(classOf[ABPAddressRepository]).toInstance(repository))
-        .build()
+      .overrides(Bindings.bind(classOf[ABPAddressRepository]).toInstance(repository))
+      .configure(
+        "access-control.enabled" -> true,
+        "access-control.allow-list.1" -> "xyz")
+      .build()
   }
 
   override val appEndpoint: String = s"http://localhost:$port"
@@ -69,14 +71,6 @@ class PostcodeLookupSuiteV2 ()
         response.status shouldBe OK
 
         Mockito.verify(repository, times(1)).findPostcode(meq(Postcode("FX1 9PY")), meq(None))
-      }
-
-      "give a successful response for a known postcode - old style 'X-Origin'" in {
-        when(repository.findPostcode(meq(Postcode("FX1 9PY")), meq(None))).thenReturn(
-          Future.successful(dbAddresses.filter(_.postcode == "FX1 9PY").toList))
-
-        val response = request("POST", "/lookup", """{"postcode":"fx1 9py"}""", headerOrigin -> "xxx")
-        response.status shouldBe OK
       }
 
       "give a successful response for a known v.large postcode - uk route" in {
@@ -114,7 +108,7 @@ class PostcodeLookupSuiteV2 ()
 
         val response = post("/lookup", """{"postcode":"FX1 9PY"}""")
         val contentType = response.header("Content-Type").get
-        contentType should startWith ("application/json")
+        contentType should startWith("application/json")
       }
 
       "set the cache-control header and include a positive max-age in it" ignore {
@@ -124,7 +118,7 @@ class PostcodeLookupSuiteV2 ()
         val response = post("/lookup", """{"postcode":"FX1 9PY"}""")
         val h = response.header("Cache-Control")
         h should not be empty
-        h.get should include ("max-age=")
+        h.get should include("max-age=")
       }
 
       "set the etag header" ignore {
@@ -244,12 +238,11 @@ class PostcodeLookupSuiteV2 ()
       }
     }
 
-
     "client error" should {
-      "give a bad request when the origin header is absent" in {
+      "return forbidden when the user-agent is absent" in {
         val path = "/lookup"
         val response = await(wsClient.url(appEndpoint + path).withMethod("POST").withBody("""{"postcode":"FX1 4AB"}""").execute())
-        response.status shouldBe BAD_REQUEST
+        response.status shouldBe FORBIDDEN
       }
 
       "give a bad request when the postcode parameter is absent" in {

@@ -17,6 +17,7 @@
 package controllers
 
 import akka.stream.Materializer
+import config.ConfigHelper
 import model.address._
 import model.internal.DbAddress
 import model.request.{LookupByPostTownRequest, LookupByPostcodeRequest, LookupByUprnRequest}
@@ -37,7 +38,6 @@ import play.api.test.Helpers._
 import play.api.{Application, inject}
 import repositories.{ABPAddressRepository, NonABPAddressRepository, PostgresABPAddressRepository, PostgresNonABPAddressRepository}
 import services.{CheckAddressDataScheduler, ReferenceData, ResponseProcessor}
-import uk.gov.hmrc.http.UpstreamErrorResponse
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import util.Utils._
 
@@ -81,11 +81,15 @@ class AddressSearchControllerTest extends AnyWordSpec with Matchers with GuiceOn
 
   override implicit lazy val app: Application = {
     new GuiceApplicationBuilder()
-        .overrides(inject.bind[ABPAddressRepository].toInstance(abpSearcher))
-        .overrides(inject.bind[NonABPAddressRepository].toInstance(nonAbpSearcher))
-        .overrides(inject.bind[AuditConnector].toInstance(mockAuditConnector))
-        .overrides(inject.bind[CheckAddressDataScheduler].toInstance(mockCheckAddressDataScheduler))
-        .build()
+      .overrides(inject.bind[ABPAddressRepository].toInstance(abpSearcher))
+      .overrides(inject.bind[NonABPAddressRepository].toInstance(nonAbpSearcher))
+      .overrides(inject.bind[AuditConnector].toInstance(mockAuditConnector))
+      .overrides(inject.bind[CheckAddressDataScheduler].toInstance(mockCheckAddressDataScheduler))
+      .configure(
+        "access-control.enabled" -> true,
+        "access-control.allow-list.1" -> "test-user-agent",
+        "access-control.allow-list.2" -> "another-user-agent")
+      .build()
   }
 
   val controller: AddressSearchController = app.injector.instanceOf[AddressSearchController]
@@ -95,171 +99,201 @@ class AddressSearchControllerTest extends AnyWordSpec with Matchers with GuiceOn
     override def convertAddressList(dbAddresses: Seq[DbAddress]): List[AddressRecord] = a
   }
 
-  "postcode lookup with POST requests" should {
+  "findPostTown" should {
 
-    "give bad request" when {
+    """when search is called without valid 'user-agent' header
+       it should give a forbidden response and not log any error
+      """ in {
+      clearInvocations(mockAuditConnector)
 
-      """when search is called without 'X-Origin' header
-       it should give a 'bad request' response via the appropriate exception
-       and not log any error
+      when(abpSearcher.findTown(meq("TESTTOWN"), meq(Some("Test Street")))).thenReturn(Future(List(dx1A, dx1B, dx1C)))
+
+      val jsonPayload = Json.toJson(LookupByPostTownRequest("Testtown", Some("Test Street")))
+      val request = FakeRequest("POST", "/lookup/by-post-town")
+        .withBody(jsonPayload.toString)
+        .withHeaders("User-Agent" -> "forbidden-user-agent")
+        .withHeadersOrigin
+
+      val result = controller.searchByPostTown().apply(request)
+      status(result) shouldBe Status.FORBIDDEN
+    }
+
+    """when search is called with a postcode that will give several results
+       it should give an 'ok' response containing the result list
+       and log the lookup including the size of the result list
+       and audit the results
+      """ in {
+      clearInvocations(mockAuditConnector)
+
+      when(abpSearcher.findTown(meq("TESTTOWN"), meq(Some("Test Street")))).thenReturn(Future(List(dx1A, dx1B, dx1C)))
+
+      val jsonPayload = Json.toJson(LookupByPostTownRequest("Testtown", Some("Test Street")))
+      val request = FakeRequest("POST", "/lookup/by-post-town")
+        .withBody(jsonPayload.toString)
+        .withHeaders("User-Agent" -> "test-user-agent")
+        .withHeadersOrigin
+
+      val expectedAuditRequestDetails = AddressSearchAuditEventRequestDetails(postTown = Some("TESTTOWN"), filter = Some("Test Street"))
+
+      val expectedAuditAddressMatches = Seq(
+        AddressSearchAuditEventMatchedAddress("100002", Some(10000200), Some(1000020), Some("gb-oragnisation-2"), List("1 Test Street"), "Testtown", None, Some(List(54.914561, -1.3905597)), Some("TestLocalAuthority"), None, "FZ22 7ZW", None, Country("GB", "United Kingdom")),
+        AddressSearchAuditEventMatchedAddress("100003", Some(10000300), Some(1000030), Some("gb-oragnisation-3"), List("2 Test Street"), "Testtown", None, Some(List(54.914561, -1.3905597)), Some("TestLocalAuthority"), None, "FZ22 7ZW", None, Country("GB", "United Kingdom")),
+        AddressSearchAuditEventMatchedAddress("100004", Some(10000400), Some(1000040), Some("gb-oragnisation-4"), List("3 Test Street"), "Testtown", None, Some(List(54.914561, -1.3905597)), Some("TestLocalAuthority"), None, "FZ22 7ZW", None, Country("GB", "United Kingdom")))
+
+      val expectedAuditEvent = AddressSearchAuditEvent(Some("test-user-agent"), expectedAuditRequestDetails, 3, expectedAuditAddressMatches)
+
+      val result = controller.searchByPostTown().apply(request)
+      status(result) shouldBe Status.OK
+
+      verify(mockAuditConnector, times(1))
+        .sendExplicitAudit(meq("AddressSearch"), meq(expectedAuditEvent))(any(), any(), any())
+    }
+
+    """when search is called with a posttown that gives no results
+       it should give an 'ok' response and not send an explicit audit event
+      """ in {
+      clearInvocations(mockAuditConnector)
+
+      when(abpSearcher.findTown(meq("TESTTOWN"), meq(None))) thenReturn Future(List())
+
+      val jsonPayload = Json.toJson(LookupByPostTownRequest("Testtown", None))
+      val request = FakeRequest("POST", "/lookup/by-post-town")
+        .withBody(jsonPayload.toString)
+        .withHeaders("User-Agent" -> "test-user-agent")
+        .withHeadersOrigin
+
+      val result = controller.searchByPostTown().apply(request)
+      status(result) shouldBe Status.OK
+
+      verify(mockAuditConnector, never()).sendExplicitAudit(any(), any[AddressSearchAuditEvent]())(any(), any(), any())
+    }
+  }
+
+  "findPostcode" should {
+
+      """when search is called without valid 'user-agent' header
+       it should give a forbidden response and not log any error
       """ in {
         import LookupByPostcodeRequest._
         val jsonPayload = Json.toJson(LookupByPostcodeRequest(Postcode("FX11 4HG")))
         val request: Request[String] = FakeRequest("POST", "/lookup")
-            .withBody(jsonPayload.toString())
+          .withHeaders("User-Agent" -> "forbidden-user-agent")
+          .withBody(jsonPayload.toString())
 
-        intercept[UpstreamErrorResponse] {
-          val result = controller.search().apply(request)
-          status(result) shouldBe Status.BAD_REQUEST
-        }
-      }
-    }
+        val result = controller.search().apply(request)
+        status(result) shouldBe Status.FORBIDDEN
 
-    "successful findPostTown" when {
-      """when search is called with a postcode that will give several results
-       it should give an 'ok' response containing the result list
-       and log the lookup including the size of the result list
-       and audit the results
-      """ in {
-        clearInvocations(mockAuditConnector)
-
-        when(abpSearcher.findTown(meq("TESTTOWN"), meq(Some("Test Street")))).thenReturn(Future(List(dx1A, dx1B, dx1C)))
-
-        val jsonPayload = Json.toJson(LookupByPostTownRequest("Testtown", Some("Test Street")))
-        val request = FakeRequest("POST", "/lookup/by-post-town")
-          .withBody(jsonPayload.toString)
-          .withHeaders("User-Agent" -> "test-user-agent")
-          .withHeadersOrigin
-
-        val expectedAuditRequestDetails = AddressSearchAuditEventRequestDetails(postTown = Some("TESTTOWN"), filter = Some("Test Street"))
-
-        val expectedAuditAddressMatches = Seq(
-          AddressSearchAuditEventMatchedAddress("100002", Some(10000200),Some(1000020),Some("gb-oragnisation-2"), List("1 Test Street"), "Testtown", None, Some(List(54.914561, -1.3905597)), Some("TestLocalAuthority"), None, "FZ22 7ZW", None, Country("GB", "United Kingdom")),
-          AddressSearchAuditEventMatchedAddress("100003", Some(10000300),Some(1000030),Some("gb-oragnisation-3"), List("2 Test Street"), "Testtown", None, Some(List(54.914561, -1.3905597)), Some("TestLocalAuthority"), None, "FZ22 7ZW", None, Country("GB", "United Kingdom")),
-          AddressSearchAuditEventMatchedAddress("100004", Some(10000400),Some(1000040),Some("gb-oragnisation-4"), List("3 Test Street"), "Testtown", None, Some(List(54.914561, -1.3905597)), Some("TestLocalAuthority"), None, "FZ22 7ZW", None, Country("GB", "United Kingdom")))
-
-        val expectedAuditEvent = AddressSearchAuditEvent(Some("test-user-agent"), expectedAuditRequestDetails, 3, expectedAuditAddressMatches)
-
-        val result = controller.searchByPostTown().apply(request)
-        status(result) shouldBe Status.OK
-
-        verify(mockAuditConnector, times(1))
-          .sendExplicitAudit(meq("AddressSearch"), meq(expectedAuditEvent))(any(), any(), any())
       }
 
-      """when search is called with a posttown that gives no results
-       it should give an 'ok' response and not send an explicit audit event
-      """ in {
-        clearInvocations(mockAuditConnector)
-
-        when(abpSearcher.findTown(meq("TESTTOWN"), meq(None))) thenReturn Future(List())
-
-        val jsonPayload = Json.toJson(LookupByPostTownRequest("Testtown", None))
-        val request = FakeRequest("POST", "/lookup/by-post-town")
-          .withBody(jsonPayload.toString)
-          .withHeaders("User-Agent" -> "test-user-agent")
-          .withHeadersOrigin
-
-        val result = controller.searchByPostTown().apply(request)
-        status(result) shouldBe Status.OK
-
-        verify(mockAuditConnector, never()).sendExplicitAudit(any(), any[AddressSearchAuditEvent]())(any(), any(), any())
-      }
-    }
-
-    "successful findPostcode" when {
-
-      """when search is called with correct parameters
+    """when search is called with correct parameters
        it should clean up the postcode parameter
        and give an 'ok' response
        and log the lookup including the size of the result list
       """ in {
-        clearInvocations(mockAuditConnector)
-        when(abpSearcher.findPostcode(Postcode("FX11 4HG"), Some("FOO"))) thenReturn Future(List(addr1Db))
-        val jsonPayload = Json.toJson(LookupByPostcodeRequest(Postcode("FX11 4HG"), Some("FOO")))
-        val request = FakeRequest("POST", "/lookup")
-          .withBody(jsonPayload.toString)
-          .withHeadersOrigin
+      clearInvocations(mockAuditConnector)
+      when(abpSearcher.findPostcode(Postcode("FX11 4HG"), Some("FOO"))) thenReturn Future(List(addr1Db))
+      val jsonPayload = Json.toJson(LookupByPostcodeRequest(Postcode("FX11 4HG"), Some("FOO")))
+      val request = FakeRequest("POST", "/lookup")
+        .withBody(jsonPayload.toString)
+        .withHeaders("User-Agent" -> "test-user-agent")
+        .withHeadersOrigin
 
-        val result = controller.search().apply(request)
-        status(result) shouldBe Status.OK
-      }
+      val result = controller.search().apply(request)
+      status(result) shouldBe Status.OK
+    }
 
-      """when search is called with blank filter
+    """when search is called with blank filter
        it should clean up the postcode parameter
        and give an 'ok' response as if the filter parameter wass absent
        and log the lookup including the size of the result list
       """ in {
-        clearInvocations(mockAuditConnector)
-        when(abpSearcher.findPostcode(Postcode("FX11 4HG"), None)) thenReturn Future(List(addr1Db))
-        val jsonPayload = Json.toJson(LookupByPostcodeRequest(Postcode("FX11 4HG"), None))
-        val request = FakeRequest("POST", "/lookup")
-          .withBody(jsonPayload.toString)
-          .withHeadersOrigin
+      clearInvocations(mockAuditConnector)
+      when(abpSearcher.findPostcode(Postcode("FX11 4HG"), None)) thenReturn Future(List(addr1Db))
+      val jsonPayload = Json.toJson(LookupByPostcodeRequest(Postcode("FX11 4HG"), None))
+      val request = FakeRequest("POST", "/lookup")
+        .withBody(jsonPayload.toString)
+        .withHeaders("User-Agent" -> "test-user-agent")
+        .withHeadersOrigin
 
-        val result = controller.search().apply(request)
-        status(result) shouldBe Status.OK
-      }
+      val result = controller.search().apply(request)
+      status(result) shouldBe Status.OK
+    }
 
-      """when search is called with a postcode that will give several results
+    """when search is called with a postcode that will give several results
        it should give an 'ok' response containing the result list
        and log the lookup including the size of the result list
        and audit the results
       """ in {
-        clearInvocations(mockAuditConnector)
+      clearInvocations(mockAuditConnector)
 
-        when(abpSearcher.findPostcode(meq(Postcode("FX11 4HG")), meq(Some("Test Street")))) thenReturn Future(List(dx1A, dx1B, dx1C))
-        val jsonPayload = Json.toJson(LookupByPostcodeRequest(Postcode("FX11 4HG"), Some("Test Street")))
-        val request = FakeRequest("POST", "/lookup")
-          .withBody(jsonPayload.toString)
-          .withHeaders("User-Agent" -> "test-user-agent")
-          .withHeadersOrigin
+      when(abpSearcher.findPostcode(meq(Postcode("FX11 4HG")), meq(Some("Test Street")))) thenReturn Future(List(dx1A, dx1B, dx1C))
+      val jsonPayload = Json.toJson(LookupByPostcodeRequest(Postcode("FX11 4HG"), Some("Test Street")))
+      val request = FakeRequest("POST", "/lookup")
+        .withBody(jsonPayload.toString)
+        .withHeaders("User-Agent" -> "test-user-agent")
+        .withHeadersOrigin
 
-        val expectedAuditRequestDetails = AddressSearchAuditEventRequestDetails(postcode = Some("FX11 4HG"), filter = Some("Test Street"))
+      val expectedAuditRequestDetails = AddressSearchAuditEventRequestDetails(postcode = Some("FX11 4HG"), filter = Some("Test Street"))
 
-        val expectedAuditAddressMatches = Seq(
-          AddressSearchAuditEventMatchedAddress("100002", Some(10000200),Some(1000020),Some("gb-oragnisation-2"), List("1 Test Street"), "Testtown", None, Some(List(54.914561, -1.3905597)), Some("TestLocalAuthority"), None, "FZ22 7ZW", None, Country("GB", "United Kingdom")),
-          AddressSearchAuditEventMatchedAddress("100003", Some(10000300),Some(1000030),Some("gb-oragnisation-3"), List("2 Test Street"), "Testtown", None, Some(List(54.914561, -1.3905597)), Some("TestLocalAuthority"), None, "FZ22 7ZW", None, Country("GB", "United Kingdom")),
-          AddressSearchAuditEventMatchedAddress("100004", Some(10000400),Some(1000040),Some("gb-oragnisation-4"), List("3 Test Street"), "Testtown", None, Some(List(54.914561, -1.3905597)), Some("TestLocalAuthority"), None, "FZ22 7ZW", None, Country("GB", "United Kingdom")))
+      val expectedAuditAddressMatches = Seq(
+        AddressSearchAuditEventMatchedAddress("100002", Some(10000200), Some(1000020), Some("gb-oragnisation-2"), List("1 Test Street"), "Testtown", None, Some(List(54.914561, -1.3905597)), Some("TestLocalAuthority"), None, "FZ22 7ZW", None, Country("GB", "United Kingdom")),
+        AddressSearchAuditEventMatchedAddress("100003", Some(10000300), Some(1000030), Some("gb-oragnisation-3"), List("2 Test Street"), "Testtown", None, Some(List(54.914561, -1.3905597)), Some("TestLocalAuthority"), None, "FZ22 7ZW", None, Country("GB", "United Kingdom")),
+        AddressSearchAuditEventMatchedAddress("100004", Some(10000400), Some(1000040), Some("gb-oragnisation-4"), List("3 Test Street"), "Testtown", None, Some(List(54.914561, -1.3905597)), Some("TestLocalAuthority"), None, "FZ22 7ZW", None, Country("GB", "United Kingdom")))
 
-        val expectedAuditEvent = AddressSearchAuditEvent(Some("test-user-agent"), expectedAuditRequestDetails, 3, expectedAuditAddressMatches)
+      val expectedAuditEvent = AddressSearchAuditEvent(Some("test-user-agent"), expectedAuditRequestDetails, 3, expectedAuditAddressMatches)
 
-        val result = controller.search().apply(request)
-        status(result) shouldBe Status.OK
+      val result = controller.search().apply(request)
+      status(result) shouldBe Status.OK
 
-        verify(mockAuditConnector, times(1))
-          .sendExplicitAudit(meq("AddressSearch"), meq(expectedAuditEvent))(any(), any(), any())
-      }
+      verify(mockAuditConnector, times(1))
+        .sendExplicitAudit(meq("AddressSearch"), meq(expectedAuditEvent))(any(), any(), any())
+    }
 
-      """when search is called with a postcode thatgives no results
+    """when search is called with a postcode thatgives no results
        it should give an 'ok' response and not send an explicit audit event
       """ in {
-        clearInvocations(mockAuditConnector)
+      clearInvocations(mockAuditConnector)
 
-        when(abpSearcher.findPostcode(meq(Postcode("FX11 4HX")), meq(None))) thenReturn Future(List())
-        val jsonPayload = Json.toJson(LookupByPostcodeRequest(Postcode("FX11 4HX")))
-        val request = FakeRequest("POST", "/lookup")
-          .withBody(jsonPayload.toString)
-          .withHeaders("User-Agent" -> "test-user-agent")
-          .withHeadersOrigin
+      when(abpSearcher.findPostcode(meq(Postcode("FX11 4HX")), meq(None))) thenReturn Future(List())
+      val jsonPayload = Json.toJson(LookupByPostcodeRequest(Postcode("FX11 4HX")))
+      val request = FakeRequest("POST", "/lookup")
+        .withBody(jsonPayload.toString)
+        .withHeaders("User-Agent" -> "test-user-agent")
+        .withHeadersOrigin
 
-        val result = controller.search().apply(request)
-        status(result) shouldBe Status.OK
+      val result = controller.search().apply(request)
+      status(result) shouldBe Status.OK
 
-        verify(mockAuditConnector, never()).sendExplicitAudit(any(), any[AddressSearchAuditEvent]())(any(), any(), any())
-      }
+      verify(mockAuditConnector, never()).sendExplicitAudit(any(), any[AddressSearchAuditEvent]())(any(), any(), any())
     }
   }
 
+
   "uprn lookup with POST request" should {
+    "give forbidden" when {
+      """search is called without a valid user agent""" in {
+        import LookupByUprnRequest._
+        when(abpSearcher.findUprn(meq("0123456789"))).thenReturn(Future.successful(List()))
+        val jsonPayload = Json.toJson(LookupByUprnRequest("0123456789"))
+        val request = FakeRequest("POST", "/lookup/by-uprn")
+          .withBody(jsonPayload.toString)
+          .withHeaders("User-Agent" -> "forbidden-user-agent")
+          .withHeadersOrigin
+
+        val response = controller.searchByUprn().apply(request)
+        status(response) shouldBe 403
+      }
+    }
+
     "give success" when {
       """search is called with a valid uprn""" in {
         import LookupByUprnRequest._
         when(abpSearcher.findUprn(meq("0123456789"))).thenReturn(Future.successful(List()))
         val jsonPayload = Json.toJson(LookupByUprnRequest("0123456789"))
         val request = FakeRequest("POST", "/lookup/by-uprn")
-        .withBody(jsonPayload.toString)
-        .withHeadersOrigin
+          .withBody(jsonPayload.toString)
+          .withHeaders("User-Agent" -> "test-user-agent")
+          .withHeadersOrigin
 
         val response = controller.searchByUprn().apply(request)
         status(response) shouldBe 200
@@ -270,11 +304,13 @@ class AddressSearchControllerTest extends AnyWordSpec with Matchers with GuiceOn
       """search is called with an invalid uprn""" in {
 
         val scheduler = app.injector.instanceOf[CheckAddressDataScheduler]
-        val controller = new AddressSearchController(abpSearcher, nonAbpSearcher, new ResponseStub(Nil), mockAuditConnector, ec, cc, SupportedCountryCodes(List(), List()), scheduler)
+        val configHelper = app.injector.instanceOf[ConfigHelper]
+        val controller = new AddressSearchController(abpSearcher, nonAbpSearcher, new ResponseStub(Nil), mockAuditConnector, ec, cc, SupportedCountryCodes(List(), List()), scheduler, configHelper)
         val jsonPayload = Json.toJson(LookupByUprnRequest("GB0123456789"))
         val request = FakeRequest("POST", "/lookup/by-uprn")
-        .withBody(jsonPayload.toString)
-        .withHeadersOrigin
+          .withBody(jsonPayload.toString)
+          .withHeaders("User-Agent" -> "test-user-agent")
+          .withHeadersOrigin
 
         val response = controller.searchByUprn().apply(request)
         status(response) shouldBe 400

@@ -41,11 +41,15 @@ class LookupPostSuite()
   private val largePostcodeExampleSize = 2517
 
   val repository: ABPAddressRepository = mock[ABPAddressRepository]
+
   override def fakeApplication(): Application = {
     SharedMetricRegistries.clear()
     new GuiceApplicationBuilder()
-        .overrides(Bindings.bind(classOf[ABPAddressRepository]).toInstance(repository))
-        .build()
+      .overrides(Bindings.bind(classOf[ABPAddressRepository]).toInstance(repository))
+      .configure(
+        "access-control.enabled" -> true,
+        "access-control.allow-list.1" -> "xyz")
+      .build()
   }
 
   override val appEndpoint: String = s"http://localhost:$port"
@@ -64,19 +68,6 @@ class LookupPostSuite()
           """{"postcode": "fx1 9py"}""".stripMargin
 
         val response = post("/lookup", payload)
-        response.status shouldBe OK
-      }
-
-      "give a successful response for a known postcode - old style 'X-Origin'" in {
-        when(repository.findPostcode(meq(Postcode("FX1 9PY")), meq(None))).thenReturn(
-          Future.successful(singleAddresses.filter(_.postcode == "FX1 9PY").toList))
-
-        val payload =
-          """{
-            |  "postcode": "fx1  9py"
-            |}""".stripMargin
-
-        val response = request("POST", "/lookup", payload, headerOrigin -> "xxx")
         response.status shouldBe OK
       }
 
@@ -106,13 +97,13 @@ class LookupPostSuite()
         when(repository.findPostcode(meq(Postcode("FX4 9PY")), meq(None))).thenReturn(
           Future.successful(dbAddresses.filter(_.postcode == "FX4 9PY").toList))
         val payload =
-        """{
-          |  "postcode": "FX1 9PY"
-          |}""".stripMargin
+          """{
+            |  "postcode": "FX1 9PY"
+            |}""".stripMargin
 
         val response = post("/lookup", payload)
         val contentType = response.header("Content-Type").get
-        contentType should startWith ("application/json")
+        contentType should startWith("application/json")
       }
 
       "set the cache-control header and include a positive max-age in it" ignore {
@@ -126,7 +117,7 @@ class LookupPostSuite()
         val response = post("/lookup", payload)
         val h = response.header("Cache-Control")
         h should not be empty
-        h.get should include ("max-age=")
+        h.get should include("max-age=")
       }
 
       "set the etag header" ignore {
@@ -134,9 +125,9 @@ class LookupPostSuite()
           Future.successful(dbAddresses.filter(_.postcode == "FX4 9PY").toList))
 
         val payload =
-        """{
-          |  "postcode": "FX1 9PY"
-          |}""".stripMargin
+          """{
+            |  "postcode": "FX1 9PY"
+            |}""".stripMargin
 
         val response = post("/lookup", payload)
         val h = response.header("ETag")
@@ -172,7 +163,7 @@ class LookupPostSuite()
 
     "client error" should {
 
-      "give a bad request when the origin header is absent" in {
+      "return forbidden when the user-agent is absent" in {
         when(repository.findPostcode(meq(Postcode("FX1 4AB")), meq(None))).thenReturn(
           Future.successful(dbAddresses.filter(_.postcode == "FX1 4AB").toList))
 
@@ -187,7 +178,7 @@ class LookupPostSuite()
           .withHttpHeaders("content-type" -> "application/json")
           .withBody(payload).execute())
 
-        response.status shouldBe BAD_REQUEST
+        response.status shouldBe FORBIDDEN
       }
 
       "give a bad request when the postcode parameter is absent" in {

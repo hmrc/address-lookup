@@ -43,11 +43,15 @@ class UprnLookupPostSuite()
   import Fixtures._
 
   val repository: ABPAddressRepository = mock[ABPAddressRepository]
+
   override def fakeApplication(): Application = {
     SharedMetricRegistries.clear()
     new GuiceApplicationBuilder()
-        .overrides(Bindings.bind(classOf[ABPAddressRepository]).toInstance(repository))
-        .build()
+      .overrides(Bindings.bind(classOf[ABPAddressRepository]).toInstance(repository))
+      .configure(
+        "access-control.enabled" -> true,
+        "access-control.allow-list.1" -> "xyz")
+      .build()
   }
 
   override val appEndpoint: String = s"http://localhost:$port"
@@ -78,7 +82,7 @@ class UprnLookupPostSuite()
 
         val response = post("/lookup/by-uprn", """{"uprn":"9999999999"}""")
         val contentType = response.header("Content-Type").get
-        contentType should startWith ("application/json")
+        contentType should startWith("application/json")
       }
 
       "set the cache-control header and include a positive max-age ignore it" ignore {
@@ -88,7 +92,7 @@ class UprnLookupPostSuite()
         val response = post("/lookup/by-uprn", """{"uprn":"9999999999"}""")
         val h = response.header("Cache-Control")
         h should not be empty
-        h.get should include ("max-age=")
+        h.get should include("max-age=")
       }
 
       "set the etag header" ignore {
@@ -113,10 +117,10 @@ class UprnLookupPostSuite()
 
     "client error" should {
 
-      "give a bad request when the origin header is absent" in {
+      "return forbidden when the user-agent is absent" in {
         val path = "/lookup/by-uprn"
         val response = await(wsClient.url(appEndpoint + path).withMethod("POST").withBody("""{"uprn":"9999999999"}""").execute())
-        response.status shouldBe BAD_REQUEST
+        response.status shouldBe FORBIDDEN
       }
 
       "give a bad request when the uprn parameter is absent" in {

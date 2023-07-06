@@ -22,7 +22,7 @@ import play.api.{Configuration, Environment}
 import javax.inject.Singleton
 
 @Singleton
-class ConfigHelper @Inject() (config: Configuration, env: Environment) {
+class ConfigHelper @Inject() (val config: Configuration, env: Environment) {
   def mustGetConfigString(key: String): String = {
     getConfigString(key).getOrElse {
       throw new Exception("ERROR: Unable to find config item " + key)

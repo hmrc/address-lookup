@@ -19,11 +19,11 @@ package it.suites
 import com.codahale.metrics.SharedMetricRegistries
 import it.helper.AppServerTestApi
 import it.suites.Fixtures.{nukdb_fx1, nukdb_fx2}
-import model.{NonUKAddressSearchAuditEvent, NonUKAddressSearchAuditEventMatchedAddress, NonUKAddressSearchAuditEventRequestDetails}
 import model.internal.NonUKAddress
+import model.{NonUKAddressSearchAuditEvent, NonUKAddressSearchAuditEventMatchedAddress, NonUKAddressSearchAuditEventRequestDetails}
 import org.mockito.ArgumentMatchers.{any, eq => meq}
 import org.mockito.Mockito
-import org.mockito.Mockito.{verify, _}
+import org.mockito.Mockito._
 import org.mockito.internal.verification._
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.mockito.MockitoSugar.mock
@@ -51,6 +51,9 @@ class CountryLookupSuiteV2()
     new GuiceApplicationBuilder()
       .overrides(Bindings.bind(classOf[NonABPAddressRepository]).toInstance(repository))
       .overrides(Bindings.bind(classOf[AuditConnector]).toInstance(auditConnector))
+      .configure(
+        "access-control.enabled" -> true,
+        "access-control.allow-list.1" -> "xyz")
       .build()
   }
 
@@ -135,10 +138,10 @@ class CountryLookupSuiteV2()
         response.status shouldBe BAD_REQUEST
       }
 
-      "give a bad request when the origin header is absent" in {
+      "return forbidden when the user-agent is absent" in {
         val path = "/country/GB/lookup"
         val response = await(wsClient.url(appEndpoint + path).withMethod("POST").withBody("""{"filter":"FX1 4AB"}""").execute())
-        response.status shouldBe BAD_REQUEST
+        response.status shouldBe FORBIDDEN
       }
 
       "give a bad request when the filter parameter is absent" in {

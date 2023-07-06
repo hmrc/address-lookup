@@ -33,6 +33,9 @@ class TownLookupPostSuite()
   override def fakeApplication(): Application = {
     SharedMetricRegistries.clear()
     new GuiceApplicationBuilder()
+      .configure(
+        "access-control.enabled" -> true,
+        "access-control.allow-list.1" -> "xyz")
       .build()
   }
 
@@ -50,17 +53,6 @@ class TownLookupPostSuite()
           """{"posttown": "some-town"}""".stripMargin
 
         val response = post("/lookup/by-post-town", payload)
-        response.status shouldBe OK
-      }
-
-      "give a successful response for a known town - old style 'X-Origin'" in {
-
-        val payload =
-          """{
-            |  "posttown": "some-town"
-            |}""".stripMargin
-
-        val response = request("POST", "/lookup/by-post-town", payload, headerOrigin -> "xxx")
         response.status shouldBe OK
       }
 
@@ -172,8 +164,7 @@ class TownLookupPostSuite()
     }
 
     "client error" should {
-
-      "give a bad request when the origin header is absent" in {
+      "return forbidden when the user-agent is absent" in {
         val payload =
           """{
             |  "posttown": "some-town"
@@ -185,7 +176,7 @@ class TownLookupPostSuite()
           .withHttpHeaders("content-type" -> "application/json")
           .withBody(payload).execute())
 
-        response.status shouldBe BAD_REQUEST
+        response.status shouldBe FORBIDDEN
       }
 
       "give a bad request when the town parameter is absent" in {

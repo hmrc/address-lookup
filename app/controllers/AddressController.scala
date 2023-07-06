@@ -16,37 +16,13 @@
 
 package controllers
 
-import com.typesafe.config.ConfigFactory
 import play.api.Logger
-import play.api.mvc.{ControllerComponents, Headers, Result}
-import uk.gov.hmrc.http.UpstreamErrorResponse
+import play.api.mvc.{ControllerComponents, Result}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
-
-import scala.concurrent.Future
-import scala.util.Try
 
 abstract class AddressController(cc: ControllerComponents) extends BackendController(cc) {
 
   private val logger = Logger(this.getClass.getSimpleName)
-
-  lazy private val headerOrigin:String =  ConfigFactory.load().getString("header.x-origin")
-
-  protected final def getOriginHeaderIfSatisfactory(headers: Headers): String = {
-    val hmrcOrigin = headers.get(headerOrigin)
-    if (hmrcOrigin.isDefined) {
-      hmrcOrigin.get
-    }
-    else {
-      val userAgent = headers.get("User-Agent").getOrElse {
-        throw UpstreamErrorResponse(s"User-Agent or $headerOrigin header is required", 400, 400, Map())
-      }
-      if (userAgent.indexOf('/') >= 0) {
-        // reject User-Agent set by default by frameworks, browsers etc
-        throw UpstreamErrorResponse(s"User-Agent or $headerOrigin header rejected: $userAgent", 400, 400, Map())
-      }
-      userAgent
-    }
-  }
 
   protected final def badRequest(tag: String, data: (String, String)*): Result = {
     logEvent(tag, data: _*)
@@ -63,8 +39,8 @@ abstract class AddressController(cc: ControllerComponents) extends BackendContro
     logger.info(s"$tag $formatted")
   }
 
-  protected final def logEvent(tag: String, origin: String, matches: Int, data: List[(String, String)]) {
-    logEvent(tag, ("origin" -> origin) :: ("matches" -> matches.toString) :: data: _*)
+  protected final def logEvent(tag: String, matches: Int, data: List[(String, String)]) {
+    logEvent(tag, ("matches" -> matches.toString) :: data: _*)
   }
 
   private def keyVal(item: (String, String)) = item._1 + "=" + item._2
