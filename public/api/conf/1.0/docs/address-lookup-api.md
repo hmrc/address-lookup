@@ -29,6 +29,7 @@ Status codes as per [RFC-7231 section 6](https://tools.ietf.org/html/rfc7231#sec
     - a required parameter is absent,
     - a parameter is sent with an incorrect value,
     - an unexpected parameter is sent.
+ - *403-Forbidden*: When we don't recognise the user agent supplied to us, your User agent needs to be added to our allow list.
  - *404-Not found*: when an unknown URI is accessed.
  - *405-Bad method*: when an unacceptable method is used.
  - *500-Internal server error*: if a fault happened in the address lookup application
@@ -77,10 +78,6 @@ Headers:
    string containing some code-name of the originating service, e.g. `yta`. It must not contain '/' to avoid
    problems with default User-Agent values.
    It will be used for reporting. All requests from a given origin must carry the same code-name.
-
- - `X-Hmrc-Origin` (alternative): *string*
-
-   The is an alternative to `User-agent`; only one of these is required.
 
  - `Accept-Language` (optional): two-letter ISO639-1 case-insensitive code list
 
@@ -147,10 +144,6 @@ Headers:
    problems with default User-Agent values.
    It will be used for reporting. All requests from a given origin must carry the same code-name.
 
- - `X-Hmrc-Origin` (alternative): *string*
-
-   The is an alternative to `User-agent`; only one of these is required.
-
  - `Accept-Language` (optional): two-letter ISO639-1 case-insensitive code list
 
    Example:
@@ -213,10 +206,6 @@ Headers:
    string containing some code-name of the originating service, e.g. `yta`. It must not contain '/' to avoid
    problems with default User-Agent values.
    It will be used for reporting. All requests from a given origin must carry the same code-name.
-
- - `X-Hmrc-Origin` (alternative): *string*
-
-   The is an alternative to `User-agent`; only one of these is required.
 
  - `Accept-Language` (optional): two-letter ISO639-1 case-insensitive code list
 

@@ -40,31 +40,36 @@ trait AccessChecker {
   private val allowedClients: Set[String] = configHelper.config.getOptional[Seq[String]](accessControlAllowListKey).getOrElse(
     if (checkAllowList) throw new RuntimeException(s"Could not find config $accessControlAllowListAbsoluteKey") else Seq()).toSet
 
-  def isClientAllowed(client: Option[String]): Boolean =
-    !checkAllowList || client.fold(false)(allowedClients.contains)
+  private def areClientsAllowed(clients: Seq[String]): Boolean =
+    clients.forall(allowedClients.contains)
 
-  def forbiddenResponse(client: Option[String]): String =
+  private def forbiddenResponse(clients: Seq[String]): String =
     s"""{
        |"code": 403,
-       |"description": "'${client.getOrElse("Unknown Client")}' is not authorized to use BARS. Please complete '${accessRequestFormUrl}' to request access."
+       |"description": "One or more user agents in '${clients.mkString(",")}' are not authorized to use this service. Please complete '${accessRequestFormUrl}' to request access."
        |}""".stripMargin
 
-  def getClientFromUserAgent[T](req: Request[T]): Option[String] = {
-    req.headers.get("OriginatorId") match {
-      case Some(oId) => logger.warn(s"An OriginatorId was provided: $oId")
-      case _ =>
-    }
+  private def getClientsFromRequest[T](req: Request[T]): Seq[String] = {
+    val originator = req.headers.get("OriginatorId")
 
-    req.headers.get(HeaderNames.USER_AGENT)
-      .flatMap(userAgent => userAgent.split(",").find(ua => ua != "bank-account-gateway"))
+    if (originator.isDefined) {
+      Seq(originator.get)
+    } else {
+      req.headers.getAll(HeaderNames.USER_AGENT).flatMap(_.split(","))
+    }
   }
 
   def accessCheckedAction[A](bodyParser: BodyParser[A])(block: Request[A] => Future[Result]): Action[A] = {
     Action.async(bodyParser) {
       request =>
-        val callingClient = getClientFromUserAgent(request)
-        if (!isClientAllowed(callingClient)) {
-          Future.successful(Forbidden(Json.parse(forbiddenResponse(callingClient))))
+        val callingClients = getClientsFromRequest(request)
+        if (!areClientsAllowed(callingClients)) {
+          if (checkAllowList) {
+            Future.successful(Forbidden(Json.parse(forbiddenResponse(callingClients))))
+          } else {
+            logger.warn(s"One or more user agents in '${callingClients.mkString(",")}' are not authorized to use this service")
+            block(request)
+          }
         }
         else {
           block(request)
