@@ -10,7 +10,6 @@ lazy val root = Project("address-lookup", file("."))
   .settings(scalaSettings: _*)
   .settings(scalaVersion := thisScalaVersion)
   .settings(scalacOptions ++= Seq("-Xlint:-missing-interpolator"))
-  .settings(publishingSettings: _*)
   .settings(defaultSettings(): _*)
   .settings(
     targetJvm := "jvm-1.8",
