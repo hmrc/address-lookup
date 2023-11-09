@@ -33,7 +33,7 @@ case class Postcode(area: String, district: String, sector: String, unit: String
 
 object Postcode {
   // The basic syntax of a postcode (ignores the rules on valid letter ranges because they don't matter here).
-  private[address] val oPattern = Pattern.compile("^[A-Z]{1,2}[0-9][0-9A-Z]?$")
+  private[address] val oPattern = Pattern.compile("^GIR|[A-Z]{1,2}[0-9][0-9A-Z]?$")
   private[address] val iPattern = Pattern.compile("^[0-9][A-Z]{2}$")
 
   /**
