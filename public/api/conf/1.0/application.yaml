@@ -32,7 +32,8 @@ paths:
             schema:
               $ref: 'docs/post-request.json'
             example:
-              $ref: 'docs/example-post-request.json'
+              postcode: "AA1 1ZZ"
+              filter: "The Rectory"
         required: true
       responses:
         '200':
@@ -43,7 +44,41 @@ paths:
               schema:
                 $ref: 'docs/uk-address-object.json'
               example:
-                $ref: 'docs/example-response.json'
+                [
+                  {
+                    "id": "GB200000706253",
+                    "uprn": 200000706253,
+                    "parentUprn": 200000706251,
+                    "usrn": 300000706253,
+                    "organisation": "Some Company",
+                    "address": {
+                      "lines": [
+                        "Test House",
+                        "The Tests"
+                      ],
+                      "town": "Test Town",
+                      "postcode": "BB00 0BB",
+                      "subdivision": {
+                        "code": "GB-ENG",
+                        "name": "England"
+                      },
+                      "country": {
+                        "code": "GB",
+                        "name": "United Kingdom"
+                      }
+                    },
+                    "localCustodian": {
+                      "code": 1760,
+                      "name": "Test Valley"
+                    },
+                    "location": [
+                      50.9986451,
+                      -1.4690977
+                    ],
+                    "language": "en",
+                    "administrativeArea": "TEST COUNTY"
+                  }
+                ]
       deprecated: false
 components:
   securitySchemes:
