@@ -16,7 +16,7 @@
 
 package controllers
 
-import akka.stream.Materializer
+import org.apache.pekko.stream.Materializer
 import config.ConfigHelper
 import model.address._
 import model.internal.DbAddress

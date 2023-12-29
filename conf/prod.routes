@@ -2,6 +2,3 @@
 ->         /                          app.Routes
 ->         /                          definition.Routes
 ->         /                          health.Routes
-
-# Kenshoo metrics https://github.com/kenshoo/metrics-play
-GET        /admin/metrics             com.kenshoo.play.metrics.MetricsController.metrics

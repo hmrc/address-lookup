@@ -15,13 +15,13 @@
  */
 
 import com.google.inject.{AbstractModule, Provides}
-import com.kenshoo.play.metrics.Metrics
 import config.ConfigHelper
 import model.response.SupportedCountryCodes
 import play.api.inject.ApplicationLifecycle
 import play.api.{Configuration, Environment}
 import repositories._
 import services.{ABPAddressRepositoryMetrics, NonABPAddressRepositoryMetrics, ReferenceData}
+import uk.gov.hmrc.play.bootstrap.metrics.Metrics
 
 import javax.inject.Singleton
 import scala.concurrent.ExecutionContext
