@@ -22,7 +22,7 @@ import play.api.libs.json._
 
 object response {
 
-  import scala.collection.JavaConverters._
+  import scala.jdk.CollectionConverters._
 
   case class SupportedCountryCodes(abp: List[String], nonAbp: List[String])
 

@@ -34,12 +34,12 @@ abstract class AddressController(cc: ControllerComponents) extends BackendContro
     NotFound(keyVal(data.last))
   }
 
-  protected final def logEvent(tag: String, data: (String, String)*) {
+  protected final def logEvent(tag: String, data: (String, String)*): Unit = {
     val formatted = data.map(keyVal).mkString(" ")
     logger.info(s"$tag $formatted")
   }
 
-  protected final def logEvent(tag: String, matches: Int, data: List[(String, String)]) {
+  protected final def logEvent(tag: String, matches: Int, data: List[(String, String)]): Unit = {
     logEvent(tag, ("matches" -> matches.toString) :: data: _*)
   }
 

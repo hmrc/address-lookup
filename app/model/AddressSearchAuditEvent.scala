@@ -46,7 +46,7 @@ object AddressSearchAuditEvent {
   import Country.formats._
   import LocalCustodian.formats._
 
-  implicit def requestDetailsWrites = Json.writes[AddressSearchAuditEventRequestDetails]
-  implicit def addressWrites = Json.writes[AddressSearchAuditEventMatchedAddress]
-  implicit def writes = Json.writes[AddressSearchAuditEvent]
+  implicit def requestDetailsWrites: Writes[AddressSearchAuditEventRequestDetails] = Json.writes[AddressSearchAuditEventRequestDetails]
+  implicit def addressWrites: Writes[AddressSearchAuditEventMatchedAddress] = Json.writes[AddressSearchAuditEventMatchedAddress]
+  implicit def writes: Writes[AddressSearchAuditEvent] = Json.writes[AddressSearchAuditEvent]
 }

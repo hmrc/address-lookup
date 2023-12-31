@@ -36,12 +36,11 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
 class AddressSearchController @Inject()(addressSearch: ABPAddressRepository, nonABPAddressSearcher: NonABPAddressRepository,
-                                        responseProcessor: ResponseProcessor, auditConnector: AuditConnector, ec: ExecutionContext,
+                                        responseProcessor: ResponseProcessor, auditConnector: AuditConnector,
                                         cc: ControllerComponents, supportedCountryCodes: SupportedCountryCodes,
-                                        scheduler: CheckAddressDataScheduler, val configHelper: ConfigHelper)
+                                        scheduler: CheckAddressDataScheduler, val configHelper: ConfigHelper)(
+                                       implicit ec: ExecutionContext)
   extends AddressController(cc) with AccessChecker {
-
-  implicit private val xec: ExecutionContext = ec
 
   scheduler.enable()
 
@@ -210,7 +209,7 @@ class AddressSearchController @Inject()(addressSearch: ABPAddressRepository, non
         a2.length,
         a2.map { ma =>
           AddressSearchAuditEventMatchedAddress(
-            ma.uprn.getOrElse("").toString,
+            ma.uprn.map(_.toString).getOrElse("").toString,
             ma.parentUprn,
             ma.usrn,
             ma.organisation,

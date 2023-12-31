@@ -1,19 +1,23 @@
 import uk.gov.hmrc.DefaultBuildSettings
-import uk.gov.hmrc.DefaultBuildSettings.{defaultSettings, scalaSettings}
 
 ThisBuild / scalaVersion := "2.13.12"
 ThisBuild / majorVersion := 4
 
 lazy val microservice = Project("address-lookup", file("."))
   .enablePlugins(play.sbt.PlayScala, SbtDistributablesPlugin, BuildInfoPlugin)
-  .settings(scalaSettings*)
-  .settings(scalacOptions ++= Seq("-Xlint:-missing-interpolator"))
-  .settings(defaultSettings()*)
   .settings(
     libraryDependencies ++= AppDependencies(),
+    scalacOptions ++= Seq("-Xlint:-missing-interpolator"),
+    scalacOptions += "-Wconf:src=routes/.*:s"
+  )
+  .settings(
     Test / parallelExecution := false,
     Test / fork := false,
     retrieveManaged := true
+  )
+  .settings( // https://github.com/sbt/sbt-buildinfo
+    buildInfoKeys := Seq[BuildInfoKey](version),
+    buildInfoPackage := "buildinfo"
   )
   .settings(resolvers += Resolver.jcenterRepo)
   .settings(PlayKeys.playDefaultPort := 9022)

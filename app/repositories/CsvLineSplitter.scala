@@ -20,8 +20,7 @@ import com.univocity.parsers.csv.{CsvParser => UnivocityParser, CsvParserSetting
 
 import java.io._
 import java.nio.charset.StandardCharsets
-import java.util.zip.GZIPInputStream
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 /**
   * Raw-Java style fast line splitter for CSV files. This uses the Univocity API for high performance.
@@ -52,12 +51,13 @@ class CsvLineSplitter(reader: Reader) extends java.util.Iterator[Array[String]] 
 
   override def next(): Array[String] = {
     val r = row
-    if (row != null)
+    if (row != null) {
       row = parser.parseNext()
+    }
     r
   }
 
-  def stopParsing() {
+  def stopParsing(): Unit = {
     if (row != null) {
       parser.stopParsing()
       row = null
@@ -70,27 +70,7 @@ class CsvLineSplitter(reader: Reader) extends java.util.Iterator[Array[String]] 
   * Pimped-Scala style iterator for CSV file splitting, based on CsvLineSplitter.
   */
 object CsvParser {
-
-  def splitResource(resource: String): Iterator[Array[String]] = {
-    val is = getClass.getClassLoader.getResourceAsStream(resource)
-    if (is == null) {
-      throw new IllegalArgumentException(resource + ": no such resource")
-    }
-    val giz = if (resource.endsWith(".gz")) new GZIPInputStream(is) else is
-    val list = split(new InputStreamReader(giz, StandardCharsets.UTF_8))
-    giz.close()
-    list
-  }
-
-  def split(multilineCsvString: String): Iterator[Array[String]] = {
-    split(new StringReader(multilineCsvString))
-  }
-
   def split(reader: Reader): Iterator[Array[String]] = {
     new CsvLineSplitter(reader).asScala
-  }
-
-  def split(is: InputStream): Iterator[Array[String]] = {
-    new CsvLineSplitter(is).asScala
   }
 }

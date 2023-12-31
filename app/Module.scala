@@ -63,15 +63,15 @@ class Module(environment: Environment, configuration: Configuration) extends Abs
       inMemoryABPAddressRepository
     }
 
-    new ABPAddressRepositoryMetrics(repository, metrics.defaultRegistry, executionContext)
+    new ABPAddressRepositoryMetrics(repository, metrics.defaultRegistry)
   }
 
   @Provides
   @Singleton
   def provideNonAbpAddressRepository(metrics: Metrics, configuration: Configuration, configHelper: ConfigHelper,
-                                     rdsQueryConfig: RdsQueryConfig, executionContext: ExecutionContext,
-                                     applicationLifecycle: ApplicationLifecycle,
-                                     inMemoryNonABPAddressRepository: InMemoryNonABPAddressRepository): NonABPAddressRepository = {
+                                     rdsQueryConfig: RdsQueryConfig, applicationLifecycle: ApplicationLifecycle,
+                                     inMemoryNonABPAddressRepository: InMemoryNonABPAddressRepository)(
+    implicit  executionContext: ExecutionContext): NonABPAddressRepository = {
 
     val dbEnabled = configHelper.isCipPaasDbEnabled()
 
@@ -82,7 +82,7 @@ class Module(environment: Environment, configuration: Configuration) extends Abs
       inMemoryNonABPAddressRepository
     }
 
-    new NonABPAddressRepositoryMetrics(repository, metrics.defaultRegistry, executionContext)
+    new NonABPAddressRepositoryMetrics(repository, metrics.defaultRegistry)
   }
 
   @Provides

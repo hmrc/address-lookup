@@ -305,7 +305,7 @@ class AddressSearchControllerTest extends AnyWordSpec with Matchers with GuiceOn
 
         val scheduler = app.injector.instanceOf[CheckAddressDataScheduler]
         val configHelper = app.injector.instanceOf[ConfigHelper]
-        val controller = new AddressSearchController(abpSearcher, nonAbpSearcher, new ResponseStub(Nil), mockAuditConnector, ec, cc, SupportedCountryCodes(List(), List()), scheduler, configHelper)
+        val controller = new AddressSearchController(abpSearcher, nonAbpSearcher, new ResponseStub(Nil), mockAuditConnector, cc, SupportedCountryCodes(List(), List()), scheduler, configHelper)
         val jsonPayload = Json.toJson(LookupByUprnRequest("GB0123456789"))
         val request = FakeRequest("POST", "/lookup/by-uprn")
           .withBody(jsonPayload.toString)

@@ -25,9 +25,7 @@ import repositories.ABPAddressRepository
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class ABPAddressRepositoryMetrics(peer: ABPAddressRepository, registry: MetricRegistry, ec: ExecutionContext) extends ABPAddressRepository {
-
-  private implicit val xec = ec
+class ABPAddressRepositoryMetrics(peer: ABPAddressRepository, registry: MetricRegistry)(implicit ec: ExecutionContext) extends ABPAddressRepository {
 
   private val prefix = "AddressLookupService"
   private val findIdTimer: Timer = registry.timer(name(prefix, "findId"))
@@ -40,7 +38,7 @@ class ABPAddressRepositoryMetrics(peer: ABPAddressRepository, registry: MetricRe
 
   private val addressSearchHits: Meter = registry.meter(name(prefix, "searchResults"))
 
-  private def timerStop[T](t: Context, r: T) = {
+  private def timerStop[T](t: Context, r: T): T = {
     t.stop()
     r
   }
@@ -91,5 +89,3 @@ class ABPAddressRepositoryMetrics(peer: ABPAddressRepository, registry: MetricRe
     }
   }
 }
-
-

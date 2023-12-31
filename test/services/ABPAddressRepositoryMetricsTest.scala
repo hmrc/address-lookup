@@ -49,7 +49,7 @@ class ABPAddressRepositoryMetricsTest extends AnyWordSpec with Matchers with Moc
     when(registry.timer(anyString())) thenReturn timer
     when(registry.meter(anyString())) thenReturn meter
     
-    val asm = new ABPAddressRepositoryMetrics(peer, registry, ec)
+    val asm = new ABPAddressRepositoryMetrics(peer, registry)
   }
 
   "AddressSearchMetrics" when {
