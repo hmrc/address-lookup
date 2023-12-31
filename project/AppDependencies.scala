@@ -26,6 +26,4 @@ object AppDependencies {
     "org.pegdown" % "pegdown" % pegdownVersion % Test,
     "org.jsoup" % "jsoup" % "1.14.3" % Test,
   )
-
-  def apply(): Seq[ModuleID] = compile ++ test
 }

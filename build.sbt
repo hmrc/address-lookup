@@ -6,23 +6,23 @@ ThisBuild / majorVersion := 4
 lazy val microservice = Project("address-lookup", file("."))
   .enablePlugins(play.sbt.PlayScala, SbtDistributablesPlugin, BuildInfoPlugin)
   .settings(
-    libraryDependencies ++= AppDependencies(),
+    libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test,
     scalacOptions ++= Seq("-Xlint:-missing-interpolator"),
     scalacOptions += "-Wconf:src=routes/.*:s"
+  )
+  .settings( // https://github.com/sbt/sbt-buildinfo
+    buildInfoKeys := Seq[BuildInfoKey](version),
+    buildInfoPackage := "buildinfo"
   )
   .settings(
     Test / parallelExecution := false,
     Test / fork := false,
     retrieveManaged := true
   )
-  .settings( // https://github.com/sbt/sbt-buildinfo
-    buildInfoKeys := Seq[BuildInfoKey](version),
-    buildInfoPackage := "buildinfo"
-  )
-  .settings(resolvers += Resolver.jcenterRepo)
   .settings(PlayKeys.playDefaultPort := 9022)
+  .settings(resolvers += Resolver.jcenterRepo)
 
 lazy val it = project.in(file("it"))
   .enablePlugins(play.sbt.PlayScala)
   .dependsOn(microservice % "test->test")
-  .settings(DefaultBuildSettings.itSettings)
+  .settings(DefaultBuildSettings.itSettings())
