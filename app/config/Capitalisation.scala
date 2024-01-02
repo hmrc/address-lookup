@@ -34,7 +34,7 @@ object Capitalisation {
     if (rest.isEmpty) first
     else first + rest.map(capitaliseRestOfSubwords).mkString("-", "-", "")
 
-  private def splitOnDash(phrase: String): Seq[String] = phrase.split('-')
+  private def splitOnDash(phrase: String): Seq[String] = phrase.split('-').toIndexedSeq
 
   private def asFirstWord(word: String): String = {
     val dashedPhrase = splitOnDash(word)

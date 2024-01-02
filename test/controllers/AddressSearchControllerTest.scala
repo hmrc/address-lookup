@@ -32,7 +32,7 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.Status
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
-import play.api.mvc.Request
+import play.api.mvc.{ControllerComponents, Request}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import play.api.{Application, inject}
@@ -41,15 +41,15 @@ import services.{CheckAddressDataScheduler, ReferenceData, ResponseProcessor}
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import util.Utils._
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
 class AddressSearchControllerTest extends AnyWordSpec with Matchers with GuiceOneAppPerSuite with MockitoSugar {
 
-  implicit val ec = scala.concurrent.ExecutionContext.Implicits.global
+  implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
   implicit val timeout: FiniteDuration = 1 second
-  val cc = play.api.test.Helpers.stubControllerComponents()
+  private val cc: ControllerComponents = play.api.test.Helpers.stubControllerComponents()
 
   private val en = "en"
 

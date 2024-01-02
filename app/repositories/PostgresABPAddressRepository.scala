@@ -37,7 +37,8 @@ class PostgresABPAddressRepository @Inject()(transactor: Transactor[IO], queryCo
     val queryFragment = baseQuery ++
       sql""" WHERE uprn = ${uprn.toLong}"""
 
-    queryFragment.query[SqlDbAddress].to[List].transact(transactor).unsafeToFuture().map(l => l.map(mapToDbAddress))
+    queryFragment.query[SqlDbAddress].to[List].transact(transactor).unsafeToFuture()
+      .map(l => l.map(mapToDbAddress))
   }
 
   override def findPostcode(postcode: Postcode, filter: Option[String]): Future[List[DbAddress]] = {

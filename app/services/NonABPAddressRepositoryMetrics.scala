@@ -20,7 +20,6 @@ import com.codahale.metrics.MetricRegistry.name
 import com.codahale.metrics.Timer.Context
 import com.codahale.metrics.{MetricRegistry, Timer}
 import model.internal.NonUKAddress
-import model.response
 import repositories.NonABPAddressRepository
 
 import scala.concurrent.{ExecutionContext, Future}
