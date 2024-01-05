@@ -17,8 +17,6 @@
 package repositories
 
 import model.internal.NonUKAddress
-import model.response
-import model.response.SupportedCountryCodes
 
 import javax.inject.Inject
 import scala.concurrent.Future

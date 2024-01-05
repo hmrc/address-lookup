@@ -20,9 +20,9 @@ import util._
 
 case class Location(latitude: BigDecimal, longitude: BigDecimal) {
 
-  def toSeq = Seq(latitude, longitude)
+  def toSeq: Seq[BigDecimal] = Seq(latitude, longitude)
 
-  override def toString: String = latitude + "," + longitude
+  override def toString: String = s"${latitude},${longitude}"
 }
 
 object Location {

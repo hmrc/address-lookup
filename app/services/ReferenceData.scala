@@ -54,10 +54,9 @@ object ReferenceData {
     }
   }
 
-  def loadResource(resource: String,
-                   keyIndex: Int,
-                   valueIndex: Int): Map[Int, String] = {
-    val start = System.currentTimeMillis()
+  private def loadResource(resource: String,
+                           keyIndex: Int,
+                           valueIndex: Int): Map[Int, String] = {
 
     val is = getClass.getClassLoader.getResourceAsStream(resource)
     if (is == null) {
@@ -85,9 +84,6 @@ object ReferenceData {
     } finally {
       reader.close()
     }
-
-    val time = System.currentTimeMillis() - start
-    // println(s"Loading $resource took ${time}ms")
 
     outputBuffer.toMap
   }

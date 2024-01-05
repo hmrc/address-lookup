@@ -20,14 +20,11 @@ import com.codahale.metrics.MetricRegistry.name
 import com.codahale.metrics.Timer.Context
 import com.codahale.metrics.{MetricRegistry, Timer}
 import model.internal.NonUKAddress
-import model.response
 import repositories.NonABPAddressRepository
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class NonABPAddressRepositoryMetrics(peer: NonABPAddressRepository, registry: MetricRegistry, ec: ExecutionContext) extends NonABPAddressRepository {
-  private implicit val xec = ec
-
+class NonABPAddressRepositoryMetrics(peer: NonABPAddressRepository, registry: MetricRegistry)(implicit ec: ExecutionContext) extends NonABPAddressRepository {
   private val prefix = "AddressLookupService"
   private val findInCountryTimer: Timer = registry.timer(name(prefix, "findInCountry"))
 

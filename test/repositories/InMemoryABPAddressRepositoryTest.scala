@@ -54,7 +54,6 @@ class InMemoryABPAddressRepositoryTest extends AnyWordSpec with Matchers with Gu
     "findTown is called with a town and no filter" should {
       "return addresses when matches are found" in {
         val town = "ATown"
-        val expected = DbAddress(town,0L, None, None, None, List("A House 27-45", "A Street"), "London", "FX9 9PY", Some("GB-ENG"), Some("GB"), Some(5840), Some("en"), None, Some(Location("12.345678", "-12.345678").toString))
         val addresses = await(lookupService.findTown(town))
         addresses should not be empty
         addresses should have length (3000)
@@ -70,7 +69,6 @@ class InMemoryABPAddressRepositoryTest extends AnyWordSpec with Matchers with Gu
     "findTown is called with an all lowercase town and no filter" should {
       "return addresses when matches are found" in {
         val town = "atown"
-        val expected = DbAddress(town, 0l, None, None, None, List("A House 27-45", "A Street"), "London", "FX9 9PY", Some("GB-ENG"), Some("GB"), Some(5840), Some("en"), None, Some(Location("12.345678", "-12.345678").toString))
         val addresses = await(lookupService.findTown(town))
         addresses should not be empty
         addresses should have length (3000)
@@ -81,7 +79,6 @@ class InMemoryABPAddressRepositoryTest extends AnyWordSpec with Matchers with Gu
       "return addresses when matches are found" in {
         val town = "Newcastle upon Tyne"
         val filter = "Boulevard"
-        val expected = DbAddress(town, 0l, None, None, None, List("A House 27-45", "A Street"), "London", "FX9 9PY", Some("GB-ENG"), Some("GB"), Some(5840), Some("en"), None, Some(Location("12.345678", "-12.345678").toString))
         val addresses = await(lookupService.findTown(town, Option(filter)))
         addresses should not be empty
         addresses should have length (2)

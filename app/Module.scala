@@ -15,13 +15,13 @@
  */
 
 import com.google.inject.{AbstractModule, Provides}
-import com.kenshoo.play.metrics.Metrics
 import config.ConfigHelper
 import model.response.SupportedCountryCodes
 import play.api.inject.ApplicationLifecycle
 import play.api.{Configuration, Environment}
 import repositories._
 import services.{ABPAddressRepositoryMetrics, NonABPAddressRepositoryMetrics, ReferenceData}
+import uk.gov.hmrc.play.bootstrap.metrics.Metrics
 
 import javax.inject.Singleton
 import scala.concurrent.ExecutionContext
@@ -63,15 +63,15 @@ class Module(environment: Environment, configuration: Configuration) extends Abs
       inMemoryABPAddressRepository
     }
 
-    new ABPAddressRepositoryMetrics(repository, metrics.defaultRegistry, executionContext)
+    new ABPAddressRepositoryMetrics(repository, metrics.defaultRegistry)
   }
 
   @Provides
   @Singleton
   def provideNonAbpAddressRepository(metrics: Metrics, configuration: Configuration, configHelper: ConfigHelper,
-                                     rdsQueryConfig: RdsQueryConfig, executionContext: ExecutionContext,
-                                     applicationLifecycle: ApplicationLifecycle,
-                                     inMemoryNonABPAddressRepository: InMemoryNonABPAddressRepository): NonABPAddressRepository = {
+                                     rdsQueryConfig: RdsQueryConfig, applicationLifecycle: ApplicationLifecycle,
+                                     inMemoryNonABPAddressRepository: InMemoryNonABPAddressRepository)(
+    implicit  executionContext: ExecutionContext): NonABPAddressRepository = {
 
     val dbEnabled = configHelper.isCipPaasDbEnabled()
 
@@ -82,7 +82,7 @@ class Module(environment: Environment, configuration: Configuration) extends Abs
       inMemoryNonABPAddressRepository
     }
 
-    new NonABPAddressRepositoryMetrics(repository, metrics.defaultRegistry, executionContext)
+    new NonABPAddressRepositoryMetrics(repository, metrics.defaultRegistry)
   }
 
   @Provides
