@@ -19,6 +19,7 @@ package it.suites
 import com.codahale.metrics.SharedMetricRegistries
 import it.helper.AppServerTestApi
 import model.address.{AddressRecord, Postcode}
+import model.response.ErrorResponse
 import org.mockito.ArgumentMatchers.{any, eq => meq}
 import org.mockito.Mockito
 import org.mockito.Mockito.{times, when}
@@ -27,7 +28,7 @@ import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.json.{JsArray, Json}
+import play.api.libs.json.{JsArray, JsObject, JsString, JsValue, Json}
 import play.api.libs.ws.WSClient
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import play.inject.Bindings
@@ -258,6 +259,18 @@ class PostcodeLookupSuiteV2()
       "give a bad request when an unexpected parameter is sent on its own" in {
         val response = post("/lookup", """{"foo":"FX1 4AC"}""")
         response.status shouldBe BAD_REQUEST
+      }
+
+      "give a bad request when the payload is invalid json" in {
+        import ErrorResponse.Implicits._
+        val response = post("/lookup", """{"foo":"FX1 4AC""")
+        response.status shouldBe BAD_REQUEST
+        val responseText = response.body
+        val errorResponse = Json.parse(responseText).validate[ErrorResponse].get
+
+        errorResponse.obj should have length(1)
+        errorResponse.obj.head.msg should have length(1)
+        errorResponse.obj.head.msg.head shouldBe "error.payload.invalid"
       }
 
       "give a not found when an unknown path is requested" in {

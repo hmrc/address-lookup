@@ -40,4 +40,24 @@ object response {
     implicit val writes: Writes[SupportedCountryCodes] = Json.writes[SupportedCountryCodes]
     implicit val reads: Reads[SupportedCountryCodes] = Json.reads[SupportedCountryCodes]
   }
+
+  case class ErrorMessage(msg: List[String], args: List[String])
+  object ErrorMessage {
+    val invalidJson: ErrorMessage = ErrorMessage(msg = List("error.payload.invalid"), args = List())
+
+    object Implicits {
+      implicit val errorMessageReads: Reads[ErrorMessage] = Json.reads[ErrorMessage]
+      implicit val errorMessageWrites: Writes[ErrorMessage] = Json.writes[ErrorMessage]
+    }
+  }
+  case class ErrorResponse(obj: List[ErrorMessage])
+  object ErrorResponse {
+    val invalidJson = ErrorResponse(obj = List(ErrorMessage.invalidJson))
+
+    object Implicits {
+      import ErrorMessage.Implicits._
+      implicit val errorResponseReads: Reads[ErrorResponse] = Json.reads[ErrorResponse]
+      implicit val errorResponseWrites: Writes[ErrorResponse] = Json.writes[ErrorResponse]
+    }
+  }
 }

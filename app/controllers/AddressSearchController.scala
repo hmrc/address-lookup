@@ -22,7 +22,7 @@ import model._
 import model.address.{AddressRecord, Postcode}
 import model.internal.NonUKAddress
 import model.request.{LookupByCountryRequest, LookupByPostTownRequest, LookupByPostcodeRequest, LookupByUprnRequest}
-import model.response.SupportedCountryCodes
+import model.response.{ErrorResponse, SupportedCountryCodes}
 import play.api.libs.json.{JsError, JsSuccess, Json}
 import play.api.mvc._
 import repositories.{ABPAddressRepository, NonABPAddressRepository}
@@ -41,16 +41,22 @@ class AddressSearchController @Inject()(addressSearch: ABPAddressRepository, non
                                         scheduler: CheckAddressDataScheduler, val configHelper: ConfigHelper)(
                                        implicit ec: ExecutionContext)
   extends AddressController(cc) with AccessChecker {
+  import ErrorResponse.Implicits._
 
   scheduler.enable()
 
   def search(): Action[String] = accessCheckedAction(parse.tolerantText) {
     request =>
-      Json.parse(request.body).validate[LookupByPostcodeRequest](LookupByPostcodeRequest.reads) match {
-        case JsSuccess(lookupByPostcodeRequest, _) =>
-          searchByPostcode(request, lookupByPostcodeRequest.postcode, lookupByPostcodeRequest.filter)
-        case JsError(errors) =>
-          Future.successful(BadRequest(JsError.toJson(errors)))
+      val maybeJson = Try(Json.parse(request.body))
+      maybeJson match {
+        case Success(json) =>
+          json.validate[LookupByPostcodeRequest](LookupByPostcodeRequest.reads) match {
+            case JsSuccess(lookupByPostcodeRequest, _) =>
+              searchByPostcode(request, lookupByPostcodeRequest.postcode, lookupByPostcodeRequest.filter)
+            case JsError(errors) =>
+              Future.successful(BadRequest(JsError.toJson(errors)))
+          }
+        case Failure(_) => Future.successful(BadRequest(Json.toJson(ErrorResponse.invalidJson)))
       }
   }
 
@@ -64,7 +70,7 @@ class AddressSearchController @Inject()(addressSearch: ABPAddressRepository, non
           case JsError(errors) =>
             Future.successful(BadRequest(JsError.toJson(errors)))
         }
-        case Failure(exception) => Future.successful(BadRequest("""{"obj":[{"msg":["error.payload.missing"],"args":[]}]}"""))
+        case Failure(_) => Future.successful(BadRequest(Json.toJson(ErrorResponse.invalidJson)))
       }
   }
 
@@ -78,7 +84,7 @@ class AddressSearchController @Inject()(addressSearch: ABPAddressRepository, non
           case JsError(errors) =>
             Future.successful(BadRequest(JsError.toJson(errors)))
         }
-        case Failure(exception) => Future.successful(BadRequest("""{"obj":[{"msg":["error.payload.missing"],"args":[]}]}"""))
+        case Failure(_) => Future.successful(BadRequest(Json.toJson(ErrorResponse.invalidJson)))
       }
   }
 
@@ -100,7 +106,7 @@ class AddressSearchController @Inject()(addressSearch: ABPAddressRepository, non
           case JsError(errors) =>
             Future.successful(BadRequest(JsError.toJson(errors)))
         }
-        case Failure(exception) => Future.successful(BadRequest("""{"obj":[{"msg":["error.payload.missing"],"args":[]}]}"""))
+        case Failure(_) => Future.successful(BadRequest(Json.toJson(ErrorResponse.invalidJson)))
       }
   }
 
