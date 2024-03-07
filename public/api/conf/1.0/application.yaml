@@ -84,7 +84,7 @@ paths:
             The request has been redirected. Clients should follow the redirect using the location header as per the HTTP specification.
         400:
           description: |
-            The request was invalid, e.g the the postcode is not well formed.
+            The request was invalid, e.g the postcode is not well formed.
         5XX:
           description: |
             An unexpected server error occurred when processing the request. These are usually temporary and consumers should try again.
