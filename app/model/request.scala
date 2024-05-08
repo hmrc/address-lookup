@@ -23,7 +23,9 @@ import play.api.libs.json._
 
 
 object request {
-  case class LookupByPostcodeRequest(postcode: Postcode, filter: Option[String] = None)
+  abstract class Filterable(filter: Option[String])
+
+  case class LookupByPostcodeRequest(postcode: Postcode, filter: Option[String] = None) extends Filterable(filter)
 
   object LookupByPostcodeRequest {
     implicit val postcodeReads: Reads[Postcode] = Reads[Postcode] { json =>
@@ -67,7 +69,7 @@ object request {
     implicit val writes: Writes[LookupByIdRequest] = Json.writes[LookupByIdRequest]
   }
 
-  case class LookupByPostTownRequest(posttown: String, filter: Option[String])
+  case class LookupByPostTownRequest(posttown: String, filter: Option[String]) extends Filterable(filter)
 
   object LookupByPostTownRequest {
     implicit val reads: Reads[LookupByPostTownRequest] = (
@@ -81,10 +83,21 @@ object request {
     implicit val writes: Writes[LookupByPostTownRequest] = Json.writes[LookupByPostTownRequest]
   }
 
-  case class LookupByCountryRequest(filter: String)
+  case class LookupByCountryRequestFilter(filter: String)
+
+  object LookupByCountryRequestFilter {
+    implicit val reads: Reads[LookupByCountryRequestFilter] = Json.reads[LookupByCountryRequestFilter]
+    implicit val writes: Writes[LookupByCountryRequestFilter] = Json.writes[LookupByCountryRequestFilter]
+  }
+
+  case class LookupByCountryRequest(country: String, filter: Option[String])
 
   object LookupByCountryRequest {
+    def fromLookupByCountryRequestFilter(country: String, lookupByCountryRequestFilter: LookupByCountryRequestFilter) =
+      new LookupByCountryRequest(country, Option(lookupByCountryRequestFilter.filter))
+
     implicit val reads: Reads[LookupByCountryRequest] = Json.reads[LookupByCountryRequest]
     implicit val writes: Writes[LookupByCountryRequest] = Json.writes[LookupByCountryRequest]
   }
+
 }

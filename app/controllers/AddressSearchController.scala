@@ -18,10 +18,10 @@ package controllers
 
 import access.AccessChecker
 import config.ConfigHelper
-import model.request.{LookupByCountryRequest, LookupByPostTownRequest, LookupByPostcodeRequest, LookupByUprnRequest}
+import model.request.{LookupByCountryRequest, LookupByCountryRequestFilter, LookupByPostTownRequest, LookupByPostcodeRequest, LookupByUprnRequest}
 import model.response.{ErrorResponse, SupportedCountryCodes}
 import play.api.Logging
-import play.api.libs.json.{JsError, JsSuccess, Json}
+import play.api.libs.json.{JsError, JsSuccess, JsValue, Json, Reads}
 import play.api.mvc._
 import services.{AddressSearchService, CheckAddressDataScheduler}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -35,7 +35,7 @@ class AddressSearchController @Inject()(addressSearchService: AddressSearchServi
                                         val controllerComponents: ControllerComponents,
                                         supportedCountryCodes: SupportedCountryCodes,
                                         scheduler: CheckAddressDataScheduler,
-                                        val configHelper: ConfigHelper)(ec: ExecutionContext)
+                                        val configHelper: ConfigHelper)(implicit ec: ExecutionContext)
   extends BaseController with AccessChecker with Logging {
   import ErrorResponse.Implicits._
 
@@ -43,66 +43,57 @@ class AddressSearchController @Inject()(addressSearchService: AddressSearchServi
 
   def search(): Action[String] = accessCheckedAction(parse.tolerantText) {
     request =>
-      val maybeJson = Try(Json.parse(request.body))
-      maybeJson match {
-        case Success(json) =>
-          json.validate[LookupByPostcodeRequest](LookupByPostcodeRequest.reads) match {
-            case JsSuccess(lookupByPostcodeRequest, _) =>
-              addressSearchService.searchByPostcode(request, lookupByPostcodeRequest.postcode, lookupByPostcodeRequest.filter)
-            case JsError(errors) =>
-              Future.successful(BadRequest(JsError.toJson(errors)))
-          }
-        case Failure(_) => Future.successful(BadRequest(Json.toJson(ErrorResponse.invalidJson)))
+      withValidJson[LookupByPostcodeRequest](request) match {
+        case Left(err)                      => err
+        case Right(lookupByPostcodeRequest: LookupByPostcodeRequest) =>
+          addressSearchService.searchByPostcode(request, lookupByPostcodeRequest.postcode, lookupByPostcodeRequest.filter)
       }
   }
 
   def searchByUprn(): Action[String] = accessCheckedAction(parse.tolerantText) {
     request =>
-      val maybeJson = Try(Json.parse(request.body))
-      maybeJson match {
-        case Success(json) => json.validate[LookupByUprnRequest] match {
-          case JsSuccess(lookupByUprnRequest, _) =>
-            addressSearchService.searchByUprn(request, lookupByUprnRequest.uprn)
-          case JsError(errors) =>
-            Future.successful(BadRequest(JsError.toJson(errors)))
-        }
-        case Failure(_) => Future.successful(BadRequest(Json.toJson(ErrorResponse.invalidJson)))
+      withValidJson[LookupByUprnRequest](request) match {
+        case Left(err)                      => err
+        case Right(lookupByUprnRequest: LookupByUprnRequest) =>
+          addressSearchService.searchByUprn(request, lookupByUprnRequest.uprn)
       }
   }
 
   def searchByPostTown(): Action[String] = accessCheckedAction(parse.tolerantText) {
     request =>
-      val maybeJson = Try(Json.parse(request.body))
-      maybeJson match {
-        case Success(json) => json.validate[LookupByPostTownRequest] match {
-          case JsSuccess(lookupByTownRequest, _) =>
-            addressSearchService.searchByTown(request, lookupByTownRequest.posttown, lookupByTownRequest.filter)
-          case JsError(errors) =>
-            Future.successful(BadRequest(JsError.toJson(errors)))
-        }
-        case Failure(_) => Future.successful(BadRequest(Json.toJson(ErrorResponse.invalidJson)))
+      withValidJson[LookupByPostTownRequest](request) match {
+        case Left(err)                      => err
+        case Right(lookupByPostTownRequest: LookupByPostTownRequest) =>
+          addressSearchService.searchByTown(request, lookupByPostTownRequest.posttown.toLowerCase(), lookupByPostTownRequest.filter)
       }
-  }
-
-  def supportedCountries(): Action[AnyContent] = Action.async {
-    import model.response.SupportedCountryCodes._
-    Future.successful(Ok(Json.toJson(supportedCountryCodes)))
   }
 
   def searchByCountry(countryCode: String): Action[String] = accessCheckedAction(parse.tolerantText) {
     request =>
       implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequest(request)
-
-      val maybeJson = Try(Json.parse(request.body))
-      maybeJson match {
-        case Success(json) => json.validate[LookupByCountryRequest] match {
-          case JsSuccess(lookupByCountryRequest, _) =>
-            val userAgent = request.headers.get("User-Agent")
-            addressSearchService.searchByCountry(userAgent, countryCode.toLowerCase(), lookupByCountryRequest.filter)
-          case JsError(errors) =>
-            Future.successful(BadRequest(JsError.toJson(errors)))
-        }
-        case Failure(_) => Future.successful(BadRequest(Json.toJson(ErrorResponse.invalidJson)))
+      withValidJson[LookupByCountryRequestFilter](request, je => Json.toJson(ErrorResponse.invalidJson)) match {
+        case Left(err)                                    => err
+        case Right(country: LookupByCountryRequestFilter) =>
+          val countryLookup = LookupByCountryRequest.fromLookupByCountryRequestFilter(countryCode, country)
+          addressSearchService.searchByCountry(request, countryLookup.country.toLowerCase(), countryLookup.filter)
       }
+  }
+
+  private def withValidJson[T: Reads](request: Request[String],
+                                      validateError: JsError => JsValue = err => JsError.toJson(err)): Either[Future[Result], Any] = {
+    Try(Json.parse(request.body)) match {
+      case Success(json) => json.validate[T] match {
+        case JsSuccess(value, _) =>
+          Right(value)
+        case jse@JsError(_)     =>
+          Left(Future.successful(BadRequest(validateError(jse))))
+      }
+      case Failure(_) => Left(Future.successful(BadRequest(Json.toJson(ErrorResponse.invalidJson))))
+    }
+  }
+
+  def supportedCountries(): Action[AnyContent] = Action.async {
+    import model.response.SupportedCountryCodes._
+    Future.successful(Ok(Json.toJson(supportedCountryCodes)))
   }
 }

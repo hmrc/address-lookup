@@ -21,5 +21,5 @@ import model.internal.NonUKAddress
 import scala.concurrent.Future
 
 trait NonABPAddressRepository {
-  def findInCountry(countryCode: String, filter: String): Future[List[NonUKAddress]]
+  def findInCountry(countryCode: String, filter: Option[String]): Future[List[NonUKAddress]]
 }

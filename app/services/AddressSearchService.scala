@@ -103,7 +103,7 @@ class AddressSearchService@Inject()(addressSearch: ABPAddressRepository, nonABPA
     }
   }
 
-  def searchByCountry[A](userAgent: Option[String], countryCode: String, filter: String)(implicit hc: HeaderCarrier): Future[Result] = {
+  def searchByCountry[A](request: Request[A], countryCode: String, filter: Option[String])(implicit hc: HeaderCarrier): Future[Result] = {
 
     if (countryCode.isEmpty || "[a-zA-Z]{2}".r.unapplySeq(countryCode).isEmpty) {
       Future.successful {
@@ -122,8 +122,9 @@ class AddressSearchService@Inject()(addressSearch: ABPAddressRepository, nonABPA
 
       nonABPAddressSearcher.findInCountry(countryCode, filter).map {
         a =>
-          auditNonUKAddressSearch(userAgent, a, countryCode, Option(filter))
-          logEvent("LOOKUP", a.size, List("countryCode" -> countryCode, "filter" -> filter))
+          val userAgent = request.headers.get("User-Agent")
+          auditNonUKAddressSearch(userAgent, a, countryCode, filter)
+          logEvent("LOOKUP", a.size, filter.foldLeft(List("countryCode" -> countryCode)){case (a, c) => a :+ "filter" -> c})
           Ok(Json.toJson(a))
       }.recover {
         case e: Throwable => logEvent("LOOKUP-NONUK-ERROR", "errorMessage" -> e.getMessage)
