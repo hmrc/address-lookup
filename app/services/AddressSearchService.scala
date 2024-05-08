@@ -20,6 +20,7 @@ import model.address.{AddressRecord, Postcode}
 import model.internal.NonUKAddress
 import model.response.SupportedCountryCodes
 import model._
+import model.request.{LookupByCountryRequest, LookupByPostTownRequest, LookupByPostcodeRequest, LookupByUprnRequest}
 import play.api.Logging
 import play.api.libs.json.Json
 import play.api.mvc.Results._
@@ -36,13 +37,14 @@ import scala.util.Try
 class AddressSearchService@Inject()(addressSearch: ABPAddressRepository, nonABPAddressSearcher: NonABPAddressRepository,
                                     responseProcessor: ResponseProcessor, auditConnector: AuditConnector, supportedCountryCodes: SupportedCountryCodes
                                    )(implicit ec: ExecutionContext) extends Logging {
-  def searchByUprn[A](request: Request[A], uprn: String): Future[Result] = {
-    if (Try(uprn.toLong).isFailure) {
+  def searchByUprn[A](request: Request[A], lookup: LookupByUprnRequest): Future[Result] = {
+    if (Try(lookup.uprn.toLong).isFailure) {
       Future.successful {
-        badRequest("BAD-UPRN", "uprn" -> uprn, "error" -> s"uprn must only consist of digits")
+        badRequest("BAD-UPRN", "uprn" -> lookup.uprn, "error" -> s"uprn must only consist of digits")
       }
     } else {
       import model.address.AddressRecord.formats._
+      import lookup._
 
       addressSearch.findUprn(uprn).map {
         a =>
@@ -53,15 +55,16 @@ class AddressSearchService@Inject()(addressSearch: ABPAddressRepository, nonABPA
     }
   }
 
-  def searchByPostcode[A](request: Request[A], postcode: Postcode, filter: Option[String]): Future[Result] = {
+  def searchByPostcode[A](request: Request[A], lookup: LookupByPostcodeRequest): Future[Result] = {
     implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequest(request)
 
-    if (postcode.toString.isEmpty) {
+    if (lookup.postcode.toString.isEmpty) {
       Future.successful {
-        badRequest("BAD-POSTCODE", "error" -> s"missing or badly-formed $postcode parameter")
+        badRequest("BAD-POSTCODE", "error" -> s"missing or badly-formed ${lookup.postcode} parameter")
       }
     } else {
       import model.address.AddressRecord.formats._
+      import lookup._
       addressSearch.findPostcode(postcode, filter).map {
         a =>
           val userAgent = request.headers.get("User-Agent")
@@ -77,15 +80,16 @@ class AddressSearchService@Inject()(addressSearch: ABPAddressRepository, nonABPA
     }
   }
 
-  def searchByTown[A](request: Request[A], posttown: String, filter: Option[String]): Future[Result] = {
+  def searchByTown[A](request: Request[A], lookup: LookupByPostTownRequest): Future[Result] = {
     implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequest(request)
 
-    if (posttown.isEmpty) {
+    if (lookup.posttown.isEmpty) {
       Future.successful {
-        badRequest("BAD-POSTTOWN", "error" -> s"missing or badly-formed $posttown parameter")
+        badRequest("BAD-POSTTOWN", "error" -> s"missing or badly-formed ${lookup.posttown} parameter")
       }
     } else {
       import model.address.AddressRecord.formats._
+      import lookup._
       val casedPosttown = posttown.toUpperCase
 
       addressSearch.findTown(casedPosttown, filter).map {
@@ -103,31 +107,32 @@ class AddressSearchService@Inject()(addressSearch: ABPAddressRepository, nonABPA
     }
   }
 
-  def searchByCountry[A](request: Request[A], countryCode: String, filter: Option[String])(implicit hc: HeaderCarrier): Future[Result] = {
-
-    if (countryCode.isEmpty || "[a-zA-Z]{2}".r.unapplySeq(countryCode).isEmpty) {
+  def searchByCountry[A](request: Request[A], lookup: LookupByCountryRequest)(implicit hc: HeaderCarrier): Future[Result] = {
+    if (lookup.country.isEmpty || "[a-zA-Z]{2}".r.unapplySeq(lookup.country).isEmpty) {
       Future.successful {
         badRequest("BAD-COUNTRYCODE", "error" -> s"missing or badly-formed country code")
       }
-    } else if (supportedCountryCodes.abp.contains(countryCode)) {
+    } else if (supportedCountryCodes.abp.contains(lookup.country)) {
       Future.successful {
         badRequest("ABP-COUNTRYCODE", "error" -> s"country code is abp.")
       }
-    } else if (!supportedCountryCodes.nonAbp.contains(countryCode)) {
+    } else if (!supportedCountryCodes.nonAbp.contains(lookup.country)) {
+      println(s""">>> nonAbpCountries: ${supportedCountryCodes.nonAbp} does not contain ${lookup.country}""")
       Future.successful {
         notFound("UNSUPPORTED-COUNTRYCODE", "error" -> s"country code unsupported")
       }
     } else {
       import model.internal.NonUKAddress._
 
-      nonABPAddressSearcher.findInCountry(countryCode, filter).map {
+      nonABPAddressSearcher.findInCountry(lookup.country, lookup.filter).map {
         a =>
           val userAgent = request.headers.get("User-Agent")
-          auditNonUKAddressSearch(userAgent, a, countryCode, filter)
-          logEvent("LOOKUP", a.size, filter.foldLeft(List("countryCode" -> countryCode)){case (a, c) => a :+ "filter" -> c})
+          auditNonUKAddressSearch(userAgent, a, lookup.country, lookup.filter)
+          logEvent("LOOKUP", a.size, lookup.filter.foldLeft(List("countryCode" -> lookup.country)){case (a, c) => a :+ "filter" -> c})
           Ok(Json.toJson(a))
       }.recover {
-        case e: Throwable => logEvent("LOOKUP-NONUK-ERROR", "errorMessage" -> e.getMessage)
+        case e: Throwable =>
+          logEvent("LOOKUP-NONUK-ERROR", "errorMessage" -> e.getMessage)
           ExpectationFailed
       }
     }

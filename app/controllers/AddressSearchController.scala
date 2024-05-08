@@ -46,7 +46,7 @@ class AddressSearchController @Inject()(addressSearchService: AddressSearchServi
       withValidJson[LookupByPostcodeRequest](request) match {
         case Left(err)                      => err
         case Right(lookupByPostcodeRequest: LookupByPostcodeRequest) =>
-          addressSearchService.searchByPostcode(request, lookupByPostcodeRequest.postcode, lookupByPostcodeRequest.filter)
+          addressSearchService.searchByPostcode(request, lookupByPostcodeRequest)
       }
   }
 
@@ -55,7 +55,7 @@ class AddressSearchController @Inject()(addressSearchService: AddressSearchServi
       withValidJson[LookupByUprnRequest](request) match {
         case Left(err)                      => err
         case Right(lookupByUprnRequest: LookupByUprnRequest) =>
-          addressSearchService.searchByUprn(request, lookupByUprnRequest.uprn)
+          addressSearchService.searchByUprn(request, lookupByUprnRequest)
       }
   }
 
@@ -64,18 +64,20 @@ class AddressSearchController @Inject()(addressSearchService: AddressSearchServi
       withValidJson[LookupByPostTownRequest](request) match {
         case Left(err)                      => err
         case Right(lookupByPostTownRequest: LookupByPostTownRequest) =>
-          addressSearchService.searchByTown(request, lookupByPostTownRequest.posttown.toLowerCase(), lookupByPostTownRequest.filter)
+          addressSearchService.searchByTown(request, lookupByPostTownRequest)
       }
   }
 
   def searchByCountry(countryCode: String): Action[String] = accessCheckedAction(parse.tolerantText) {
     request =>
       implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequest(request)
+
       withValidJson[LookupByCountryRequestFilter](request, je => Json.toJson(ErrorResponse.invalidJson)) match {
-        case Left(err)                                    => err
+        case Left(err)                                    =>
+          err
         case Right(country: LookupByCountryRequestFilter) =>
-          val countryLookup = LookupByCountryRequest.fromLookupByCountryRequestFilter(countryCode, country)
-          addressSearchService.searchByCountry(request, countryLookup.country.toLowerCase(), countryLookup.filter)
+          val countryLookup = LookupByCountryRequest.fromLookupByCountryRequestFilter(countryCode.toLowerCase, country)
+          addressSearchService.searchByCountry(request, countryLookup)
       }
   }
 
