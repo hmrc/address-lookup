@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package it.suites
+package suites
 
 import com.codahale.metrics.SharedMetricRegistries
-import it.helper.AppServerTestApi
-import it.suites.Fixtures.{nukdb_fx1, nukdb_fx2}
+import helper.AppServerTestApi
+import suites.Fixtures.{nukdb_fx1, nukdb_fx2}
 import model.internal.NonUKAddress
 import model.{NonUKAddressSearchAuditEvent, NonUKAddressSearchAuditEventMatchedAddress, NonUKAddressSearchAuditEventRequestDetails}
 import org.mockito.ArgumentMatchers.{any, eq => meq}
