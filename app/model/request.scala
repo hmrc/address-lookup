@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,9 +23,9 @@ import play.api.libs.json._
 
 
 object request {
-  abstract class Filterable(filter: Option[String])
+  sealed abstract class LookupRequest[T](value: T, filter: Option[String])
 
-  case class LookupByPostcodeRequest(postcode: Postcode, filter: Option[String] = None) extends Filterable(filter)
+  case class LookupByPostcodeRequest(postcode: Postcode, filter: Option[String] = None) extends LookupRequest(postcode, filter)
 
   object LookupByPostcodeRequest {
     implicit val postcodeReads: Reads[Postcode] = Reads[Postcode] { json =>
@@ -39,45 +39,45 @@ object request {
       }
     }
 
-    implicit val postcodeWrites: Writes[Postcode] = new Writes[Postcode]{
+    implicit val postcodeWrites: Writes[Postcode] = new Writes[Postcode] {
       override def writes(o: Postcode): JsValue =
         JsString(o.toString)
     }
 
     implicit val reads: Reads[LookupByPostcodeRequest] = (
-        (JsPath \ "postcode").read[Postcode] and
-            (JsPath \ "filter").readNullable[String].map(fo =>
-              fo.flatMap(f => if(f.trim.isEmpty) None else Some(f))
-            )
-        ) (
+      (JsPath \ "postcode").read[Postcode] and
+        (JsPath \ "filter").readNullable[String].map(fo =>
+          fo.flatMap(f => if (f.trim.isEmpty) None else Some(f))
+        )
+      )(
       (pc, fo) => LookupByPostcodeRequest.apply(pc, fo))
 
     implicit val writes: Writes[LookupByPostcodeRequest] = Json.writes[LookupByPostcodeRequest]
   }
 
-  case class LookupByUprnRequest(uprn: String)
+  case class LookupByUprnRequest(uprn: String) extends LookupRequest(uprn, None)
 
   object LookupByUprnRequest {
     implicit val reads: Reads[LookupByUprnRequest] = Json.reads[LookupByUprnRequest]
     implicit val writes: Writes[LookupByUprnRequest] = Json.writes[LookupByUprnRequest]
   }
 
-  case class LookupByIdRequest(id: String)
+  case class LookupByIdRequest(id: String) extends LookupRequest(id, None)
 
   object LookupByIdRequest {
     implicit val reads: Reads[LookupByIdRequest] = Json.reads[LookupByIdRequest]
     implicit val writes: Writes[LookupByIdRequest] = Json.writes[LookupByIdRequest]
   }
 
-  case class LookupByPostTownRequest(posttown: String, filter: Option[String]) extends Filterable(filter)
+  case class LookupByPostTownRequest(posttown: String, filter: Option[String]) extends LookupRequest(posttown, filter)
 
   object LookupByPostTownRequest {
     implicit val reads: Reads[LookupByPostTownRequest] = (
-        (JsPath \ "posttown").read[String] and
-            (JsPath \ "filter").readNullable[String].map(fo =>
-              fo.flatMap(f => if(f.trim.isEmpty) None else Some(f))
-            )
-        ) (
+      (JsPath \ "posttown").read[String] and
+        (JsPath \ "filter").readNullable[String].map(fo =>
+          fo.flatMap(f => if (f.trim.isEmpty) None else Some(f))
+        )
+      )(
       (pt, fo) => LookupByPostTownRequest.apply(pt, fo))
 
     implicit val writes: Writes[LookupByPostTownRequest] = Json.writes[LookupByPostTownRequest]
@@ -90,7 +90,7 @@ object request {
     implicit val writes: Writes[LookupByCountryRequestFilter] = Json.writes[LookupByCountryRequestFilter]
   }
 
-  case class LookupByCountryRequest(country: String, filter: Option[String])
+  case class LookupByCountryRequest(country: String, filter: Option[String]) extends LookupRequest(country, filter)
 
   object LookupByCountryRequest {
     def fromLookupByCountryRequestFilter(country: String, lookupByCountryRequestFilter: LookupByCountryRequestFilter) =
