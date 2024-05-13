@@ -22,6 +22,8 @@ import org.slf4j.LoggerFactory
 import play.api.http.HeaderNames
 import play.api.libs.json.Json
 import play.api.mvc._
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.play.http.HeaderCarrierConverter
 
 import javax.inject.Singleton
 import scala.concurrent.Future
@@ -59,20 +61,21 @@ trait AccessChecker {
     }
   }
 
-  def accessCheckedAction[A](bodyParser: BodyParser[A])(block: Request[A] => Future[Result]): Action[A] = {
+  def accessCheckedAction[A](bodyParser: BodyParser[A])(block: (Request[A], HeaderCarrier) => Future[Result]): Action[A] = {
     Action.async(bodyParser) {
       request =>
+        val hc = HeaderCarrierConverter.fromRequest(request)
         val callingClients = getClientsFromRequest(request)
         if (!areClientsAllowed(callingClients)) {
           if (checkAllowList) {
             Future.successful(Forbidden(Json.parse(forbiddenResponse(callingClients))))
           } else {
             logger.warn(s"One or more user agents in '${callingClients.mkString(",")}' are not authorized to use this service")
-            block(request)
+            block(request, hc)
           }
         }
         else {
-          block(request)
+          block(request, hc)
         }
     }
   }

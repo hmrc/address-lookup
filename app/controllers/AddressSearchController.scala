@@ -19,10 +19,10 @@ package controllers
 import access.AccessChecker
 import config.ConfigHelper
 import model.address.Postcode
-import model.request.{LookupByCountryRequest, LookupByCountryRequestFilter, LookupByPostTownRequest, LookupByPostcodeRequest, LookupByUprnRequest, LookupRequest}
+import model.request._
 import model.response.{ErrorResponse, SupportedCountryCodes}
 import play.api.Logging
-import play.api.libs.json.{JsError, JsSuccess, JsValue, Json, Reads}
+import play.api.libs.json.{JsError, JsValue, Json, Reads}
 import play.api.mvc._
 import services.{AddressSearchService, CheckAddressDataScheduler}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -30,7 +30,7 @@ import uk.gov.hmrc.play.http.HeaderCarrierConverter
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success, Try}
+import scala.util.Try
 
 class AddressSearchController @Inject()(addressSearchService: AddressSearchService,
                                         val controllerComponents: ControllerComponents,
@@ -43,41 +43,33 @@ class AddressSearchController @Inject()(addressSearchService: AddressSearchServi
 
   scheduler.enable()
 
-  def search(): Action[String] = accessCheckedAction(parse.tolerantText) {
-    request =>
-      implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequest(request)
+  def search(): Action[String] =
+    accessCheckedAction(parse.tolerantText) {
+      (request, hc) =>
+        implicit val hcc: HeaderCarrier = hc
+        implicit val sfn: (Request[String], LookupByPostcodeRequest) => Future[Result] = addressSearchService.searchByPostcode(_, _)
 
-      withValidJson[LookupByPostcodeRequest](request) match {
-        case Left(err)                                               => err
-        case Right(lookupByPostcodeRequest: LookupByPostcodeRequest) =>
-          doLookup[Postcode, LookupByPostcodeRequest](request, addressSearchService.searchByPostcode(_, _), lookupByPostcodeRequest)
-      }
-  }
+        doSearch[Postcode, LookupByPostcodeRequest](request)
+    }
 
   def searchByUprn(): Action[String] = accessCheckedAction(parse.tolerantText) {
-    request =>
-      implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequest(request)
+    (request, hc) =>
+      implicit val hcc: HeaderCarrier = hc
+      implicit val sfn: (Request[String], LookupByUprnRequest) => Future[Result] = addressSearchService.searchByUprn(_, _)
 
-      withValidJson[LookupByUprnRequest](request) match {
-        case Left(err)                                       => err
-        case Right(lookupByUprnRequest: LookupByUprnRequest) =>
-          doLookup[String, LookupByUprnRequest](request, addressSearchService.searchByUprn(_, _), lookupByUprnRequest)
-      }
+      doSearch[String, LookupByUprnRequest](request)
   }
 
   def searchByPostTown(): Action[String] = accessCheckedAction(parse.tolerantText) {
-    request =>
-      implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequest(request)
+    (request, hc) =>
+      implicit val hcc: HeaderCarrier = hc
+      implicit val sfn: (Request[String], LookupByPostTownRequest) => Future[Result] = addressSearchService.searchByTown(_, _)
 
-      withValidJson[LookupByPostTownRequest](request) match {
-        case Left(err)                                               => err
-        case Right(lookupByPostTownRequest: LookupByPostTownRequest) =>
-          doLookup[String, LookupByPostTownRequest](request, addressSearchService.searchByTown(_, _), lookupByPostTownRequest)
-      }
+      doSearch[String, LookupByPostTownRequest](request)
   }
 
   def searchByCountry(countryCode: String): Action[String] = accessCheckedAction(parse.tolerantText) {
-    request =>
+    (request, hc) =>
       implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequest(request)
 
       withValidJson[LookupByCountryRequestFilter](request, _ => Json.toJson(ErrorResponse.invalidJson)) match {
@@ -87,6 +79,19 @@ class AddressSearchController @Inject()(addressSearchService: AddressSearchServi
           val countryLookup = LookupByCountryRequest.fromLookupByCountryRequestFilter(countryCode.toLowerCase, country)
           doLookup[String, LookupByCountryRequest](request, addressSearchService.searchByCountry(_, _), countryLookup)
       }
+  }
+
+  def supportedCountries(): Action[AnyContent] = Action.async {
+    import model.response.SupportedCountryCodes._
+    Future.successful(Ok(Json.toJson(supportedCountryCodes)))
+  }
+
+  private def doSearch[U, T <: LookupRequest[U] : Reads](request: Request[String])(implicit hc: HeaderCarrier, searchFn: (Request[String], T) => Future[Result]): Future[Result] = {
+    withValidJson[T](request) match {
+      case Left(err)        => err
+      case Right(lookup: T) =>
+        doLookup[U, T](request, searchFn, lookup)
+    }
   }
 
   private def withValidJson[T: Reads](request: Request[String],
@@ -104,9 +109,4 @@ class AddressSearchController @Inject()(addressSearchService: AddressSearchServi
 
   private def doLookup[T, B <: LookupRequest[T]](request: Request[String], lookup: (Request[String], B) => Future[Result], lookupRequest: B)(implicit hc: HeaderCarrier) =
     lookup(request, lookupRequest)
-
-  def supportedCountries(): Action[AnyContent] = Action.async {
-    import model.response.SupportedCountryCodes._
-    Future.successful(Ok(Json.toJson(supportedCountryCodes)))
-  }
 }
