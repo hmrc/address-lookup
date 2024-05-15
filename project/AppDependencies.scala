@@ -25,5 +25,6 @@ object AppDependencies {
     "uk.gov.hmrc" %% "bootstrap-test-play-30" % bootstrapPlayVersion % Test,
     "org.pegdown" % "pegdown" % pegdownVersion % Test,
     "org.jsoup" % "jsoup" % "1.14.3" % Test,
+    "org.scalatestplus" %% "selenium-4-17" % "3.2.18.0" % Test
   )
 }

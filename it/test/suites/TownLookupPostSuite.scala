@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package it.suites
+package suites
 
 import com.codahale.metrics.SharedMetricRegistries
-import it.helper.AppServerTestApi
+import helper.AppServerTestApi
 import model.address.AddressRecord
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite

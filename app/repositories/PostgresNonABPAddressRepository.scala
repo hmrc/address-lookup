@@ -27,7 +27,7 @@ import scala.concurrent.Future
 
 class PostgresNonABPAddressRepository @Inject()(transactor: Transactor[IO], queryConfig: RdsQueryConfig) extends NonABPAddressRepository {
 
-  override def findInCountry(countryCode: String, filter: String): Future[List[NonUKAddress]] = {
+  override def findInCountry(countryCode: String, filter: Option[String]): Future[List[NonUKAddress]] = {
     val timeLimit = csql(s"SET statement_timeout=${queryConfig.queryTimeoutMillis};")
 
     val querySql = csql(

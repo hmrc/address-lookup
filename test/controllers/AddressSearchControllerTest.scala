@@ -16,13 +16,13 @@
 
 package controllers
 
-import org.apache.pekko.stream.Materializer
 import config.ConfigHelper
 import model.address._
 import model.internal.DbAddress
 import model.request.{LookupByPostTownRequest, LookupByPostcodeRequest, LookupByUprnRequest}
 import model.response.SupportedCountryCodes
 import model.{AddressSearchAuditEvent, AddressSearchAuditEventMatchedAddress, AddressSearchAuditEventRequestDetails}
+import org.apache.pekko.stream.Materializer
 import org.mockito.ArgumentMatchers.{any, eq => meq}
 import org.mockito.Mockito._
 import org.scalatest.matchers.should.Matchers
@@ -37,12 +37,12 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import play.api.{Application, inject}
 import repositories.{ABPAddressRepository, NonABPAddressRepository, PostgresABPAddressRepository, PostgresNonABPAddressRepository}
-import services.{CheckAddressDataScheduler, ReferenceData, ResponseProcessor}
+import services.{AddressSearchService, CheckAddressDataScheduler, ReferenceData, ResponseProcessor}
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import util.Utils._
 
-import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
 import scala.language.postfixOps
 
 class AddressSearchControllerTest extends AnyWordSpec with Matchers with GuiceOneAppPerSuite with MockitoSugar {
@@ -51,33 +51,24 @@ class AddressSearchControllerTest extends AnyWordSpec with Matchers with GuiceOn
   implicit val timeout: FiniteDuration = 1 second
   private val cc: ControllerComponents = play.api.test.Helpers.stubControllerComponents()
 
-  private val en = "en"
+  private val addr1Db = DbAddress("GB100001", 100001L, Some(10000100L), Some(1000010L), Some("gb-oragnisation-1"),
+    List("10 Test Court", "Test Street", "Tester"), "Test upon Tyne", "FX1 5XD", Some("GB-ENG"), Some("GB"), Some(4510),
+    Some("en"), None, Some(Location("12.345678", "-12.345678").toString), None, Some("TestLocalAuthority"))
 
-  import model.address.Country._
+  private val dx1A = DbAddress("GB100002", 100002L, Some(10000200L), Some(1000020L), Some("gb-oragnisation-2"),
+    List("1 Test Street"), "Testtown", "FZ22 7ZW", Some("GB-XXX"), Some("GB"), Some(9999), Some("en"), None,
+    Some("54.914561,-1.3905597"), None, Some("TestLocalAuthority"))
+  private val dx1B = DbAddress("GB100003", 100003L, Some(10000300L), Some(1000030L), Some("gb-oragnisation-3"),
+    List("2 Test Street"), "Testtown", "FZ22 7ZW", Some("GB-XXX"), Some("GB"), Some(9999), Some("en"), None,
+    Some("54.914561,-1.3905597"), None, Some("TestLocalAuthority"))
+  private val dx1C = DbAddress("GB100004", 100004L, Some(10000400L), Some(1000040L), Some("gb-oragnisation-4"),
+    List("3 Test Street"), "Testtown", "FZ22 7ZW", Some("GB-XXX"), Some("GB"), Some(9999), Some("en"), None,
+    Some("54.914561,-1.3905597"), None, Some("TestLocalAuthority"))
 
-  val addr1Db = DbAddress("GB100001", 100001L, Some(10000100L), Some(1000010L), Some("gb-oragnisation-1"), List("10 Test Court", "Test Street", "Tester"), "Test upon Tyne", "FX1 5XD", Some("GB-ENG"), Some("GB"), Some(4510), Some("en"), None, Some(Location("12.345678", "-12.345678").toString), None, Some("TestLocalAuthority"))
-  val addr1Ar = AddressRecord("GB100001", Some(100001L), Some(10000100L), Some(1000010L), Some("gb-oragnisation-1"), Address(List("10 Test Court", "Test Street", "Tester"), "Test upon Tyne", "FX1 5XD", Some(England), GB), en, Some(LocalCustodian(4510, "Test upon Tyne")), Some(Location("12.345678", "-12.345678").toSeq), Some("TestLocalAuthority"))
-
-  val dx1A = DbAddress("GB100002", 100002L, Some(10000200L), Some(1000020L), Some("gb-oragnisation-2"), List("1 Test Street"), "Testtown", "FZ22 7ZW", Some("GB-XXX"), Some("GB"), Some(9999), Some("en"), None, Some("54.914561,-1.3905597"), None, Some("TestLocalAuthority"))
-  val dx1B = DbAddress("GB100003", 100003L, Some(10000300L), Some(1000030L), Some("gb-oragnisation-3"), List("2 Test Street"), "Testtown", "FZ22 7ZW", Some("GB-XXX"), Some("GB"), Some(9999), Some("en"), None, Some("54.914561,-1.3905597"), None, Some("TestLocalAuthority"))
-  val dx1C = DbAddress("GB100004", 100004L, Some(10000400L), Some(1000040L), Some("gb-oragnisation-4"), List("3 Test Street"), "Testtown", "FZ22 7ZW", Some("GB-XXX"), Some("GB"), Some(9999), Some("en"), None, Some("54.914561,-1.3905597"), None, Some("TestLocalAuthority"))
-
-  val fx1A = AddressRecord("GB100002", Some(100002L), Some(10000200L), Some(1000020L), Some("gb-oragnisation-2"), Address(List("1 Test Street"), "Testtown", "FZ22 7ZW", Some(England), GB), en, Some(LocalCustodian(9999, "Somewhere")), Some(Location("0,0").toSeq), Some("TestLocalAuthority"))
-  val fx1B = AddressRecord("GB100003", Some(100003L), Some(10000300L), Some(1000030L), Some("gb-oragnisation-3"), Address(List("2 Test Street"), "Testtown", "FZ22 7ZW", Some(England), GB), en, Some(LocalCustodian(9999, "Somewhere")), Some(Location("0,0").toSeq), Some("TestLocalAuthority"))
-  val fx1C = AddressRecord("GB100004", Some(100004L), Some(10000400L), Some(1000040L), Some("gb-oragnisation-4"), Address(List("3 Test Street"), "Testtown", "FZ22 7ZW", Some(England), GB), en, Some(LocalCustodian(9999, "Somewhere")), Some(Location("0,0").toSeq), Some("TestLocalAuthority"))
-
-  val addressDb1 = DbAddress("GB100005", 100005L, Some(10000500L), Some(1000050L), Some("gb-oragnisation-5"), List("Test Road"), "ATown", "FX11 7LX", Some("GB-ENG"), Some("GB"), Some(2935), Some("en"), None, Some(Location("12.345678", "-12.345678").toString), None, Some("TestLocalAuthority"))
-  val addressDb2 = DbAddress("GB100006", 100006L, Some(10000600L), Some(1000060L), Some("gb-oragnisation-6"), List("ARoad", "ARoad"), "Atown", "FX11 7LA", Some("GB-ENG"), Some("GB"), Some(2935), Some("en"), None, Some(Location("12.345678", "-12.345678").toString), None, Some("TestLocalAuthority"))
-
-  val addressAr1 = AddressRecord("GB100005", Some(100005L), Some(10000500L), Some(1000050L), Some("gb-oragnisation-5"), Address(List("Test Road"), "ATown", "FX11 7LX", Some(England), GB), en, Some(LocalCustodian(2935, "Testland")), Some(Location("12.345678", "-12.345678").toSeq), Some("TestLocalAuthority"))
-  val addressAr2 = AddressRecord("GB100006", Some(100006L), Some(10000600L), Some(1000060L), Some("gb-oragnisation-6"), Address(List("Test Station", "Test Road"), "ATown", "FX11 7LA", Some(England), GB), en, Some(LocalCustodian(2935, "Testland")), Some(Location("12.345678", "-12.345678").toSeq), Some("TestLocalAuthority"))
-
-  val abpSearcher: PostgresABPAddressRepository = mock[PostgresABPAddressRepository]
-  val nonAbpSearcher: PostgresNonABPAddressRepository = mock[PostgresNonABPAddressRepository]
-  val mockAuditConnector = mock[AuditConnector]
-  val mockCheckAddressDataScheduler = mock[CheckAddressDataScheduler]
-
-  //when(mockCheckAddressDataScheduler.enable()).thenReturn(Unit)
+  private val abpSearcher: PostgresABPAddressRepository = mock[PostgresABPAddressRepository]
+  private val nonAbpSearcher: PostgresNonABPAddressRepository = mock[PostgresNonABPAddressRepository]
+  private val mockAuditConnector = mock[AuditConnector]
+  private val mockCheckAddressDataScheduler = mock[CheckAddressDataScheduler]
 
   override implicit lazy val app: Application = {
     new GuiceApplicationBuilder()
@@ -136,11 +127,18 @@ class AddressSearchControllerTest extends AnyWordSpec with Matchers with GuiceOn
       val expectedAuditRequestDetails = AddressSearchAuditEventRequestDetails(postTown = Some("TESTTOWN"), filter = Some("Test Street"))
 
       val expectedAuditAddressMatches = Seq(
-        AddressSearchAuditEventMatchedAddress("100002", Some(10000200), Some(1000020), Some("gb-oragnisation-2"), List("1 Test Street"), "Testtown", None, Some(List(54.914561, -1.3905597)), Some("TestLocalAuthority"), None, "FZ22 7ZW", None, Country("GB", "United Kingdom")),
-        AddressSearchAuditEventMatchedAddress("100003", Some(10000300), Some(1000030), Some("gb-oragnisation-3"), List("2 Test Street"), "Testtown", None, Some(List(54.914561, -1.3905597)), Some("TestLocalAuthority"), None, "FZ22 7ZW", None, Country("GB", "United Kingdom")),
-        AddressSearchAuditEventMatchedAddress("100004", Some(10000400), Some(1000040), Some("gb-oragnisation-4"), List("3 Test Street"), "Testtown", None, Some(List(54.914561, -1.3905597)), Some("TestLocalAuthority"), None, "FZ22 7ZW", None, Country("GB", "United Kingdom")))
+        AddressSearchAuditEventMatchedAddress("100002", Some(10000200), Some(1000020), Some("gb-oragnisation-2"),
+          List("1 Test Street"), "Testtown", None, Some(List(54.914561, -1.3905597)), Some("TestLocalAuthority"),
+          None, "FZ22 7ZW", None, Country("GB", "United Kingdom")),
+        AddressSearchAuditEventMatchedAddress("100003", Some(10000300), Some(1000030), Some("gb-oragnisation-3"),
+          List("2 Test Street"), "Testtown", None, Some(List(54.914561, -1.3905597)), Some("TestLocalAuthority"),
+          None, "FZ22 7ZW", None, Country("GB", "United Kingdom")),
+        AddressSearchAuditEventMatchedAddress("100004", Some(10000400), Some(1000040), Some("gb-oragnisation-4"),
+          List("3 Test Street"), "Testtown", None, Some(List(54.914561, -1.3905597)), Some("TestLocalAuthority"),
+          None, "FZ22 7ZW", None, Country("GB", "United Kingdom")))
 
-      val expectedAuditEvent = AddressSearchAuditEvent(Some("test-user-agent"), expectedAuditRequestDetails, 3, expectedAuditAddressMatches)
+      val expectedAuditEvent = AddressSearchAuditEvent(Some("test-user-agent"), expectedAuditRequestDetails, 3,
+        expectedAuditAddressMatches)
 
       val result = controller.searchByPostTown().apply(request)
       status(result) shouldBe Status.OK
@@ -171,19 +169,19 @@ class AddressSearchControllerTest extends AnyWordSpec with Matchers with GuiceOn
 
   "findPostcode" should {
 
-      """when search is called without valid 'user-agent' header
+    """when search is called without valid 'user-agent' header
        it should give a forbidden response and not log any error
       """ in {
-        import LookupByPostcodeRequest._
-        val jsonPayload = Json.toJson(LookupByPostcodeRequest(Postcode("FX11 4HG")))
-        val request: Request[String] = FakeRequest("POST", "/lookup")
-          .withHeaders("User-Agent" -> "forbidden-user-agent")
-          .withBody(jsonPayload.toString())
+      import LookupByPostcodeRequest._
+      val jsonPayload = Json.toJson(LookupByPostcodeRequest(Postcode("FX11 4HG")))
+      val request: Request[String] = FakeRequest("POST", "/lookup")
+        .withHeaders("User-Agent" -> "forbidden-user-agent")
+        .withBody(jsonPayload.toString())
 
-        val result = controller.search().apply(request)
-        status(result) shouldBe Status.FORBIDDEN
+      val result = controller.search().apply(request)
+      status(result) shouldBe Status.FORBIDDEN
 
-      }
+    }
 
     """when search is called with correct parameters
        it should clean up the postcode parameter
@@ -226,19 +224,27 @@ class AddressSearchControllerTest extends AnyWordSpec with Matchers with GuiceOn
       """ in {
       clearInvocations(mockAuditConnector)
 
-      when(abpSearcher.findPostcode(meq(Postcode("FX11 4HG")), meq(Some("Test Street")))) thenReturn Future(List(dx1A, dx1B, dx1C))
+      when(abpSearcher.findPostcode(meq(Postcode("FX11 4HG")), meq(Some("Test Street")))) thenReturn Future(List(dx1A,
+        dx1B, dx1C))
       val jsonPayload = Json.toJson(LookupByPostcodeRequest(Postcode("FX11 4HG"), Some("Test Street")))
       val request = FakeRequest("POST", "/lookup")
         .withBody(jsonPayload.toString)
         .withHeaders("User-Agent" -> "test-user-agent")
         .withHeadersOrigin
 
-      val expectedAuditRequestDetails = AddressSearchAuditEventRequestDetails(postcode = Some("FX11 4HG"), filter = Some("Test Street"))
+      val expectedAuditRequestDetails = AddressSearchAuditEventRequestDetails(postcode = Some("FX11 4HG"),
+        filter = Some("Test Street"))
 
       val expectedAuditAddressMatches = Seq(
-        AddressSearchAuditEventMatchedAddress("100002", Some(10000200), Some(1000020), Some("gb-oragnisation-2"), List("1 Test Street"), "Testtown", None, Some(List(54.914561, -1.3905597)), Some("TestLocalAuthority"), None, "FZ22 7ZW", None, Country("GB", "United Kingdom")),
-        AddressSearchAuditEventMatchedAddress("100003", Some(10000300), Some(1000030), Some("gb-oragnisation-3"), List("2 Test Street"), "Testtown", None, Some(List(54.914561, -1.3905597)), Some("TestLocalAuthority"), None, "FZ22 7ZW", None, Country("GB", "United Kingdom")),
-        AddressSearchAuditEventMatchedAddress("100004", Some(10000400), Some(1000040), Some("gb-oragnisation-4"), List("3 Test Street"), "Testtown", None, Some(List(54.914561, -1.3905597)), Some("TestLocalAuthority"), None, "FZ22 7ZW", None, Country("GB", "United Kingdom")))
+        AddressSearchAuditEventMatchedAddress("100002", Some(10000200), Some(1000020), Some("gb-oragnisation-2"),
+          List("1 Test Street"), "Testtown", None, Some(List(54.914561, -1.3905597)), Some("TestLocalAuthority"), None,
+          "FZ22 7ZW", None, Country("GB", "United Kingdom")),
+        AddressSearchAuditEventMatchedAddress("100003", Some(10000300), Some(1000030), Some("gb-oragnisation-3"),
+          List("2 Test Street"), "Testtown", None, Some(List(54.914561, -1.3905597)), Some("TestLocalAuthority"), None,
+          "FZ22 7ZW", None, Country("GB", "United Kingdom")),
+        AddressSearchAuditEventMatchedAddress("100004", Some(10000400), Some(1000040), Some("gb-oragnisation-4"),
+          List("3 Test Street"), "Testtown", None, Some(List(54.914561, -1.3905597)), Some("TestLocalAuthority"), None,
+          "FZ22 7ZW", None, Country("GB", "United Kingdom")))
 
       val expectedAuditEvent = AddressSearchAuditEvent(Some("test-user-agent"), expectedAuditRequestDetails, 3, expectedAuditAddressMatches)
 
@@ -305,7 +311,9 @@ class AddressSearchControllerTest extends AnyWordSpec with Matchers with GuiceOn
 
         val scheduler = app.injector.instanceOf[CheckAddressDataScheduler]
         val configHelper = app.injector.instanceOf[ConfigHelper]
-        val controller = new AddressSearchController(abpSearcher, nonAbpSearcher, new ResponseStub(Nil), mockAuditConnector, cc, SupportedCountryCodes(List(), List()), scheduler, configHelper)
+        val addressSearchService = app.injector.instanceOf[AddressSearchService]
+        val controller = new AddressSearchController(addressSearchService, cc, SupportedCountryCodes(List(), List()),
+          scheduler, configHelper)(ec)
         val jsonPayload = Json.toJson(LookupByUprnRequest("GB0123456789"))
         val request = FakeRequest("POST", "/lookup/by-uprn")
           .withBody(jsonPayload.toString)

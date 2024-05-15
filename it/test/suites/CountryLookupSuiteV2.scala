@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package it.suites
+package suites
 
 import com.codahale.metrics.SharedMetricRegistries
-import it.helper.AppServerTestApi
-import it.suites.Fixtures.{nukdb_fx1, nukdb_fx2}
+import helper.AppServerTestApi
+import suites.Fixtures.{nukdb_fx1, nukdb_fx2}
 import model.internal.NonUKAddress
 import model.{NonUKAddressSearchAuditEvent, NonUKAddressSearchAuditEventMatchedAddress, NonUKAddressSearchAuditEventRequestDetails}
 import org.mockito.ArgumentMatchers.{any, eq => meq}
@@ -66,7 +66,7 @@ class CountryLookupSuiteV2()
     "successful" should {
 
       "give a successful response for bermuda" in {
-        when(repository.findInCountry(meq("bm"), meq("HM02"))).thenReturn(
+        when(repository.findInCountry(meq("bm"), meq(Option("HM02")))).thenReturn(
           Future.successful(nonUKAddress.getOrElse("bm", Seq()).filter(_.postcode.contains("HM02")).toList))
 
         val response = post("/country/BM/lookup", """{"filter":"HM02"}""")
@@ -92,7 +92,7 @@ class CountryLookupSuiteV2()
       }
 
       "give a successful response for an unknown postcode" in {
-        when(repository.findInCountry(meq("bm"), meq("HM99"))).thenReturn(
+        when(repository.findInCountry(meq("bm"), meq(Option("HM99")))).thenReturn(
           Future.successful(nonUKAddress.getOrElse("bm", Seq()).filter(_.postcode.contains("HM99")).toList))
 
         val response = post("/country/BM/lookup", """{"filter":"HM99"}""")
@@ -101,7 +101,7 @@ class CountryLookupSuiteV2()
       }
 
       "give sorted results when two addresses are returned" in {
-        when(repository.findInCountry(meq("bm"), meq("WK04"))).thenReturn(
+        when(repository.findInCountry(meq("bm"), meq(Option("WK04")))).thenReturn(
           Future.successful(nonUKAddress.getOrElse("bm", Seq()).filter(_.postcode.contains("WK04")).toList))
 
         val response = post("/country/BM/lookup", """{"filter":"WK04"}""")

@@ -87,9 +87,9 @@ object InMemoryAddressTestData {
     }
   }
 
-  def doNonUkFilter(filteredNonUkAddresses: Seq[NonUKAddress], filter: String): Seq[NonUKAddress] = {
+  def doNonUkFilter(filteredNonUkAddresses: Seq[NonUKAddress], filter: Option[String]): Seq[NonUKAddress] = {
     val filterTokens =
-      filter.toLowerCase.split("[ ]+").toSet.filterNot(_.isEmpty)
+      filter.getOrElse("").toLowerCase.split("[ ]+").toSet.filterNot(_.isEmpty)
     filteredNonUkAddresses.filter { dba =>
       val dbAddString = nonUkDbsToFilterText(dba)
       filterTokens.subsetOf(dbAddString)

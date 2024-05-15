@@ -33,8 +33,9 @@ class NonABPAddressRepositoryMetrics(peer: NonABPAddressRepository, registry: Me
     r
   }
 
-  override def findInCountry(countryCode: String, filter: String): Future[List[NonUKAddress]] = {
+  override def findInCountry(countryCode: String, filter: Option[String]): Future[List[NonUKAddress]] = {
     val context = findInCountryTimer.time()
+    peer.findInCountry(countryCode, filter) map (timerStop(context, _))
     peer.findInCountry(countryCode, filter) map (timerStop(context, _))
   }
 }

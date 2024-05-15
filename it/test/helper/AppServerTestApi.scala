@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package it.helper
+package helper
 
 import org.apache.pekko.util.ByteString
 import com.typesafe.config.ConfigFactory

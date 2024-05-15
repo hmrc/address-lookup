@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package it.suites
+package suites
 
 import model.address.Country._
 import model.address.{Address, AddressRecord, LocalCustodian, Location}

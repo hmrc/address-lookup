@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package it.suites
+package suites
 
 import com.codahale.metrics.SharedMetricRegistries
-import it.helper.AppServerTestApi
+import helper.AppServerTestApi
 import model.address.{AddressRecord, Postcode}
 import model.response.ErrorResponse
 import org.mockito.ArgumentMatchers.{any, eq => meq}

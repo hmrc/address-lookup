@@ -24,7 +24,7 @@ import scala.concurrent.Future
 class InMemoryNonABPAddressRepository @Inject()() extends NonABPAddressRepository {
   import InMemoryAddressTestData._
 
-  override def findInCountry(countryCode: String, filter: String): Future[List[NonUKAddress]] = {
+  override def findInCountry(countryCode: String, filter: Option[String]): Future[List[NonUKAddress]] = {
     Future.successful(
       doNonUkFilter(nonUKAddress.getOrElse(countryCode.toLowerCase, Seq()), filter).toList
     )
