@@ -16,8 +16,8 @@
 
 package access
 
-import access.AccessChecker.{accessControlAllowListAbsoluteKey, accessControlAllowListKey, accessControlEnabledKey, accessRequestFormUrlKey}
-import config.ConfigHelper
+import access.AccessChecker.{accessControlAllowListAbsoluteKey, accessControlEnabledAbsoluteKey, accessRequestFormUrlAbsoluteKey}
+import config.AppConfig
 import org.slf4j.LoggerFactory
 import play.api.http.HeaderNames
 import play.api.libs.json.Json
@@ -30,14 +30,14 @@ import scala.concurrent.Future
 trait AccessChecker {
   this: BaseController =>
 
-  val configHelper: ConfigHelper
+  val configHelper: AppConfig
 
   private val logger = LoggerFactory.getLogger(this.getClass)
 
-  private val accessRequestFormUrl: String = configHelper.mustGetConfigString(accessRequestFormUrlKey)
+  private val accessRequestFormUrl: String = configHelper.mustGetConfigString(accessRequestFormUrlAbsoluteKey)
 
-  private val checkAllowList: Boolean = configHelper.mustGetConfigString(accessControlEnabledKey).toBoolean
-  private val allowedClients: Set[String] = configHelper.config.getOptional[Seq[String]](accessControlAllowListKey).getOrElse(
+  private val checkAllowList: Boolean = configHelper.mustGetConfigString(accessControlEnabledAbsoluteKey).toBoolean
+  private val allowedClients: Set[String] = configHelper.config.getOptional[Seq[String]](accessControlAllowListAbsoluteKey).getOrElse(
     if (checkAllowList) throw new RuntimeException(s"Could not find config $accessControlAllowListAbsoluteKey") else Seq()).toSet
 
   private def areClientsAllowed(clients: Seq[String]): Boolean =
@@ -76,7 +76,6 @@ trait AccessChecker {
         }
     }
   }
-
 }
 
 object AccessChecker {

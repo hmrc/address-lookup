@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,43 +14,30 @@
  * limitations under the License.
  */
 
-package it.suites
+package suites
 
 import com.codahale.metrics.SharedMetricRegistries
 import it.helper.AppServerTestApi
-import model.address.AddressRecord
-import org.mockito.ArgumentMatchers.{eq => meq}
-import org.mockito.Mockito.when
+import model.address.{Address, AddressRecord, Country, LocalCustodian}
 import org.scalatest.wordspec.AnyWordSpec
-import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.{JsArray, Json}
 import play.api.libs.ws.WSClient
 import play.api.test.Helpers._
-import play.inject.Bindings
-import repositories.ABPAddressRepository
-import repositories.InMemoryAddressTestData.dbAddresses
-
-import scala.concurrent.Future
 
 // Please keep UprnLookupSuiteV2 and UprnLookupSuiteV2 as similar as appropriate.
 
 class UprnLookupPostSuite()
   extends AnyWordSpec with GuiceOneServerPerSuite with AppServerTestApi {
 
-  import Fixtures._
-
-  val repository: ABPAddressRepository = mock[ABPAddressRepository]
-
   override def fakeApplication(): Application = {
     SharedMetricRegistries.clear()
     new GuiceApplicationBuilder()
-      .overrides(Bindings.bind(classOf[ABPAddressRepository]).toInstance(repository))
       .configure(
-        "access-control.enabled" -> true,
-        "access-control.allow-list.1" -> "xyz")
+        "microservice.services.access-control.enabled" -> true,
+        "microservice.services.access-control.allow-list.1" -> "xyz")
       .build()
   }
 
@@ -63,32 +50,28 @@ class UprnLookupPostSuite()
     "successful" should {
 
       "give a successful response for a known uprn - uk route" in {
-        when(repository.findUprn(meq("11111"))).thenReturn(
-          Future.successful(dbAddresses.filter(_.uprn == 11111L).toList))
+        val expectedAddressRecord = AddressRecord(
+          "GB690091234501",Some(690091234501L),None,None,None,
+          Address(List("1 Test Street"),"Testtown","AA00 0AA",Some(Country("GB-ENG","England")),Country("GB","United Kingdom"))
+          ,"en",Some(LocalCustodian(121,"NORTH SOMERSET")),None,None,None)
 
-        val response = post("/lookup/by-uprn", """{"uprn": "11111"}""")
+        val response = post("/lookup/by-uprn", """{"uprn": "690091234501"}""")
         response.status shouldBe OK
         val body = response.body
         val json = Json.parse(body)
         val arr = json.asInstanceOf[JsArray].value
         arr.size shouldBe 1
         val address1 = Json.fromJson[AddressRecord](arr.head).get
-        address1 shouldBe fx9_9py_terse
+        address1 shouldBe expectedAddressRecord
       }
 
       "set the content type to application/json" in {
-        when(repository.findUprn(meq("9999999999"))).thenReturn(
-          Future.successful(dbAddresses.filter(_.uprn == 9999999999L).toList))
-
         val response = post("/lookup/by-uprn", """{"uprn":"9999999999"}""")
         val contentType = response.header("Content-Type").get
         contentType should startWith("application/json")
       }
 
       "set the cache-control header and include a positive max-age ignore it" ignore {
-        when(repository.findUprn(meq("9999999999"))).thenReturn(
-          Future.successful(dbAddresses.filter(_.uprn == 9999999999L).toList))
-
         val response = post("/lookup/by-uprn", """{"uprn":"9999999999"}""")
         val h = response.header("Cache-Control")
         h should not be empty
@@ -96,18 +79,12 @@ class UprnLookupPostSuite()
       }
 
       "set the etag header" ignore {
-        when(repository.findUprn(meq("9999999999"))).thenReturn(
-          Future.successful(dbAddresses.filter(_.uprn == 9999999999L).toList))
-
         val response = post("/lookup/by-uprn", """{"uprn":"9999999999"}""")
         val h = response.header("ETag")
         h.nonEmpty shouldBe true
       }
 
       "give a successful response with an empty array for an unknown uprn" in {
-        when(repository.findUprn(meq("0"))).thenReturn(
-          Future.successful(dbAddresses.filter(_.uprn == 0L).toList))
-
         val response = post("/lookup/by-uprn", """{"uprn":"0"}""")
         response.status shouldBe OK
         response.body shouldBe "[]"

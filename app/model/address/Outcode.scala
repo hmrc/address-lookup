@@ -23,14 +23,6 @@ case class Outcode(area: String, district: String) {
 
 
 object Outcode {
-  /**
-    * Performs normalisation and then checks the syntax, returning None if the string
-    * cannot represent a well-formed outcode.
-    */
-  def cleanupOutcode(p: String): Option[Outcode] = {
-    if (p == null) None
-    else doCleanupOutcode(p)
-  }
 
   private def doCleanupOutcode(p: String): Option[Outcode] = {
     val norm = p.trim.toUpperCase

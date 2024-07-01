@@ -63,8 +63,6 @@ case class AddressRecord(
   def truncatedAddress(maxLen: Int = Address.maxLineLength): AddressRecord =
     if (address.longestLineLength <= maxLen) this
     else copy(address = address.truncatedAddress(maxLen))
-
-  def locationValue: Option[Location] = location.map(loc => Location(loc.head, loc(1)))
 }
 
 object AddressRecord {

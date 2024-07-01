@@ -21,11 +21,7 @@ import java.util.regex.Pattern
 case class Postcode(area: String, district: String, sector: String, unit: String) {
   def outcode: String = area + district
 
-  def asOutcode = Outcode(area, district)
-
   def incode: String = sector + unit
-
-  def urlSafe: String = outcode + "+" + incode
 
   override lazy val toString = outcode + " " + incode
 }

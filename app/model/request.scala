@@ -60,13 +60,6 @@ object request {
     implicit val writes: Writes[LookupByUprnRequest] = Json.writes[LookupByUprnRequest]
   }
 
-  case class LookupByIdRequest(id: String)
-
-  object LookupByIdRequest {
-    implicit val reads: Reads[LookupByIdRequest] = Json.reads[LookupByIdRequest]
-    implicit val writes: Writes[LookupByIdRequest] = Json.writes[LookupByIdRequest]
-  }
-
   case class LookupByPostTownRequest(posttown: String, filter: Option[String])
 
   object LookupByPostTownRequest {
@@ -81,7 +74,7 @@ object request {
     implicit val writes: Writes[LookupByPostTownRequest] = Json.writes[LookupByPostTownRequest]
   }
 
-  case class LookupByCountryRequest(filter: String)
+  case class LookupByCountryRequest(country: String, filter: String)
 
   object LookupByCountryRequest {
     implicit val reads: Reads[LookupByCountryRequest] = Json.reads[LookupByCountryRequest]

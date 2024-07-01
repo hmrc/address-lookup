@@ -23,24 +23,6 @@ import play.api.libs.json._
 object response {
 
   import scala.jdk.CollectionConverters._
-
-  case class SupportedCountryCodes(abp: List[String], nonAbp: List[String])
-
-  object SupportedCountryCodes {
-
-    implicit val configLoader: ConfigLoader[SupportedCountryCodes] = new ConfigLoader[SupportedCountryCodes] {
-      override def load(config: Config, path: String): SupportedCountryCodes = {
-        val cfg = config.getConfig(path)
-        val abp = cfg.getStringList("abp").asScala.toList
-        val nonAbp = cfg.getStringList("nonAbp").asScala.toList
-        SupportedCountryCodes(abp = abp, nonAbp = nonAbp)
-      }
-    }
-
-    implicit val writes: Writes[SupportedCountryCodes] = Json.writes[SupportedCountryCodes]
-    implicit val reads: Reads[SupportedCountryCodes] = Json.reads[SupportedCountryCodes]
-  }
-
   case class ErrorMessage(msg: List[String], args: List[String])
   object ErrorMessage {
     val invalidJson: ErrorMessage = ErrorMessage(msg = List("error.payload.invalid"), args = List())
