@@ -17,238 +17,189 @@
 package controllers
 
 import access.AccessChecker
-import config.ConfigHelper
+import config.AppConfig
+import connectors.DownstreamConnector
 import model._
-import model.address.{AddressRecord, Postcode}
-import model.internal.NonUKAddress
+import model.address.{AddressRecord, NonUKAddress, Postcode}
 import model.request.{LookupByCountryRequest, LookupByPostTownRequest, LookupByPostcodeRequest, LookupByUprnRequest}
-import model.response.{ErrorResponse, SupportedCountryCodes}
-import play.api.libs.json.{JsError, JsSuccess, Json}
+import model.response.ErrorResponse
+import org.apache.pekko.actor.ActorSystem
+import org.apache.pekko.stream.Materializer
+import play.api.Logging
+import play.api.http.HeaderNames
+import play.api.libs.json._
 import play.api.mvc._
-import repositories.{ABPAddressRepository, NonABPAddressRepository}
-import services.{CheckAddressDataScheduler, ResponseProcessor}
+import play.api.mvc.request.RequestTarget
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
+import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
-class AddressSearchController @Inject()(addressSearch: ABPAddressRepository, nonABPAddressSearcher: NonABPAddressRepository,
-                                        responseProcessor: ResponseProcessor, auditConnector: AuditConnector,
-                                        cc: ControllerComponents, supportedCountryCodes: SupportedCountryCodes,
-                                        scheduler: CheckAddressDataScheduler, val configHelper: ConfigHelper)(
-                                       implicit ec: ExecutionContext)
-  extends AddressController(cc) with AccessChecker {
+class AddressSearchController @Inject()(connector: DownstreamConnector, auditConnector: AuditConnector, cc: ControllerComponents, val configHelper: AppConfig)(implicit ec: ExecutionContext)
+  extends BackendController(cc) with Logging with AccessChecker {
+  private val actorSystem = ActorSystem("AddressSearchController")
+  private implicit val materializer: Materializer = Materializer.createMaterializer(actorSystem)
+
   import ErrorResponse.Implicits._
 
-  scheduler.enable()
+  private def withValidJson[T: Reads](request: Request[String], doSearch: (Request[String], T) => Future[Result]): Future[Result] = {
+    Try(Json.parse(request.body)) match {
+      case Success(json) =>
+        json.validate[T] match {
+          case JsSuccess(requestDetails, _) =>
+            doSearch(request, requestDetails)
+          case JsError(errors)              =>
+            Future.successful(BadRequest(JsError.toJson(errors)))
+        }
+      case Failure(_)    => Future.successful(BadRequest(Json.toJson(ErrorResponse.invalidJson)))
+    }
+  }
 
-  def search(): Action[String] = accessCheckedAction(parse.tolerantText) {
-    request =>
-      val maybeJson = Try(Json.parse(request.body))
-      maybeJson match {
-        case Success(json) =>
-          json.validate[LookupByPostcodeRequest](LookupByPostcodeRequest.reads) match {
-            case JsSuccess(lookupByPostcodeRequest, _) =>
-              searchByPostcode(request, lookupByPostcodeRequest.postcode, lookupByPostcodeRequest.filter)
-            case JsError(errors) =>
-              Future.successful(BadRequest(JsError.toJson(errors)))
-          }
-        case Failure(_) => Future.successful(BadRequest(Json.toJson(ErrorResponse.invalidJson)))
-      }
+  def searchByPostcode(): Action[String] = accessCheckedAction(parse.tolerantText) {
+    request: Request[String] =>
+      withValidJson[LookupByPostcodeRequest](request, searchByPostcode)
   }
 
   def searchByUprn(): Action[String] = accessCheckedAction(parse.tolerantText) {
-    request =>
-      val maybeJson = Try(Json.parse(request.body))
-      maybeJson match {
-        case Success(json) => json.validate[LookupByUprnRequest] match {
-          case JsSuccess(lookupByUprnRequest, _) =>
-            searchByUprn(request, lookupByUprnRequest.uprn)
-          case JsError(errors) =>
-            Future.successful(BadRequest(JsError.toJson(errors)))
-        }
-        case Failure(_) => Future.successful(BadRequest(Json.toJson(ErrorResponse.invalidJson)))
-      }
+    request: Request[String] =>
+      withValidJson[LookupByUprnRequest](request, searchByUprn)
   }
 
   def searchByPostTown(): Action[String] = accessCheckedAction(parse.tolerantText) {
-    request =>
-      val maybeJson = Try(Json.parse(request.body))
-      maybeJson match {
-        case Success(json) => json.validate[LookupByPostTownRequest] match {
-          case JsSuccess(lookupByTownRequest, _) =>
-            searchByTown(request, lookupByTownRequest.posttown, lookupByTownRequest.filter)
-          case JsError(errors) =>
-            Future.successful(BadRequest(JsError.toJson(errors)))
-        }
-        case Failure(_) => Future.successful(BadRequest(Json.toJson(ErrorResponse.invalidJson)))
-      }
+    request: Request[String] =>
+      withValidJson[LookupByPostTownRequest](request, searchByTown)
   }
 
   def supportedCountries(): Action[AnyContent] = Action.async {
-    import model.response.SupportedCountryCodes._
-    Future.successful(Ok(Json.toJson(supportedCountryCodes)))
+    request: Request[AnyContent] =>
+      forwardIfAllowed[JsValue](request.map(r => JsObject.empty), _ => ())
   }
 
   def searchByCountry(countryCode: String): Action[String] = accessCheckedAction(parse.tolerantText) {
     request =>
       implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequest(request)
+      val newRequest =
+        request.withTarget(RequestTarget("/country/lookup", "/country/lookup", request.queryString))
+          .withBody(addCountryTo(request.body, countryCode.toLowerCase))
 
-      val maybeJson = Try(Json.parse(request.body))
-      maybeJson match {
-        case Success(json) => json.validate[LookupByCountryRequest] match {
-          case JsSuccess(lookupByCountryRequest, _) =>
-            val userAgent = request.headers.get("User-Agent")
-            searchByCountry(userAgent, countryCode.toLowerCase(), lookupByCountryRequest.filter)
-          case JsError(errors) =>
-            Future.successful(BadRequest(JsError.toJson(errors)))
-        }
-        case Failure(_) => Future.successful(BadRequest(Json.toJson(ErrorResponse.invalidJson)))
-      }
+
+      withValidJson[LookupByCountryRequest](newRequest, searchByCountry)
   }
 
-  private[controllers] def searchByUprn[A](request: Request[A], uprn: String): Future[Result] = {
-    if (Try(uprn.toLong).isFailure) {
-      Future.successful {
-        badRequest("BAD-UPRN", "uprn" -> uprn, "error" -> s"uprn must only consist of digits")
-      }
-    } else {
-      import model.address.AddressRecord.formats._
+  private[controllers] def searchByUprn(request: Request[String], uprn: LookupByUprnRequest): Future[Result] = {
+    import model.address.AddressRecord.formats._
 
-      addressSearch.findUprn(uprn).map {
-        a =>
-          val a2 = responseProcessor.convertAddressList(a)
-          logEvent("LOOKUP", "uprn" -> uprn, "matches" -> a2.size.toString)
-          Ok(Json.toJson(a2))
-      }
-    }
+    forwardIfAllowed[AddressRecord](request.map(rb => Json.parse(rb)), _ => ()) //We don't audit uprn searches?
   }
 
-  private[controllers] def searchByPostcode[A](request: Request[A], postcode: Postcode, filter: Option[String]): Future[Result] = {
+  private[controllers] def searchByPostcode[A](request: Request[String], postcode: LookupByPostcodeRequest): Future[Result] = {
     implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequest(request)
+    val userAgent = request.headers.get(HeaderNames.USER_AGENT)
 
-    if (postcode.toString.isEmpty) {
-      Future.successful {
-        badRequest("BAD-POSTCODE", "error" -> s"missing or badly-formed $postcode parameter")
-      }
-    } else {
-      import model.address.AddressRecord.formats._
-      addressSearch.findPostcode(postcode, filter).map {
-        a =>
-          val userAgent = request.headers.get("User-Agent")
-          val a2 = responseProcessor.convertAddressList(a)
+    import model.address.AddressRecord.formats._
 
-          if (a2.nonEmpty) {
-            auditAddressSearch(userAgent, a2, postcode = Some(postcode), filter = filter)
-          }
-
-          logEvent("LOOKUP", a2.size, List(Some("postcode" -> postcode.toString), filter.map(f => "filter" -> f)).flatten)
-          Ok(Json.toJson(a2))
-      }
-    }
+    forwardIfAllowed[AddressRecord](request.map(rb => Json.parse(rb)),
+      addresses => auditAddressSearch(userAgent, addresses, postcode = Some(postcode.postcode), filter = postcode.filter))
   }
 
-  private[controllers] def searchByTown[A](request: Request[A], posttown: String, filter: Option[String]): Future[Result] = {
+  private[controllers] def searchByTown[A](request: Request[String], posttown: LookupByPostTownRequest): Future[Result] = {
     implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequest(request)
+    val userAgent = request.headers.get(HeaderNames.USER_AGENT)
 
-    if (posttown.isEmpty) {
-      Future.successful {
-        badRequest("BAD-POSTTOWN", "error" -> s"missing or badly-formed $posttown parameter")
+    import model.address.AddressRecord.formats._
+
+    forwardIfAllowed[AddressRecord](request.map(rb => Json.parse(rb)),
+      addresses => auditAddressSearch(userAgent, addresses, posttown = Some(posttown.posttown.toUpperCase), filter = posttown.filter))
+  }
+
+  private[controllers] def searchByCountry[A](request: Request[String], country: LookupByCountryRequest)(implicit hc: HeaderCarrier): Future[Result] = {
+    implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequest(request)
+    val userAgent = request.headers.get(HeaderNames.USER_AGENT)
+
+    import model.address.NonUKAddress._
+
+    forwardIfAllowed[NonUKAddress](request.map(rb => Json.parse(rb)),
+      addresses => auditNonUKAddressSearch(userAgent, country = country.country, filter = Option(country.filter), nonUKAddresses = addresses))
+  }
+
+  private def addCountryTo(body: String, country: String): String = {
+    val newBody = Json.parse(body).as[JsObject] + (("country", JsString(country)))
+    newBody.toString()
+  }
+
+  private def url(path: String) = s"${configHelper.addressSearchApiBaseUrl}$path"
+
+  private def forwardIfAllowed[Resp:Reads](request: Request[JsValue], auditFn: List[Resp] => Unit): Future[Result] = {
+    connector.forward(request, url(request.target.uri.toString), configHelper.addressSearchApiAuthToken)
+      .flatMap(res => res.body.consumeData.map(d => res.header.status -> d))
+      .map { case (s, bs) => s -> bs.utf8String }
+      .map { case (s, res) => s -> Json.parse(res) }
+      .map {
+        case (OK, js)           =>
+          auditFn(Json.fromJson[List[Resp]](js).get)
+          Ok(js)
+        case (NOT_FOUND, err)   => NotFound(err)
+        case (BAD_REQUEST, err) => BadRequest(err)
       }
-    } else {
-      import model.address.AddressRecord.formats._
-      val casedPosttown = posttown.toUpperCase
 
-      addressSearch.findTown(casedPosttown, filter).map {
-        a =>
-          val userAgent = request.headers.get("User-Agent")
-          val a2 = responseProcessor.convertAddressList(a)
+  }
 
-          if (a2.nonEmpty) {
-            auditAddressSearch(userAgent, a2, postTown = Some(casedPosttown), filter = filter)
-          }
+  connector.checkConnectivity(url("/ping/ping"), configHelper.addressSearchApiAuthToken).map {
+    case true => logger.warn("Downstream connectivity to address-search-api service successfully established")
+    case _    => logger.error("Downstream connectivity check to address-search-api service FAILED")
+  }
 
-          logEvent("LOOKUP", a2.size, List(Some("posttown" -> posttown), filter.map(f => "filter" -> f)).flatten)
-          Ok(Json.toJson(a2))
-      }
+  private def auditAddressSearch[A](userAgent: Option[String], addressRecords: List[AddressRecord], postcode: Option[Postcode] = None,
+                                    posttown: Option[String] = None, filter: Option[String] = None)(implicit hc: HeaderCarrier): Unit = {
+
+    if (addressRecords.nonEmpty) {
+      auditConnector.sendExplicitAudit("AddressSearch",
+        AddressSearchAuditEvent(userAgent,
+          AddressSearchAuditEventRequestDetails(postcode.map(_.toString), posttown, filter),
+          addressRecords.length,
+          addressRecords.map { ma =>
+            AddressSearchAuditEventMatchedAddress(
+              ma.uprn.map(_.toString).getOrElse(""),
+              ma.parentUprn,
+              ma.usrn,
+              ma.organisation,
+              ma.address.lines,
+              ma.address.town,
+              ma.localCustodian,
+              ma.location,
+              ma.administrativeArea,
+              ma.poBox,
+              ma.address.postcode,
+              ma.address.subdivision,
+              ma.address.country)
+          }))
     }
   }
 
-  private[controllers] def searchByCountry[A](userAgent: Option[String], countryCode: String, filter: String)(implicit hc: HeaderCarrier): Future[Result] = {
-
-    if (countryCode.isEmpty || "[a-zA-Z]{2}".r.unapplySeq(countryCode).isEmpty) {
-      Future.successful {
-        badRequest("BAD-COUNTRYCODE", "error" -> s"missing or badly-formed country code")
-      }
-    } else if (supportedCountryCodes.abp.contains(countryCode)) {
-      Future.successful {
-        badRequest("ABP-COUNTRYCODE", "error" -> s"country code is abp.")
-      }
-    } else if (!supportedCountryCodes.nonAbp.contains(countryCode)) {
-      Future.successful {
-        notFound("UNSUPPORTED-COUNTRYCODE", "error" -> s"country code unsupported")
-      }
-    } else {
-      import model.internal.NonUKAddress._
-
-      nonABPAddressSearcher.findInCountry(countryCode, filter).map {
-        a =>
-          auditNonUKAddressSearch(userAgent, a, countryCode, Option(filter))
-          logEvent("LOOKUP", a.size, List("countryCode" -> countryCode, "filter" -> filter))
-          Ok(Json.toJson(a))
-      }.recover {
-        case e: Throwable => logEvent("LOOKUP-NONUK-ERROR", "errorMessage" -> e.getMessage)
-          ExpectationFailed
-      }
-    }
-  }
-
-  private def auditAddressSearch[A](userAgent: Option[String], a2: List[AddressRecord], postcode: Option[Postcode] = None,
-                                    postTown: Option[String] = None, filter: Option[String] = None)(implicit hc: HeaderCarrier): Unit = {
-
-    auditConnector.sendExplicitAudit("AddressSearch",
-      AddressSearchAuditEvent(userAgent,
-        AddressSearchAuditEventRequestDetails(postcode.map(_.toString), postTown, filter),
-        a2.length,
-        a2.map { ma =>
-          AddressSearchAuditEventMatchedAddress(
-            ma.uprn.map(_.toString).getOrElse("").toString,
-            ma.parentUprn,
-            ma.usrn,
-            ma.organisation,
-            ma.address.lines,
-            ma.address.town,
-            ma.localCustodian,
-            ma.location,
-            ma.administrativeArea,
-            ma.poBox,
-            ma.address.postcode,
-            ma.address.subdivision,
-            ma.address.country)
-        }))
-  }
-
-  private def auditNonUKAddressSearch[A](userAgent: Option[String], a2: List[NonUKAddress], country: String,
+  private def auditNonUKAddressSearch[A](userAgent: Option[String], nonUKAddresses: List[NonUKAddress], country: String,
                                          filter: Option[String] = None)(implicit hc: HeaderCarrier): Unit = {
 
-    auditConnector.sendExplicitAudit("NonUKAddressSearch",
-      NonUKAddressSearchAuditEvent(userAgent,
-        NonUKAddressSearchAuditEventRequestDetails(filter),
-        a2.length,
-        a2.map { ma =>
-          NonUKAddressSearchAuditEventMatchedAddress(
-            ma.id,
-            ma.number,
-            ma.street,
-            ma.unit,
-            ma.city,
-            ma.district,
-            ma.region,
-            ma.postcode,
-            country)
-        }))
+    if (nonUKAddresses.nonEmpty) {
+      auditConnector.sendExplicitAudit("NonUKAddressSearch",
+        NonUKAddressSearchAuditEvent(userAgent,
+          NonUKAddressSearchAuditEventRequestDetails(filter),
+          nonUKAddresses.length,
+          nonUKAddresses.map { ma =>
+            NonUKAddressSearchAuditEventMatchedAddress(
+              ma.id,
+              ma.number,
+              ma.street,
+              ma.unit,
+              ma.city,
+              ma.district,
+              ma.region,
+              ma.postcode,
+              country)
+          }))
+    }
   }
 }

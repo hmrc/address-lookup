@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package it.suites
+package suites
 
 import com.codahale.metrics.SharedMetricRegistries
 import it.helper.AppServerTestApi
@@ -34,8 +34,8 @@ class TownLookupPostSuite()
     SharedMetricRegistries.clear()
     new GuiceApplicationBuilder()
       .configure(
-        "access-control.enabled" -> true,
-        "access-control.allow-list.1" -> "xyz")
+        "microservice.services.access-control.enabled" -> true,
+        "microservice.services.access-control.allow-list.1" -> "xyz")
       .build()
   }
 

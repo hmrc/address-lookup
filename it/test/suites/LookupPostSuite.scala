@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,41 +14,30 @@
  * limitations under the License.
  */
 
-package it.suites
+package suites
 
 import com.codahale.metrics.SharedMetricRegistries
 import it.helper.AppServerTestApi
-import model.address.{AddressRecord, Postcode}
-import org.mockito.ArgumentMatchers.{eq => meq}
-import org.mockito.Mockito.when
+import model.address.AddressRecord
 import org.scalatest.wordspec.AnyWordSpec
-import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import play.api.libs.ws.WSClient
 import play.api.test.Helpers._
-import play.inject.Bindings
-import repositories.ABPAddressRepository
-import repositories.InMemoryAddressTestData.{dbAddresses, singleAddresses}
-
-import scala.concurrent.Future
 
 class LookupPostSuite()
   extends AnyWordSpec with GuiceOneServerPerSuite with AppServerTestApi {
 
   private val largePostcodeExampleSize = 2517
 
-  val repository: ABPAddressRepository = mock[ABPAddressRepository]
-
   override def fakeApplication(): Application = {
     SharedMetricRegistries.clear()
     new GuiceApplicationBuilder()
-      .overrides(Bindings.bind(classOf[ABPAddressRepository]).toInstance(repository))
       .configure(
-        "access-control.enabled" -> true,
-        "access-control.allow-list.1" -> "xyz")
+        "microservice.services.access-control.enabled" -> true,
+        "microservice.services.access-control.allow-list.1" -> "xyz")
       .build()
   }
 
@@ -61,9 +50,6 @@ class LookupPostSuite()
     "successful" should {
 
       "give a successful response for a known postcode - uk route" in {
-        when(repository.findPostcode(meq(Postcode("FX1 9PY")), meq(None))).thenReturn(
-          Future.successful(singleAddresses.filter(_.postcode == "FX1 9PY").toList))
-
         val payload =
           """{"postcode": "fx1 9py"}""".stripMargin
 
@@ -72,9 +58,6 @@ class LookupPostSuite()
       }
 
       "give a successful response for a known v.large postcode - uk route" in {
-        when(repository.findPostcode(meq(Postcode("FX4 7AL")), meq(None))).thenReturn(
-          Future.successful(dbAddresses.filter(_.postcode == "FX4 7AL").toList))
-
         val payload =
           """{
             |  "postcode": "fx47al"
@@ -94,8 +77,6 @@ class LookupPostSuite()
       }
 
       "set the content type to application/json" in {
-        when(repository.findPostcode(meq(Postcode("FX4 9PY")), meq(None))).thenReturn(
-          Future.successful(dbAddresses.filter(_.postcode == "FX4 9PY").toList))
         val payload =
           """{
             |  "postcode": "FX1 9PY"
@@ -107,8 +88,6 @@ class LookupPostSuite()
       }
 
       "set the cache-control header and include a positive max-age in it" ignore {
-        when(repository.findPostcode(meq(Postcode("FX4 9PY")), meq(None))).thenReturn(
-          Future.successful(dbAddresses.filter(_.postcode == "FX4 9PY").toList))
         val payload =
           """{
             |  "postcode": "FX1 9PY"
@@ -121,9 +100,6 @@ class LookupPostSuite()
       }
 
       "set the etag header" ignore {
-        when(repository.findPostcode(meq(Postcode("FX4 9PY")), meq(None))).thenReturn(
-          Future.successful(dbAddresses.filter(_.postcode == "FX4 9PY").toList))
-
         val payload =
           """{
             |  "postcode": "FX1 9PY"
@@ -135,9 +111,6 @@ class LookupPostSuite()
       }
 
       "give a successful response for an unknown postcode" in {
-        when(repository.findPostcode(meq(Postcode("ZZ10 9ZZ")), meq(None))).thenReturn(
-          Future.successful(dbAddresses.filter(_.postcode == "ZZ10 9ZZ").toList))
-
         val payload =
           """{
             |  "postcode": "zz10 9zz"
@@ -148,9 +121,6 @@ class LookupPostSuite()
       }
 
       "give an empty array for an unknown postcode" in {
-        when(repository.findPostcode(meq(Postcode("ZZ10 9ZZ")), meq(None))).thenReturn(
-          Future.successful(dbAddresses.filter(_.postcode == "ZZ10 9ZZ").toList))
-
         val payload =
           """{
             |  "postcode": "ZZ10 9ZZ"
@@ -164,9 +134,6 @@ class LookupPostSuite()
     "client error" should {
 
       "return forbidden when the user-agent is absent" in {
-        when(repository.findPostcode(meq(Postcode("FX1 4AB")), meq(None))).thenReturn(
-          Future.successful(dbAddresses.filter(_.postcode == "FX1 4AB").toList))
-
         val payload =
           """{
             |  "postcode": "FX1 4AB"
@@ -210,9 +177,6 @@ class LookupPostSuite()
       }
 
       "give a bad request when an unexpected parameter is sent on its own" in {
-        when(repository.findPostcode(meq(Postcode("FX1 4AC")), meq(None))).thenReturn(
-          Future.successful(dbAddresses.filter(_.postcode == "FX1 4AC").toList))
-
         val payload =
           """{
             |  "foo": "FX1 4AC"
@@ -224,9 +188,6 @@ class LookupPostSuite()
       }
 
       "not give a bad request when an unexpected parameter is sent" in {
-        when(repository.findPostcode(meq(Postcode("FX1 4AC")), meq(None))).thenReturn(
-          Future.successful(dbAddresses.filter(_.postcode == "FX1 4AC").toList))
-
         val payload =
           """{
             |  "postcode": "FX1 4AC",

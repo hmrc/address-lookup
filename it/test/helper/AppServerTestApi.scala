@@ -73,11 +73,11 @@ trait AppServerTestApi extends Matchers with Status {
 
   //-----------------------------------------------------------------------------------------------
 
-  def verifyOK(path: String, expectedBody: String, expectedContent: String = "text/plain") {
+  def verifyOK(path: String, expectedBody: String, expectedContent: String = "text/plain"): Unit = {
     verify(path, OK, expectedBody, expectedContent)
   }
 
-  def verify(path: String, expectedStatus: Int, expectedBody: String, expectedContent: String = "text/plain") {
+  def verify(path: String, expectedStatus: Int, expectedBody: String, expectedContent: String = "text/plain"): Unit = {
     val step = get(path)
     step.status shouldBe expectedStatus
     step.header("Content-Type") shouldBe Some(expectedContent)

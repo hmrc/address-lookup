@@ -56,11 +56,8 @@ object Country {
   val NorthernIreland = Country("GB-NIR", "Northern Ireland")
 
   private val all = List(UK, GB, GG, IM, JE, England, Scotland, Wales, Cymru, NorthernIreland)
-  def supported: List[Country] = all
 
   def find(code: String): Option[Country] = all.find(_.code == code)
-
-  def findByName(name: String): Option[Country] = all.find(_.name == name)
 
   // TODO this is possibly not good enough - should consult a reference HMG-approved list of countries
 }
