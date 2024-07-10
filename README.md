@@ -10,6 +10,13 @@ Please read the [**address-lookup API definition**](public/api/conf/1.0/docs/add
 * SBT
 * Java 8
 * Play Framework
+* `address-search-api` 
+
+## Running / testing locally
+Run `address-lookup` services using `sm2`:
+```bash
+sm2 start ADDRESS_LOOKUP_SERVICES
+```
 
 ## Development
 The unit tests can be run as follows:
