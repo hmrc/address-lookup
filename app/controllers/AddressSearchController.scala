@@ -93,7 +93,7 @@ class AddressSearchController @Inject()(connector: DownstreamConnector, auditCon
   private[controllers] def searchByUprn(request: Request[String], uprn: LookupByUprnRequest): Future[Result] = {
     import model.address.AddressRecord.formats._
 
-    forwardIfAllowed[AddressRecord](request.map(rb => Json.parse(rb)), _ => ()) //We don't audit uprn searches?
+    forwardIfAllowed[List[AddressRecord]](request.map(rb => Json.parse(rb)), _ => ()) //We don't audit uprn searches?
   }
 
   private[controllers] def searchByPostcode[A](request: Request[String], postcode: LookupByPostcodeRequest): Future[Result] = {
@@ -102,7 +102,7 @@ class AddressSearchController @Inject()(connector: DownstreamConnector, auditCon
 
     import model.address.AddressRecord.formats._
 
-    forwardIfAllowed[AddressRecord](request.map(rb => Json.parse(rb)),
+    forwardIfAllowed[List[AddressRecord]](request.map(rb => Json.parse(rb)),
       addresses => auditAddressSearch(userAgent, addresses, postcode = Some(postcode.postcode), filter = postcode.filter))
   }
 
@@ -112,7 +112,7 @@ class AddressSearchController @Inject()(connector: DownstreamConnector, auditCon
 
     import model.address.AddressRecord.formats._
 
-    forwardIfAllowed[AddressRecord](request.map(rb => Json.parse(rb)),
+    forwardIfAllowed[List[AddressRecord]](request.map(rb => Json.parse(rb)),
       addresses => auditAddressSearch(userAgent, addresses, posttown = Some(posttown.posttown.toUpperCase), filter = posttown.filter))
   }
 
@@ -122,7 +122,7 @@ class AddressSearchController @Inject()(connector: DownstreamConnector, auditCon
 
     import model.address.NonUKAddress._
 
-    forwardIfAllowed[NonUKAddress](request.map(rb => Json.parse(rb)),
+    forwardIfAllowed[List[NonUKAddress]](request.map(rb => Json.parse(rb)),
       addresses => auditNonUKAddressSearch(userAgent, country = country.country, filter = Option(country.filter), nonUKAddresses = addresses))
   }
 
@@ -133,14 +133,14 @@ class AddressSearchController @Inject()(connector: DownstreamConnector, auditCon
 
   private def url(path: String) = s"${configHelper.addressSearchApiBaseUrl}$path"
 
-  private def forwardIfAllowed[Resp:Reads](request: Request[JsValue], auditFn: List[Resp] => Unit): Future[Result] = {
+  private def forwardIfAllowed[Resp:Reads](request: Request[JsValue], auditFn: Resp => Unit): Future[Result] = {
     connector.forward(request, url(request.target.uri.toString), configHelper.addressSearchApiAuthToken)
       .flatMap(res => res.body.consumeData.map(d => res.header.status -> d))
       .map { case (s, bs) => s -> bs.utf8String }
       .map { case (s, res) => s -> Json.parse(res) }
       .map {
         case (OK, js)           =>
-          auditFn(Json.fromJson[List[Resp]](js).get)
+          auditFn(Json.fromJson[Resp](js).get)
           Ok(js)
         case (NOT_FOUND, err)   => NotFound(err)
         case (BAD_REQUEST, err) => BadRequest(err)
