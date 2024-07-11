@@ -27,7 +27,7 @@ import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.json.Json
+import play.api.libs.json.{JsValue, Json}
 import play.api.libs.ws.WSClient
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import play.inject.Bindings
@@ -54,6 +54,18 @@ class CountryLookupSuiteV2()
   "country specific lookup" when {
 
     "successful" should {
+
+      "give a successful response for supported countries" in {
+        val response = get("/country")
+
+        val contentType = response.header("Content-Type").get
+        contentType should startWith("application/json")
+
+        response.status shouldBe OK
+        val countriesJs = response.body[JsValue]
+        (countriesJs \ "abp").as[List[String]] should contain theSameElementsAs List("gb","gg","je")
+        (countriesJs \ "nonAbp").as[List[String]] should contain theSameElementsAs List("bm","nl","vg")
+      }
 
       "give a successful response for bermuda" in {
         val response = post("/country/BM/lookup", """{"filter":"HM02"}""")
