@@ -30,7 +30,7 @@ import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.{HeaderNames, MimeTypes, Status}
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.json.Json
+import play.api.libs.json.{JsNumber, JsObject, JsString, Json}
 import play.api.mvc.{ControllerComponents, Request}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
@@ -75,7 +75,7 @@ class AddressSearchControllerTest extends AnyWordSpec with Matchers with GuiceOn
   val controller: AddressSearchController = app.injector.instanceOf[AddressSearchController]
   implicit val mat: Materializer = app.injector.instanceOf[Materializer]
 
-  "findPostTown" ignore {
+  "findPostTown" should {
 
     """when search is called without valid 'user-agent' header
        it should give a forbidden response and not log any error
@@ -90,6 +90,11 @@ class AddressSearchControllerTest extends AnyWordSpec with Matchers with GuiceOn
         .withHeadersOrigin
 
       val result = controller.searchByPostTown().apply(request)
+      contentType(result) shouldBe Some(MimeTypes.JSON)
+      contentAsJson(result) shouldBe JsObject(Map(
+        "code" -> JsNumber(FORBIDDEN),
+        "description" -> JsString("One or more user agents in 'forbidden-user-agent' are not authorized to use this service. Please complete 'https://forms.office.com/Pages/ResponsePage.aspx?id=PPdSrBr9mkqOekokjzE54cRTj_GCzpRJqsT4amG0JK1UMkpBS1NUVDhWR041NjJWU0lCMVZUNk5NTi4u' to request access.")
+      ))
       status(result) shouldBe Status.FORBIDDEN
     }
 
@@ -101,20 +106,20 @@ class AddressSearchControllerTest extends AnyWordSpec with Matchers with GuiceOn
       clearInvocations(mockAuditConnector)
 
 
-      val jsonPayload = Json.toJson(LookupByPostTownRequest("Testtown", Some("Test Street")))
+      val jsonPayload = Json.toJson(LookupByPostTownRequest("town", Some("address lines")))
       val request = FakeRequest("POST", "/lookup/by-post-town")
         .withBody(jsonPayload.toString)
         .withHeaders(HeaderNames.USER_AGENT -> "test-user-agent", HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
         .withHeadersOrigin
 
-      val expectedAuditRequestDetails = AddressSearchAuditEventRequestDetails(postTown = Some("TESTTOWN"), filter = Some("Test Street"))
+      val expectedAuditRequestDetails = AddressSearchAuditEventRequestDetails(postTown = Some("TOWN"), filter = Some("address lines"))
 
       val expectedAuditAddressMatches = Seq(
-        AddressSearchAuditEventMatchedAddress("100002", Some(10000200), Some(1000020), Some("gb-oragnisation-2"), List("1 Test Street"), "Testtown", None, Some(List(54.914561, -1.3905597)), Some("TestLocalAuthority"), None, "FZ22 7ZW", None, Country("GB", "United Kingdom")),
-        AddressSearchAuditEventMatchedAddress("100003", Some(10000300), Some(1000030), Some("gb-oragnisation-3"), List("2 Test Street"), "Testtown", None, Some(List(54.914561, -1.3905597)), Some("TestLocalAuthority"), None, "FZ22 7ZW", None, Country("GB", "United Kingdom")),
-        AddressSearchAuditEventMatchedAddress("100004", Some(10000400), Some(1000040), Some("gb-oragnisation-4"), List("3 Test Street"), "Testtown", None, Some(List(54.914561, -1.3905597)), Some("TestLocalAuthority"), None, "FZ22 7ZW", None, Country("GB", "United Kingdom")))
-
-      val expectedAuditEvent = AddressSearchAuditEvent(Some("test-user-agent"), expectedAuditRequestDetails, 3, expectedAuditAddressMatches)
+        AddressSearchAuditEventMatchedAddress("990091234568",None,None,None,List("Address with 2 Address Lines", "Second Address Line"),"Town",Some(LocalCustodian(425,"WYCOMBE")),None,None,None,"ZZ1Z 6AB",Some(Country("GB-ENG","England")),Country("GB","United Kingdom")),
+        AddressSearchAuditEventMatchedAddress("990091234637",None,None,None,List("Address with 2 Address Lines", "Second Address Line"),"Town",Some(LocalCustodian(6810,"GWYNEDD")),None,None,None,"FX52 9SJ",Some(Country("GB-ENG","England")),Country("GB","United Kingdom")),
+        AddressSearchAuditEventMatchedAddress("990091234569",None,None,None,List("Address with 3 Address Lines", "Second Address Line", "Third Address Line"),"Town",Some(LocalCustodian(425,"WYCOMBE")),None,None,None,"ZZ1Z 7AB",Some(Country("GB-ENG","England")),Country("GB","United Kingdom")),
+        AddressSearchAuditEventMatchedAddress("990091234638",None,None,None,List("Address with 3 Address Lines", "Second Address Line", "Third Address Line"),"Town",Some(LocalCustodian(6810,"GWYNEDD")),None,None,None,"FX0 2GJ",Some(Country("GB-ENG","England")),Country("GB","United Kingdom")))
+      val expectedAuditEvent = AddressSearchAuditEvent(Some("test-user-agent"), expectedAuditRequestDetails, 4, expectedAuditAddressMatches)
 
       val result = controller.searchByPostTown().apply(request)
       status(result) shouldBe Status.OK
@@ -129,7 +134,7 @@ class AddressSearchControllerTest extends AnyWordSpec with Matchers with GuiceOn
       clearInvocations(mockAuditConnector)
 
 
-      val jsonPayload = Json.toJson(LookupByPostTownRequest("Testtown", None))
+      val jsonPayload = Json.toJson(LookupByPostTownRequest("non-existent-town", None))
       val request = FakeRequest("POST", "/lookup/by-post-town")
         .withBody(jsonPayload.toString)
         .withHeaders(HeaderNames.USER_AGENT -> "test-user-agent", HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
@@ -203,7 +208,7 @@ class AddressSearchControllerTest extends AnyWordSpec with Matchers with GuiceOn
         .withHeaders(HeaderNames.USER_AGENT -> "test-user-agent", HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
         .withHeadersOrigin
 
-      val expectedAuditRequestDetails = AddressSearchAuditEventRequestDetails(postcode = Some("ZZ11 1ZZ"), filter = Some("Test Street"))
+      val expectedAuditRequestDetails = AddressSearchAuditEventRequestDetails(postcode = Some("ZZ11 1ZZ"), uprn = None, filter = Some("Test Street"))
 
       val expectedAuditAddressMatches = Seq(
         AddressSearchAuditEventMatchedAddress("990091234512", None, None, None, List("10 Test Street"), "Testtown", Some(LocalCustodian(121, "NORTH SOMERSET")), None, None, None, "ZZ11 1ZZ", Some(Country("GB-ENG", "England")), Country("GB", "United Kingdom")),
@@ -227,7 +232,7 @@ class AddressSearchControllerTest extends AnyWordSpec with Matchers with GuiceOn
         .sendExplicitAudit(meq("AddressSearch"), meq(expectedAuditEvent))(any(), any(), any())
     }
 
-    """when search is called with a postcode thatgives no results
+    """when search is called with a postcode that gives no results
        it should give an 'ok' response and not send an explicit audit event
       """ in {
       clearInvocations(mockAuditConnector)
@@ -264,7 +269,18 @@ class AddressSearchControllerTest extends AnyWordSpec with Matchers with GuiceOn
     "give success" when {
       """search is called with a valid uprn""" in {
         import LookupByUprnRequest._
-        val jsonPayload = Json.toJson(LookupByUprnRequest("0123456789"))
+
+        clearInvocations(mockAuditConnector)
+
+        val expectedAuditRequestDetails = AddressSearchAuditEventRequestDetails(uprn = Some("790091234501"))
+
+        val expectedAuditAddressMatches = Seq(
+          AddressSearchAuditEventMatchedAddress("790091234501",None,None,None,List("1 Test Street"),"Testtown",Some(LocalCustodian(9010,"SHETLAND ISLANDS")),None,None,None,"BB00 0BB",Some(Country("GB-SCT","Scotland")),Country("GB","United Kingdom"))
+        )
+
+        val expectedAuditEvent = AddressSearchAuditEvent(Some("test-user-agent"), expectedAuditRequestDetails, 10, expectedAuditAddressMatches)
+
+        val jsonPayload = Json.toJson(LookupByUprnRequest("790091234501"))
         val request = FakeRequest("POST", "/lookup/by-uprn")
           .withBody(jsonPayload.toString)
           .withHeaders(HeaderNames.USER_AGENT -> "test-user-agent", HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
@@ -272,6 +288,9 @@ class AddressSearchControllerTest extends AnyWordSpec with Matchers with GuiceOn
 
         val response = controller.searchByUprn().apply(request)
         status(response) shouldBe 200
+
+        verify(mockAuditConnector, never())
+          .sendExplicitAudit(any(), meq(expectedAuditEvent))(any(), any(), any())
       }
     }
 

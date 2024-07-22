@@ -97,7 +97,8 @@ class AddressSearchController @Inject()(connector: DownstreamConnector, auditCon
     import model.address.AddressRecord.formats._
 
     forwardIfAllowed[List[AddressRecord]](request.map(rb => Json.parse(rb)),
-      addresses => auditAddressSearch(userAgent, addresses, uprn = Some(uprn.uprn)))//We don't audit uprn searches?
+      addresses => auditAddressSearch(userAgent, addresses, uprn = Some(uprn.uprn))
+    )
   }
 
   private[controllers] def searchByPostcode[A](request: Request[String], postcode: LookupByPostcodeRequest): Future[Result] = {
@@ -148,6 +149,7 @@ class AddressSearchController @Inject()(connector: DownstreamConnector, auditCon
           Ok(js)
         case (NOT_FOUND, err)   => NotFound(err)
         case (BAD_REQUEST, err) => BadRequest(err)
+        case (FORBIDDEN, err) => Forbidden(err)
       }
 
   }
@@ -161,7 +163,7 @@ class AddressSearchController @Inject()(connector: DownstreamConnector, auditCon
                                     posttown: Option[String] = None, uprn: Option[String] = None, filter: Option[String] = None)(implicit hc: HeaderCarrier): Unit = {
 
     if (addressRecords.nonEmpty) {
-      val auditEventRequestDetails = AddressSearchAuditEventRequestDetails(postcode.map(_.toString), posttown, filter)
+      val auditEventRequestDetails = AddressSearchAuditEventRequestDetails(postcode.map(_.toString), posttown, uprn, filter)
       val addressSearchAuditEventMatchedAddresses = addressRecords.map { ma =>
         AddressSearchAuditEventMatchedAddress(
           ma.uprn.map(_.toString).getOrElse(""),

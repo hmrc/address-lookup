@@ -34,7 +34,9 @@ case class AddressSearchAuditEventMatchedAddress(uprn: String,
                                                  subDivision: Option[Country],
                                                  country: Country)
 
-case class AddressSearchAuditEventRequestDetails(postcode: Option[String] = None, postTown: Option[String] = None,
+case class AddressSearchAuditEventRequestDetails(postcode: Option[String] = None,
+                                                 postTown: Option[String] = None,
+                                                 uprn: Option[String] = None,
                                                  filter: Option[String] = None)
 
 case class AddressSearchAuditEvent(userAgent: Option[String],

@@ -45,7 +45,7 @@ trait AccessChecker {
 
   private def forbiddenResponse(clients: Seq[String]): String =
     s"""{
-       |"code": 403,
+       |"code": ${FORBIDDEN},
        |"description": "One or more user agents in '${clients.mkString(",")}' are not authorized to use this service. Please complete '${accessRequestFormUrl}' to request access."
        |}""".stripMargin
 
