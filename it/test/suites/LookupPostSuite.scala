@@ -22,6 +22,7 @@ import model.address.AddressRecord
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
+import play.api.http.MimeTypes
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import play.api.libs.ws.WSClient
@@ -54,6 +55,14 @@ class LookupPostSuite()
           """{"postcode": "fx1 9py"}""".stripMargin
 
         val response = post("/lookup", payload)
+        response.status shouldBe OK
+      }
+
+      "give a successful response for a known postcode with text content-type - uk route" in {
+        val payload =
+          """{"postcode": "fx1 9py"}""".stripMargin
+
+        val response = post("/lookup", payload, MimeTypes.TEXT)
         response.status shouldBe OK
       }
 

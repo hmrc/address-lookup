@@ -27,6 +27,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
+import play.api.http.MimeTypes
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.{JsArray, JsObject, Json}
 import play.api.libs.ws.WSClient
@@ -59,6 +60,13 @@ class PostcodeLookupSuiteV2()
 
       "give a successful response for a known postcode - uk route" in {
         val response = post("/lookup", """{"postcode":"AA00 0AA"}""")
+        response.status shouldBe OK
+        val jsonBody = Json.parse(response.body)
+        jsonBody shouldBe a[JsArray]
+      }
+
+      "give a successful response for a known postcode with text content type - uk route" in {
+        val response = post("/lookup", """{"postcode":"AA00 0AA"}""", MimeTypes.TEXT)
         response.status shouldBe OK
         val jsonBody = Json.parse(response.body)
         jsonBody shouldBe a[JsArray]

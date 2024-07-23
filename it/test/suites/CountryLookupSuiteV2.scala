@@ -26,6 +26,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
+import play.api.http.MimeTypes
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.{JsValue, Json}
 import play.api.libs.ws.WSClient
@@ -89,6 +90,15 @@ class CountryLookupSuiteV2()
             NonUKAddressSearchAuditEventMatchedAddress(Some("BM1fb321218785e9a6"), Some("12"), Some("Arlington Avenue"), None, None, Some("Pembroke"), None, Some("HM02"), "bm")))
         Mockito.verify(auditConnector).sendExplicitAudit(meq("NonUKAddressSearch"), meq(expectedAuditValues))(any(),any(),any())
       }
+
+      "give a successful response for bermuda with text content-type" in {
+        val response = post("/country/BM/lookup", """{"filter":"HM02"}""", MimeTypes.TEXT)
+
+        val contentType = response.header("Content-Type").get
+        contentType should startWith("application/json")
+
+        response.status shouldBe OK
+    }
 
       "give a successful response for an unknown postcode" in {
         val response = post("/country/BM/lookup", """{"filter":"HM99"}""")

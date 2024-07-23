@@ -26,7 +26,7 @@ import model.response.ErrorResponse
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.stream.Materializer
 import play.api.Logging
-import play.api.http.HeaderNames
+import play.api.http.{HeaderNames, MimeTypes}
 import play.api.libs.json._
 import play.api.mvc._
 import play.api.mvc.request.RequestTarget
@@ -139,7 +139,9 @@ class AddressSearchController @Inject()(connector: DownstreamConnector, auditCon
   private def url(path: String) = s"${configHelper.addressSearchApiBaseUrl}$path"
 
   private def forwardIfAllowed[Resp:Reads](request: Request[JsValue], auditFn: Resp => Unit): Future[Result] = {
-    connector.forward(request, url(request.target.uri.toString), configHelper.addressSearchApiAuthToken)
+    val newHeadersMap = request.headers.toSimpleMap ++ Map(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
+    val jsonRequest = request.withHeaders(Headers(newHeadersMap.toSeq: _*))
+    connector.forward(jsonRequest, url(jsonRequest.target.uri.toString), configHelper.addressSearchApiAuthToken)
       .flatMap(res => res.body.consumeData.map(d => res.header.status -> d))
       .map { case (s, bs) => s -> bs.utf8String }
       .map { case (s, res) => s -> Json.parse(res) }

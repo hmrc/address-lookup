@@ -38,10 +38,10 @@ class DownstreamConnector @Inject()(httpClient: HttpClient) extends Logging {
     logger.info(s"Forwarding to downstream url: $url")
 
     // TODO: Check if the context path is present - if so remove before forwarding
-    val called = (request.method, request.headers.get(CONTENT_TYPE).map(_.toLowerCase())) match {
-      case ("POST", Some("application/json")) =>
+    val called = request.method match {
+      case "POST" =>
         httpClient.POST[Option[JsValue], HttpResponse](url = url, body = Some(request.body), onwardHeaders)
-      case ("GET", _)                         =>
+      case "GET"  =>
         httpClient.GET[HttpResponse](url = url, onwardHeaders)
     }
 

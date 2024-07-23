@@ -22,6 +22,7 @@ import model.address.{Address, AddressRecord, Country, LocalCustodian}
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
+import play.api.http.MimeTypes
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.{JsArray, Json}
 import play.api.libs.ws.WSClient
@@ -63,6 +64,16 @@ class UprnLookupPostSuite()
         arr.size shouldBe 1
         val address1 = Json.fromJson[AddressRecord](arr.head).get
         address1 shouldBe expectedAddressRecord
+      }
+
+      "give a successful response for a known uprn with text content-type - uk route" in {
+        val expectedAddressRecord = AddressRecord(
+          "GB690091234501",Some(690091234501L),None,None,None,
+          Address(List("1 Test Street"),"Testtown","AA00 0AA",Some(Country("GB-ENG","England")),Country("GB","United Kingdom"))
+          ,"en",Some(LocalCustodian(121,"NORTH SOMERSET")),None,None,None)
+
+        val response = post("/lookup/by-uprn", """{"uprn": "690091234501"}""", MimeTypes.TEXT)
+        response.status shouldBe OK
       }
 
       "set the content type to application/json" in {
