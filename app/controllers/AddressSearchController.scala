@@ -91,9 +91,14 @@ class AddressSearchController @Inject()(connector: DownstreamConnector, auditCon
   }
 
   private[controllers] def searchByUprn(request: Request[String], uprn: LookupByUprnRequest): Future[Result] = {
+    implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequest(request)
+    val userAgent = request.headers.get(HeaderNames.USER_AGENT)
+
     import model.address.AddressRecord.formats._
 
-    forwardIfAllowed[List[AddressRecord]](request.map(rb => Json.parse(rb)), _ => ()) //We don't audit uprn searches?
+    forwardIfAllowed[List[AddressRecord]](request.map(rb => Json.parse(rb)),
+      addresses => auditAddressSearch(userAgent, addresses, uprn = Some(uprn.uprn))
+    )
   }
 
   private[controllers] def searchByPostcode[A](request: Request[String], postcode: LookupByPostcodeRequest): Future[Result] = {
@@ -144,6 +149,7 @@ class AddressSearchController @Inject()(connector: DownstreamConnector, auditCon
           Ok(js)
         case (NOT_FOUND, err)   => NotFound(err)
         case (BAD_REQUEST, err) => BadRequest(err)
+        case (FORBIDDEN, err) => Forbidden(err)
       }
 
   }
@@ -154,29 +160,32 @@ class AddressSearchController @Inject()(connector: DownstreamConnector, auditCon
   }
 
   private def auditAddressSearch[A](userAgent: Option[String], addressRecords: List[AddressRecord], postcode: Option[Postcode] = None,
-                                    posttown: Option[String] = None, filter: Option[String] = None)(implicit hc: HeaderCarrier): Unit = {
+                                    posttown: Option[String] = None, uprn: Option[String] = None, filter: Option[String] = None)(implicit hc: HeaderCarrier): Unit = {
 
     if (addressRecords.nonEmpty) {
+      val auditEventRequestDetails = AddressSearchAuditEventRequestDetails(postcode.map(_.toString), posttown, uprn, filter)
+      val addressSearchAuditEventMatchedAddresses = addressRecords.map { ma =>
+        AddressSearchAuditEventMatchedAddress(
+          ma.uprn.map(_.toString).getOrElse(""),
+          ma.parentUprn,
+          ma.usrn,
+          ma.organisation,
+          ma.address.lines,
+          ma.address.town,
+          ma.localCustodian,
+          ma.location,
+          ma.administrativeArea,
+          ma.poBox,
+          ma.address.postcode,
+          ma.address.subdivision,
+          ma.address.country)
+      }
+
       auditConnector.sendExplicitAudit("AddressSearch",
         AddressSearchAuditEvent(userAgent,
-          AddressSearchAuditEventRequestDetails(postcode.map(_.toString), posttown, filter),
+          auditEventRequestDetails,
           addressRecords.length,
-          addressRecords.map { ma =>
-            AddressSearchAuditEventMatchedAddress(
-              ma.uprn.map(_.toString).getOrElse(""),
-              ma.parentUprn,
-              ma.usrn,
-              ma.organisation,
-              ma.address.lines,
-              ma.address.town,
-              ma.localCustodian,
-              ma.location,
-              ma.administrativeArea,
-              ma.poBox,
-              ma.address.postcode,
-              ma.address.subdivision,
-              ma.address.country)
-          }))
+          addressSearchAuditEventMatchedAddresses))
     }
   }
 
