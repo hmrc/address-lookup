@@ -22,7 +22,7 @@ import model.address.{Address, AddressRecord, Country, LocalCustodian}
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
-import play.api.http.MimeTypes
+import play.api.http.{HeaderNames, MimeTypes}
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.{JsArray, Json}
 import play.api.libs.ws.WSClient
@@ -107,7 +107,13 @@ class UprnLookupPostSuite()
 
       "return forbidden when the user-agent is absent" in {
         val path = "/lookup/by-uprn"
-        val response = await(wsClient.url(appEndpoint + path).withMethod("POST").withBody("""{"uprn":"9999999999"}""").execute())
+        val response = await(
+          wsClient
+            .url(appEndpoint + path)
+            .withMethod("POST")
+            .withHttpHeaders(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
+            .withBody("""{"uprn":"9999999999"}""")
+            .execute())
         response.status shouldBe FORBIDDEN
       }
 

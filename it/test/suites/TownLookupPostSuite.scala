@@ -24,7 +24,7 @@ import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
 import play.api.http.MimeTypes
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.json.{JsArray, Json}
+import play.api.libs.json.{JsArray, JsValue, Json}
 import play.api.libs.ws.WSClient
 import play.api.test.Helpers._
 
@@ -192,7 +192,9 @@ class TownLookupPostSuite()
       "give a bad request when the town parameter is absent" in {
         val response = post("/lookup/by-post-town", "{}")
         response.status shouldBe BAD_REQUEST
-        response.body shouldBe """{"obj.posttown":[{"msg":["error.path.missing"],"args":[]}]}"""
+        val jsonBody = response.body[JsValue]
+        (jsonBody \ "statusCode").as[Int] shouldBe BAD_REQUEST
+        (jsonBody \ "message").as[String] should startWith("Json validation error")
       }
 
       "give a bad request when the town parameter is of the wrong type" in {
@@ -203,7 +205,9 @@ class TownLookupPostSuite()
 
         val response = post("/lookup/by-post-town", payload)
         response.status shouldBe BAD_REQUEST
-        response.body shouldBe """{"obj.posttown":[{"msg":["error.expected.jsstring"],"args":[]}]}"""
+        val jsonBody = response.body[JsValue]
+        (jsonBody \ "statusCode").as[Int] shouldBe BAD_REQUEST
+        (jsonBody \ "message").as[String] should startWith("Json validation error")
       }
 
       "give a bad request when an unexpected parameter is sent on its own" in {
@@ -214,7 +218,9 @@ class TownLookupPostSuite()
 
         val response = post("/lookup/by-post-town", payload)
         response.status shouldBe BAD_REQUEST
-        response.body shouldBe """{"obj.posttown":[{"msg":["error.path.missing"],"args":[]}]}"""
+        val jsonBody = response.body[JsValue]
+        (jsonBody \ "statusCode").as[Int] shouldBe BAD_REQUEST
+        (jsonBody \ "message").as[String] should startWith("Json validation error")
       }
 
       "not give a bad request when an unexpected parameter is sent" in {

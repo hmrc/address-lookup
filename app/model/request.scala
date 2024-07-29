@@ -74,6 +74,13 @@ object request {
     implicit val writes: Writes[LookupByPostTownRequest] = Json.writes[LookupByPostTownRequest]
   }
 
+  case class LookupByCountryFilterRequest(filter: String)
+
+  object LookupByCountryFilterRequest {
+    implicit val reads: Reads[LookupByCountryFilterRequest] = Json.reads[LookupByCountryFilterRequest]
+    implicit val writes: Writes[LookupByCountryFilterRequest] = Json.writes[LookupByCountryFilterRequest]
+  }
+
   case class LookupByCountryRequest(country: String, filter: String)
 
   object LookupByCountryRequest {

@@ -18,23 +18,16 @@ package suites
 
 import com.codahale.metrics.SharedMetricRegistries
 import it.helper.AppServerTestApi
-import model.address.{AddressRecord, Postcode}
-import model.response.ErrorResponse
-import org.mockito.ArgumentMatchers.{any, eq => meq}
-import org.mockito.Mockito
-import org.mockito.Mockito.{times, when}
+import model.address.AddressRecord
 import org.scalatest.wordspec.AnyWordSpec
-import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
-import play.api.http.MimeTypes
+import play.api.http.{HeaderNames, MimeTypes}
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.json.{JsArray, JsObject, Json}
+import play.api.libs.json.{JsArray, Json}
 import play.api.libs.ws.WSClient
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
-import play.inject.Bindings
-
-import scala.concurrent.Future
+import uk.gov.hmrc.play.bootstrap.backend.http.ErrorResponse
 
 class PostcodeLookupSuiteV2()
   extends AnyWordSpec with GuiceOneServerPerSuite with AppServerTestApi {
@@ -204,7 +197,13 @@ class PostcodeLookupSuiteV2()
     "client error" should {
       "return forbidden when the user-agent is absent" in {
         val path = "/lookup"
-        val response = await(wsClient.url(appEndpoint + path).withMethod("POST").withBody("""{"postcode":"FX1 4AB"}""").execute())
+        val response = await(
+          wsClient
+            .url(appEndpoint + path)
+            .withMethod("POST")
+            .withHttpHeaders(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
+            .withBody("""{"postcode":"FX1 4AB"}""")
+            .execute())
         response.status shouldBe FORBIDDEN
       }
 
@@ -224,15 +223,13 @@ class PostcodeLookupSuiteV2()
       }
 
       "give a bad request when the payload is invalid json" in {
-        import ErrorResponse.Implicits._
+//        import ErrorResponse.Implicits._
         val response = post("/lookup", """{"foo":"FX1 4AC""")
         response.status shouldBe BAD_REQUEST
         val responseText = response.body
         val errorResponse = Json.parse(responseText).validate[ErrorResponse].get
 
-        errorResponse.obj should have length(1)
-        errorResponse.obj.head.msg should have length(1)
-        errorResponse.obj.head.msg.head shouldBe "error.payload.invalid"
+        errorResponse.message should startWith ("Invalid Json:")
       }
 
       "give a not found when an unknown path is requested" in {

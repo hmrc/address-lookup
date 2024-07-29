@@ -21,8 +21,7 @@ import config.AppConfig
 import connectors.DownstreamConnector
 import model._
 import model.address.{AddressRecord, NonUKAddress, Postcode}
-import model.request.{LookupByCountryRequest, LookupByPostTownRequest, LookupByPostcodeRequest, LookupByUprnRequest}
-import model.response.ErrorResponse
+import model.request._
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.stream.Materializer
 import play.api.Logging
@@ -37,111 +36,102 @@ import uk.gov.hmrc.play.http.HeaderCarrierConverter
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success, Try}
 
 class AddressSearchController @Inject()(connector: DownstreamConnector, auditConnector: AuditConnector, cc: ControllerComponents, val configHelper: AppConfig)(implicit ec: ExecutionContext)
   extends BackendController(cc) with Logging with AccessChecker {
   private val actorSystem = ActorSystem("AddressSearchController")
   private implicit val materializer: Materializer = Materializer.createMaterializer(actorSystem)
 
-  import ErrorResponse.Implicits._
-
-  private def withValidJson[T: Reads](request: Request[String], doSearch: (Request[String], T) => Future[Result]): Future[Result] = {
-    Try(Json.parse(request.body)) match {
-      case Success(json) =>
-        json.validate[T] match {
-          case JsSuccess(requestDetails, _) =>
-            doSearch(request, requestDetails)
-          case JsError(errors)              =>
-            Future.successful(BadRequest(JsError.toJson(errors)))
-        }
-      case Failure(_)    => Future.successful(BadRequest(Json.toJson(ErrorResponse.invalidJson)))
-    }
+  def searchByPostcode(): Action[LookupByPostcodeRequest] = accessCheckedAction(parse.json[LookupByPostcodeRequest]) {
+    implicit request: Request[LookupByPostcodeRequest] =>
+      searchByPostcode(request)
   }
 
-  def searchByPostcode(): Action[String] = accessCheckedAction(parse.tolerantText) {
-    request: Request[String] =>
-      withValidJson[LookupByPostcodeRequest](request, searchByPostcode)
+  def searchByUprn(): Action[LookupByUprnRequest] = accessCheckedAction(parse.json[LookupByUprnRequest]) {
+    implicit request: Request[LookupByUprnRequest] =>
+      searchByUprn(request)
   }
 
-  def searchByUprn(): Action[String] = accessCheckedAction(parse.tolerantText) {
-    request: Request[String] =>
-      withValidJson[LookupByUprnRequest](request, searchByUprn)
-  }
-
-  def searchByPostTown(): Action[String] = accessCheckedAction(parse.tolerantText) {
-    request: Request[String] =>
-      withValidJson[LookupByPostTownRequest](request, searchByTown)
+  def searchByPostTown(): Action[LookupByPostTownRequest] = accessCheckedAction(parse.json[LookupByPostTownRequest]) {
+    implicit request: Request[LookupByPostTownRequest] =>
+      searchByTown(request)
   }
 
   def supportedCountries(): Action[AnyContent] = Action.async {
     request: Request[AnyContent] =>
-      forwardIfAllowed[JsValue](request.map(r => JsObject.empty), _ => ())
+      forwardIfAllowed[JsValue, JsValue](request.map(r => JsObject.empty), _ => ())
   }
 
-  def searchByCountry(countryCode: String): Action[String] = accessCheckedAction(parse.tolerantText) {
-    request =>
+  def searchByCountry(countryCode: String): Action[LookupByCountryFilterRequest] = accessCheckedAction(parse.json[LookupByCountryFilterRequest]) {
+    implicit request: Request[LookupByCountryFilterRequest] =>
       implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequest(request)
-      val newRequest =
+      val newRequest: Request[LookupByCountryRequest] =
         request.withTarget(RequestTarget("/country/lookup", "/country/lookup", request.queryString))
           .withBody(addCountryTo(request.body, countryCode.toLowerCase))
 
 
-      withValidJson[LookupByCountryRequest](newRequest, searchByCountry)
+      searchByCountry(newRequest)
   }
 
-  private[controllers] def searchByUprn(request: Request[String], uprn: LookupByUprnRequest): Future[Result] = {
+  private[controllers] def searchByUprn(request: Request[LookupByUprnRequest]): Future[Result] = {
     implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequest(request)
     val userAgent = request.headers.get(HeaderNames.USER_AGENT)
 
+    val uprn: LookupByUprnRequest = request.body
+
     import model.address.AddressRecord.formats._
 
-    forwardIfAllowed[List[AddressRecord]](request.map(rb => Json.parse(rb)),
+    forwardIfAllowed[LookupByUprnRequest, List[AddressRecord]](request,
       addresses => auditAddressSearch(userAgent, addresses, uprn = Some(uprn.uprn))
     )
   }
 
-  private[controllers] def searchByPostcode[A](request: Request[String], postcode: LookupByPostcodeRequest): Future[Result] = {
+  private[controllers] def searchByPostcode[A](request: Request[LookupByPostcodeRequest]): Future[Result] = {
     implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequest(request)
     val userAgent = request.headers.get(HeaderNames.USER_AGENT)
 
+    val postcode: LookupByPostcodeRequest = request.body
+
     import model.address.AddressRecord.formats._
 
-    forwardIfAllowed[List[AddressRecord]](request.map(rb => Json.parse(rb)),
+    forwardIfAllowed[LookupByPostcodeRequest, List[AddressRecord]](request,
       addresses => auditAddressSearch(userAgent, addresses, postcode = Some(postcode.postcode), filter = postcode.filter))
   }
 
-  private[controllers] def searchByTown[A](request: Request[String], posttown: LookupByPostTownRequest): Future[Result] = {
+  private[controllers] def searchByTown[A](request: Request[LookupByPostTownRequest]): Future[Result] = {
     implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequest(request)
     val userAgent = request.headers.get(HeaderNames.USER_AGENT)
+
+    val posttown: LookupByPostTownRequest = request.body
 
     import model.address.AddressRecord.formats._
 
-    forwardIfAllowed[List[AddressRecord]](request.map(rb => Json.parse(rb)),
+    forwardIfAllowed[LookupByPostTownRequest, List[AddressRecord]](request,
       addresses => auditAddressSearch(userAgent, addresses, posttown = Some(posttown.posttown.toUpperCase), filter = posttown.filter))
   }
 
-  private[controllers] def searchByCountry[A](request: Request[String], country: LookupByCountryRequest)(implicit hc: HeaderCarrier): Future[Result] = {
+  private[controllers] def searchByCountry[A](request: Request[LookupByCountryRequest])(implicit hc: HeaderCarrier): Future[Result] = {
     implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequest(request)
     val userAgent = request.headers.get(HeaderNames.USER_AGENT)
 
+    val country: LookupByCountryRequest = request.body
+
     import model.address.NonUKAddress._
 
-    forwardIfAllowed[List[NonUKAddress]](request.map(rb => Json.parse(rb)),
+    forwardIfAllowed[LookupByCountryRequest, List[NonUKAddress]](request,
       addresses => auditNonUKAddressSearch(userAgent, country = country.country, filter = Option(country.filter), nonUKAddresses = addresses))
   }
 
-  private def addCountryTo(body: String, country: String): String = {
-    val newBody = Json.parse(body).as[JsObject] + (("country", JsString(country)))
-    newBody.toString()
+  private def addCountryTo(body: LookupByCountryFilterRequest, country: String): LookupByCountryRequest = {
+    LookupByCountryRequest(country, body.filter)
   }
 
   private def url(path: String) = s"${configHelper.addressSearchApiBaseUrl}$path"
 
-  private def forwardIfAllowed[Resp:Reads](request: Request[JsValue], auditFn: Resp => Unit): Future[Result] = {
+  private def forwardIfAllowed[Req: Writes, Resp:Reads](request: Request[Req], auditFn: Resp => Unit): Future[Result] = {
     val newHeadersMap = request.headers.toSimpleMap ++ Map(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
     val jsonRequest = request.withHeaders(Headers(newHeadersMap.toSeq: _*))
-    connector.forward(jsonRequest, url(jsonRequest.target.uri.toString), configHelper.addressSearchApiAuthToken)
+    connector.forward(jsonRequest.map((r: Req) => Json.toJson(r)), url(jsonRequest.target.uri.toString), configHelper.addressSearchApiAuthToken)
       .flatMap(res => res.body.consumeData.map(d => res.header.status -> d))
       .map { case (s, bs) => s -> bs.utf8String }
       .map { case (s, res) => s -> Json.parse(res) }

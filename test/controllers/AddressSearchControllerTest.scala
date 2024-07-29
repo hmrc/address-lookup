@@ -83,11 +83,10 @@ class AddressSearchControllerTest extends AnyWordSpec with Matchers with GuiceOn
       clearInvocations(mockAuditConnector)
 
 
-      val jsonPayload = Json.toJson(LookupByPostTownRequest("Testtown", Some("Test Street")))
+      val payload = LookupByPostTownRequest("Testtown", Some("Test Street"))
       val request = FakeRequest("POST", "/lookup/by-post-town")
-        .withBody(jsonPayload.toString)
+        .withBody(payload)
         .withHeaders(HeaderNames.USER_AGENT -> "forbidden-user-agent", HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
-        .withHeadersOrigin
 
       val result = controller.searchByPostTown().apply(request)
       contentType(result) shouldBe Some(MimeTypes.JSON)
@@ -106,9 +105,9 @@ class AddressSearchControllerTest extends AnyWordSpec with Matchers with GuiceOn
       clearInvocations(mockAuditConnector)
 
 
-      val jsonPayload = Json.toJson(LookupByPostTownRequest("town", Some("address lines")))
+      val payload = LookupByPostTownRequest("town", Some("address lines"))
       val request = FakeRequest("POST", "/lookup/by-post-town")
-        .withBody(jsonPayload.toString)
+        .withBody(payload)
         .withHeaders(HeaderNames.USER_AGENT -> "test-user-agent", HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
         .withHeadersOrigin
 
@@ -134,9 +133,9 @@ class AddressSearchControllerTest extends AnyWordSpec with Matchers with GuiceOn
       clearInvocations(mockAuditConnector)
 
 
-      val jsonPayload = Json.toJson(LookupByPostTownRequest("non-existent-town", None))
+      val payload = LookupByPostTownRequest("non-existent-town", None)
       val request = FakeRequest("POST", "/lookup/by-post-town")
-        .withBody(jsonPayload.toString)
+        .withBody(payload)
         .withHeaders(HeaderNames.USER_AGENT -> "test-user-agent", HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
         .withHeadersOrigin
 
@@ -153,10 +152,11 @@ class AddressSearchControllerTest extends AnyWordSpec with Matchers with GuiceOn
        it should give a forbidden response and not log any error
       """ in {
       import LookupByPostcodeRequest._
-      val jsonPayload = Json.toJson(LookupByPostcodeRequest(Postcode("FX11 4HG")))
-      val request: Request[String] = FakeRequest("POST", "/lookup")
+
+      val payload = LookupByPostcodeRequest(Postcode("FX11 4HG"))
+      val request = FakeRequest("POST", "/lookup")
+        .withBody(payload)
         .withHeaders(HeaderNames.USER_AGENT -> "forbidden-user-agent", HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
-        .withBody(jsonPayload.toString())
 
       val result = controller.searchByPostcode().apply(request)
       status(result) shouldBe Status.FORBIDDEN
@@ -169,9 +169,9 @@ class AddressSearchControllerTest extends AnyWordSpec with Matchers with GuiceOn
        and log the lookup including the size of the result list
       """ in {
       clearInvocations(mockAuditConnector)
-      val jsonPayload = Json.toJson(LookupByPostcodeRequest(Postcode("FX11 4HG"), Some("FOO")))
+      val payload = LookupByPostcodeRequest(Postcode("FX11 4HG"), Some("FOO"))
       val request = FakeRequest("POST", "/lookup")
-        .withBody(jsonPayload.toString)
+        .withBody(payload)
         .withHeaders(HeaderNames.USER_AGENT -> "test-user-agent", HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
         .withHeadersOrigin
 
@@ -185,9 +185,9 @@ class AddressSearchControllerTest extends AnyWordSpec with Matchers with GuiceOn
        and log the lookup including the size of the result list
       """ in {
       clearInvocations(mockAuditConnector)
-      val jsonPayload = Json.toJson(LookupByPostcodeRequest(Postcode("FX11 4HG"), None))
+      val payload = LookupByPostcodeRequest(Postcode("FX11 4HG"), None)
       val request = FakeRequest("POST", "/lookup")
-        .withBody(jsonPayload.toString)
+        .withBody(payload)
         .withHeaders(HeaderNames.USER_AGENT -> "test-user-agent", HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
         .withHeadersOrigin
 
@@ -202,9 +202,9 @@ class AddressSearchControllerTest extends AnyWordSpec with Matchers with GuiceOn
       """ in {
       clearInvocations(mockAuditConnector)
 
-      val jsonPayload = Json.toJson(LookupByPostcodeRequest(Postcode("ZZ11 1ZZ"), Some("Test Street")))
+      val payload = LookupByPostcodeRequest(Postcode("ZZ11 1ZZ"), Some("Test Street"))
       val request = FakeRequest("POST", "/lookup")
-        .withBody(jsonPayload.toString)
+        .withBody(payload)
         .withHeaders(HeaderNames.USER_AGENT -> "test-user-agent", HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
         .withHeadersOrigin
 
@@ -237,9 +237,9 @@ class AddressSearchControllerTest extends AnyWordSpec with Matchers with GuiceOn
       """ in {
       clearInvocations(mockAuditConnector)
 
-      val jsonPayload = Json.toJson(LookupByPostcodeRequest(Postcode("ZZ11 1YY")))
+      val payload = LookupByPostcodeRequest(Postcode("ZZ11 1YY"))
       val request = FakeRequest("POST", "/lookup")
-        .withBody(jsonPayload.toString)
+        .withBody(payload)
         .withHeaders(HeaderNames.USER_AGENT -> "test-user-agent", HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
         .withHeadersOrigin
 
@@ -255,9 +255,9 @@ class AddressSearchControllerTest extends AnyWordSpec with Matchers with GuiceOn
     "give forbidden" when {
       """search is called without a valid user agent""" in {
         import LookupByUprnRequest._
-        val jsonPayload = Json.toJson(LookupByUprnRequest("0123456789"))
+        val payload = LookupByUprnRequest("0123456789")
         val request = FakeRequest("POST", "/lookup/by-uprn")
-          .withBody(jsonPayload.toString)
+          .withBody(payload)
           .withHeaders(HeaderNames.USER_AGENT -> "forbidden-user-agent", HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
           .withHeadersOrigin
 
@@ -280,9 +280,9 @@ class AddressSearchControllerTest extends AnyWordSpec with Matchers with GuiceOn
 
         val expectedAuditEvent = AddressSearchAuditEvent(Some("test-user-agent"), expectedAuditRequestDetails, 10, expectedAuditAddressMatches)
 
-        val jsonPayload = Json.toJson(LookupByUprnRequest("790091234501"))
+        val payload = LookupByUprnRequest("790091234501")
         val request = FakeRequest("POST", "/lookup/by-uprn")
-          .withBody(jsonPayload.toString)
+          .withBody(payload)
           .withHeaders(HeaderNames.USER_AGENT -> "test-user-agent", HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
           .withHeadersOrigin
 
@@ -299,9 +299,9 @@ class AddressSearchControllerTest extends AnyWordSpec with Matchers with GuiceOn
         val connector = app.injector.instanceOf[DownstreamConnector]
         val configHelper = app.injector.instanceOf[AppConfig]
         val controller = new AddressSearchController(connector, mockAuditConnector, cc, configHelper)(ec)
-        val jsonPayload = Json.toJson(LookupByUprnRequest("GB0123456789"))
+        val payload = LookupByUprnRequest("GB0123456789")
         val request = FakeRequest("POST", "/lookup/by-uprn")
-          .withBody(jsonPayload.toString)
+          .withBody(payload)
           .withHeaders(HeaderNames.USER_AGENT -> "test-user-agent", HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
           .withHeadersOrigin
 
