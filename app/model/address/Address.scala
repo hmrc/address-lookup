@@ -22,21 +22,23 @@ import play.api.libs.json.{JsPath, Reads, Writes}
 
 import java.util.regex.Pattern
 
-/**
-  * Address typically represents a postal address.
-  * For UK addresses, 'town' will always be present.
-  * For non-UK addresses, 'town' may be absent and there may be an extra line instead.
+/** Address typically represents a postal address. For UK addresses, 'town' will
+  * always be present. For non-UK addresses, 'town' may be absent and there may
+  * be an extra line instead.
   */
-case class Address(lines: List[String],
-                   town: String,
-                   postcode: String,
-                   subdivision: Option[Country],
-                   country: Country) {
+case class Address(
+    lines: List[String],
+    town: String,
+    postcode: String,
+    subdivision: Option[Country],
+    country: Country
+) {
 
   import Address._
 
   @JsonIgnore // needed because the name starts 'is...'
-  def isValid: Boolean = lines.nonEmpty && lines.size <= (if (town.isEmpty) 4 else 3)
+  def isValid: Boolean =
+    lines.nonEmpty && lines.size <= (if (town.isEmpty) 4 else 3)
 
   def nonEmptyFields: List[String] = lines ::: List(town) ::: List(postcode)
 
@@ -58,9 +60,14 @@ case class Address(lines: List[String],
   def longestLineLength: Int = nonEmptyFields.map(_.length).max
 
   def truncatedAddress(maxLen: Int = maxLineLength): Address =
-    Address(lines.map(limit(_, maxLen)), limit(town, maxLen), postcode, subdivision, country)
+    Address(
+      lines.map(limit(_, maxLen)),
+      limit(town, maxLen),
+      postcode,
+      subdivision,
+      country
+    )
 }
-
 
 object Address {
   val maxLineLength = 35
@@ -77,26 +84,25 @@ object Address {
         s = s.substring(0, s.length - 2)
       }
       s
-    }
-    else s
+    } else s
   }
 
   object formats {
     import Country.formats._
 
-    implicit val addressReads: Reads[Address] = (
-        (JsPath \ "lines").read[List[String]] and
-            (JsPath \ "town").read[String] and
-            (JsPath \ "postcode").read[String] and
-            (JsPath \ "subdivision").readNullable[Country] and
-            (JsPath \ "country").read[Country]) (Address.apply _)
+    implicit val addressReads: Reads[Address] =
+      ((JsPath \ "lines").read[List[String]] and
+        (JsPath \ "town").read[String] and
+        (JsPath \ "postcode").read[String] and
+        (JsPath \ "subdivision").readNullable[Country] and
+        (JsPath \ "country").read[Country])(Address.apply _)
 
-    implicit val addressWrites: Writes[Address] = (
-        (JsPath \ "lines").write[Seq[String]] and
-            (JsPath \ "town").write[String] and
-            (JsPath \ "postcode").write[String] and
-            (JsPath \ "subdivision").writeNullable[Country] and
-            (JsPath \ "country").write[Country]) (unlift(Address.unapply))
+    implicit val addressWrites: Writes[Address] =
+      ((JsPath \ "lines").write[Seq[String]] and
+        (JsPath \ "town").write[String] and
+        (JsPath \ "postcode").write[String] and
+        (JsPath \ "subdivision").writeNullable[Country] and
+        (JsPath \ "country").write[Country])(unlift(Address.unapply))
 
   }
 }

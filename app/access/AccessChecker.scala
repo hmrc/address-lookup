@@ -16,7 +16,11 @@
 
 package access
 
-import access.AccessChecker.{accessControlAllowListAbsoluteKey, accessControlEnabledAbsoluteKey, accessRequestFormUrlAbsoluteKey}
+import access.AccessChecker.{
+  accessControlAllowListAbsoluteKey,
+  accessControlEnabledAbsoluteKey,
+  accessRequestFormUrlAbsoluteKey
+}
 import config.AppConfig
 import org.slf4j.LoggerFactory
 import play.api.http.HeaderNames
@@ -34,11 +38,21 @@ trait AccessChecker {
 
   private val logger = LoggerFactory.getLogger(this.getClass)
 
-  private val accessRequestFormUrl: String = configHelper.mustGetConfigString(accessRequestFormUrlAbsoluteKey)
+  private val accessRequestFormUrl: String =
+    configHelper.mustGetConfigString(accessRequestFormUrlAbsoluteKey)
 
-  private val checkAllowList: Boolean = configHelper.mustGetConfigString(accessControlEnabledAbsoluteKey).toBoolean
-  private val allowedClients: Set[String] = configHelper.config.getOptional[Seq[String]](accessControlAllowListAbsoluteKey).getOrElse(
-    if (checkAllowList) throw new RuntimeException(s"Could not find config $accessControlAllowListAbsoluteKey") else Seq()).toSet
+  private val checkAllowList: Boolean =
+    configHelper.mustGetConfigString(accessControlEnabledAbsoluteKey).toBoolean
+  private val allowedClients: Set[String] = configHelper.config
+    .getOptional[Seq[String]](accessControlAllowListAbsoluteKey)
+    .getOrElse(
+      if (checkAllowList)
+        throw new RuntimeException(
+          s"Could not find config $accessControlAllowListAbsoluteKey"
+        )
+      else Seq()
+    )
+    .toSet
 
   private def areClientsAllowed(clients: Seq[String]): Boolean =
     clients.forall(allowedClients.contains)
@@ -46,7 +60,9 @@ trait AccessChecker {
   private def forbiddenResponse(clients: Seq[String]): String =
     s"""{
        |"code": ${FORBIDDEN},
-       |"description": "One or more user agents in '${clients.mkString(",")}' are not authorized to use this service. Please complete '${accessRequestFormUrl}' to request access."
+       |"description": "One or more user agents in '${clients.mkString(
+        ","
+      )}' are not authorized to use this service. Please complete '${accessRequestFormUrl}' to request access."
        |}""".stripMargin
 
   private def getClientsFromRequest[T](req: Request[T]): Seq[String] = {
@@ -59,30 +75,37 @@ trait AccessChecker {
     }
   }
 
-  def accessCheckedAction[A](bodyParser: BodyParser[A])(block: Request[A] => Future[Result]): Action[A] = {
-    Action.async(bodyParser) {
-      request =>
-        val callingClients = getClientsFromRequest(request)
-        if (!areClientsAllowed(callingClients)) {
-          if (checkAllowList) {
-            Future.successful(Forbidden(Json.parse(forbiddenResponse(callingClients))))
-          } else {
-            logger.warn(s"One or more user agents in '${callingClients.mkString(",")}' are not authorized to use this service")
-            block(request)
-          }
-        }
-        else {
+  def accessCheckedAction[A](
+      bodyParser: BodyParser[A]
+  )(block: Request[A] => Future[Result]): Action[A] = {
+    Action.async(bodyParser) { request =>
+      val callingClients = getClientsFromRequest(request)
+      if (!areClientsAllowed(callingClients)) {
+        if (checkAllowList) {
+          Future.successful(
+            Forbidden(Json.parse(forbiddenResponse(callingClients)))
+          )
+        } else {
+          logger.warn(
+            s"One or more user agents in '${callingClients.mkString(",")}' are not authorized to use this service"
+          )
           block(request)
         }
+      } else {
+        block(request)
+      }
     }
   }
 }
 
 object AccessChecker {
   val accessRequestFormUrlKey = "access-control.request.formUrl"
-  val accessRequestFormUrlAbsoluteKey = s"microservice.services.$accessRequestFormUrlKey"
+  val accessRequestFormUrlAbsoluteKey =
+    s"microservice.services.$accessRequestFormUrlKey"
   val accessControlEnabledKey = "access-control.enabled"
-  val accessControlEnabledAbsoluteKey = s"microservice.services.$accessControlEnabledKey"
+  val accessControlEnabledAbsoluteKey =
+    s"microservice.services.$accessControlEnabledKey"
   val accessControlAllowListKey = "access-control.allow-list"
-  val accessControlAllowListAbsoluteKey = s"microservice.services.$accessControlAllowListKey"
+  val accessControlAllowListAbsoluteKey =
+    s"microservice.services.$accessControlAllowListKey"
 }

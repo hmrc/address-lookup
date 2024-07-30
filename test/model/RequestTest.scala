@@ -28,8 +28,10 @@ class RequestTest extends AnyWordSpec with Matchers {
   "LookupByPostTownRequest" should {
     "de-serialise filter correctly" when {
       "filter is specified and is non-empty" in {
-        val postTownJson = Json.parse("""{"posttown":"WINDSOR", "filter":"some-filter"}""")
-        val postTownRequest = Json.fromJson[LookupByPostTownRequest](postTownJson)
+        val postTownJson =
+          Json.parse("""{"posttown":"WINDSOR", "filter":"some-filter"}""")
+        val postTownRequest =
+          Json.fromJson[LookupByPostTownRequest](postTownJson)
         postTownRequest shouldBe a[JsSuccess[_]]
         postTownRequest.get.posttown shouldBe "WINDSOR"
         postTownRequest.get.filter shouldBe Some("some-filter")
@@ -37,7 +39,8 @@ class RequestTest extends AnyWordSpec with Matchers {
 
       "filter is not specified" in {
         val postTownJson = Json.parse("""{"posttown":"WINDSOR"}""")
-        val postTownRequest = Json.fromJson[LookupByPostTownRequest](postTownJson)
+        val postTownRequest =
+          Json.fromJson[LookupByPostTownRequest](postTownJson)
         postTownRequest shouldBe a[JsSuccess[_]]
         postTownRequest.get.posttown shouldBe "WINDSOR"
         postTownRequest.get.filter shouldBe None
@@ -45,7 +48,8 @@ class RequestTest extends AnyWordSpec with Matchers {
 
       "filter is specified but is empty" in {
         val postTownJson = Json.parse("""{"posttown":"WINDSOR", "filter":""}""")
-        val postTownRequest = Json.fromJson[LookupByPostTownRequest](postTownJson)
+        val postTownRequest =
+          Json.fromJson[LookupByPostTownRequest](postTownJson)
         postTownRequest shouldBe a[JsSuccess[_]]
         postTownRequest.get.posttown shouldBe "WINDSOR"
         postTownRequest.get.filter shouldBe None
@@ -58,8 +62,10 @@ class RequestTest extends AnyWordSpec with Matchers {
 
     "de-serialise correctly" when {
       "filter is specified and is non-empty" in {
-        val postCodeJson = Json.parse("""{"postcode":"SW6 6SA", "filter":"some-filter"}""")
-        val postCodeRequest = Json.fromJson[LookupByPostcodeRequest](postCodeJson)
+        val postCodeJson =
+          Json.parse("""{"postcode":"SW6 6SA", "filter":"some-filter"}""")
+        val postCodeRequest =
+          Json.fromJson[LookupByPostcodeRequest](postCodeJson)
         postCodeRequest shouldBe a[JsSuccess[_]]
         postCodeRequest.get.postcode shouldBe Postcode("SW6 6SA")
         postCodeRequest.get.filter shouldBe Some("some-filter")
@@ -67,7 +73,8 @@ class RequestTest extends AnyWordSpec with Matchers {
 
       "filter is not specified" in {
         val postCodeJson = Json.parse("""{"postcode":"SW6 6SA"}""")
-        val postCodeRequest = Json.fromJson[LookupByPostcodeRequest](postCodeJson)
+        val postCodeRequest =
+          Json.fromJson[LookupByPostcodeRequest](postCodeJson)
         postCodeRequest shouldBe a[JsSuccess[_]]
         postCodeRequest.get.postcode shouldBe Postcode("SW6 6SA")
         postCodeRequest.get.filter shouldBe None
@@ -75,7 +82,8 @@ class RequestTest extends AnyWordSpec with Matchers {
 
       "filter is specified but is empty" in {
         val postCodeJson = Json.parse("""{"postcode":"SW6 6SA", "filter":""}""")
-        val postCodeRequest = Json.fromJson[LookupByPostcodeRequest](postCodeJson)
+        val postCodeRequest =
+          Json.fromJson[LookupByPostcodeRequest](postCodeJson)
         postCodeRequest shouldBe a[JsSuccess[_]]
         postCodeRequest.get.postcode shouldBe Postcode("SW6 6SA")
         postCodeRequest.get.filter shouldBe None

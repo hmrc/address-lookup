@@ -18,7 +18,12 @@ package model.address
 
 import java.util.regex.Pattern
 
-case class Postcode(area: String, district: String, sector: String, unit: String) {
+case class Postcode(
+    area: String,
+    district: String,
+    sector: String,
+    unit: String
+) {
   def outcode: String = area + district
 
   def incode: String = sector + unit
@@ -26,15 +31,14 @@ case class Postcode(area: String, district: String, sector: String, unit: String
   override lazy val toString = outcode + " " + incode
 }
 
-
 object Postcode {
   // The basic syntax of a postcode (ignores the rules on valid letter ranges because they don't matter here).
-  private[address] val oPattern = Pattern.compile("^GIR|[A-Z]{1,2}[0-9][0-9A-Z]?$")
+  private[address] val oPattern =
+    Pattern.compile("^GIR|[A-Z]{1,2}[0-9][0-9A-Z]?$")
   private[address] val iPattern = Pattern.compile("^[0-9][A-Z]{2}$")
 
-  /**
-    * Performs normalisation and then checks the syntax, returning None if the string
-    * cannot represent a well-formed postcode.
+  /** Performs normalisation and then checks the syntax, returning None if the
+    * string cannot represent a well-formed postcode.
     */
   def cleanupPostcode(p: String): Option[Postcode] = {
     if (p == null) None
@@ -45,7 +49,6 @@ object Postcode {
     val norm = normalisePostcode(p)
     val space = norm.indexOf(' ')
     if (norm.length < 5) None
-
     else if (space < 0) {
       val incodeLength = norm.length - 3
       val out = norm.substring(0, incodeLength)
@@ -79,13 +82,14 @@ object Postcode {
   }
 
   def unapply(postcode: Postcode): Option[String] = {
-    if(postcode == null) None
+    if (postcode == null) None
     else Some(postcode.toString)
   }
 
   def apply(outcode: String, incode: String): Postcode = {
     val (area, district) =
-      if (Character.isDigit(outcode(1))) (outcode.substring(0, 1), outcode.substring(1))
+      if (Character.isDigit(outcode(1)))
+        (outcode.substring(0, 1), outcode.substring(1))
       else (outcode.substring(0, 2), outcode.substring(2))
     val sector = incode.substring(0, 1)
     val unit = incode.substring(1)

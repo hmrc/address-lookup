@@ -19,20 +19,37 @@ package model
 import play.api.libs.json._
 import play.api.libs.json.Json
 
-case class NonUKAddressSearchAuditEventMatchedAddress(id: Option[String], number: Option[String], street: Option[String], unit: Option[String], city: Option[String], district: Option[String], region: Option[String], postCode: Option[String], country: String)
+case class NonUKAddressSearchAuditEventMatchedAddress(
+    id: Option[String],
+    number: Option[String],
+    street: Option[String],
+    unit: Option[String],
+    city: Option[String],
+    district: Option[String],
+    region: Option[String],
+    postCode: Option[String],
+    country: String
+)
 
 case class NonUKAddressSearchAuditEventRequestDetails(filter: Option[String])
 
-case class NonUKAddressSearchAuditEvent(userAgent: Option[String],
-                                        request: NonUKAddressSearchAuditEventRequestDetails,
-                                        numberOfAddressFound: Int,
-                                        matchedAddresses: Seq[NonUKAddressSearchAuditEventMatchedAddress])
+case class NonUKAddressSearchAuditEvent(
+    userAgent: Option[String],
+    request: NonUKAddressSearchAuditEventRequestDetails,
+    numberOfAddressFound: Int,
+    matchedAddresses: Seq[NonUKAddressSearchAuditEventMatchedAddress]
+)
 
 object NonUKAddressSearchAuditEvent {
 
-  implicit def requestDetailsWrites: Writes[NonUKAddressSearchAuditEventRequestDetails] = Json.writes[NonUKAddressSearchAuditEventRequestDetails]
+  implicit def requestDetailsWrites
+      : Writes[NonUKAddressSearchAuditEventRequestDetails] =
+    Json.writes[NonUKAddressSearchAuditEventRequestDetails]
 
-  implicit def addressWrites: Writes[NonUKAddressSearchAuditEventMatchedAddress] = Json.writes[NonUKAddressSearchAuditEventMatchedAddress]
+  implicit def addressWrites
+      : Writes[NonUKAddressSearchAuditEventMatchedAddress] =
+    Json.writes[NonUKAddressSearchAuditEventMatchedAddress]
 
-  implicit def writes: Writes[NonUKAddressSearchAuditEvent] = Json.writes[NonUKAddressSearchAuditEvent]
+  implicit def writes: Writes[NonUKAddressSearchAuditEvent] =
+    Json.writes[NonUKAddressSearchAuditEvent]
 }

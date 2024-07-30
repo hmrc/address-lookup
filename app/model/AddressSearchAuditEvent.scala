@@ -20,35 +20,45 @@ import model.address.{Country, LocalCustodian}
 import play.api.libs.json._
 import play.api.libs.json.Json
 
-case class AddressSearchAuditEventMatchedAddress(uprn: String,
-                                                 parentUprn: Option[Long],
-                                                 usrn: Option[Long],
-                                                 organisation: Option[String],
-                                                 lines: Seq[String],
-                                                 town: String,
-                                                 localCustodian: Option[LocalCustodian],
-                                                 location: Option[Seq[BigDecimal]],
-                                                 administrativeArea: Option[String],
-                                                 poBox: Option[String],
-                                                 postCode: String,
-                                                 subDivision: Option[Country],
-                                                 country: Country)
+case class AddressSearchAuditEventMatchedAddress(
+    uprn: String,
+    parentUprn: Option[Long],
+    usrn: Option[Long],
+    organisation: Option[String],
+    lines: Seq[String],
+    town: String,
+    localCustodian: Option[LocalCustodian],
+    location: Option[Seq[BigDecimal]],
+    administrativeArea: Option[String],
+    poBox: Option[String],
+    postCode: String,
+    subDivision: Option[Country],
+    country: Country
+)
 
-case class AddressSearchAuditEventRequestDetails(postcode: Option[String] = None,
-                                                 postTown: Option[String] = None,
-                                                 uprn: Option[String] = None,
-                                                 filter: Option[String] = None)
+case class AddressSearchAuditEventRequestDetails(
+    postcode: Option[String] = None,
+    postTown: Option[String] = None,
+    uprn: Option[String] = None,
+    filter: Option[String] = None
+)
 
-case class AddressSearchAuditEvent(userAgent: Option[String],
-                                   request: AddressSearchAuditEventRequestDetails,
-                                   numberOfAddressFound: Int,
-                                   matchedAddresses: Seq[AddressSearchAuditEventMatchedAddress])
+case class AddressSearchAuditEvent(
+    userAgent: Option[String],
+    request: AddressSearchAuditEventRequestDetails,
+    numberOfAddressFound: Int,
+    matchedAddresses: Seq[AddressSearchAuditEventMatchedAddress]
+)
 
 object AddressSearchAuditEvent {
   import Country.formats._
   import LocalCustodian.formats._
 
-  implicit def requestDetailsWrites: Writes[AddressSearchAuditEventRequestDetails] = Json.writes[AddressSearchAuditEventRequestDetails]
-  implicit def addressWrites: Writes[AddressSearchAuditEventMatchedAddress] = Json.writes[AddressSearchAuditEventMatchedAddress]
-  implicit def writes: Writes[AddressSearchAuditEvent] = Json.writes[AddressSearchAuditEvent]
+  implicit def requestDetailsWrites
+      : Writes[AddressSearchAuditEventRequestDetails] =
+    Json.writes[AddressSearchAuditEventRequestDetails]
+  implicit def addressWrites: Writes[AddressSearchAuditEventMatchedAddress] =
+    Json.writes[AddressSearchAuditEventMatchedAddress]
+  implicit def writes: Writes[AddressSearchAuditEvent] =
+    Json.writes[AddressSearchAuditEvent]
 }

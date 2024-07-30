@@ -30,52 +30,76 @@ import uk.gov.hmrc.play.bootstrap.config.HttpAuditEvent
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class InvalidJsonErrorHandler @Inject()(
-                                         auditConnector: AuditConnector, httpAuditEvent: HttpAuditEvent, configuration: Configuration
-                                       )(implicit ec: ExecutionContext)
-  extends uk.gov.hmrc.play.bootstrap.backend.http.JsonErrorHandler(auditConnector, httpAuditEvent, configuration) {
+class InvalidJsonErrorHandler @Inject() (
+    auditConnector: AuditConnector,
+    httpAuditEvent: HttpAuditEvent,
+    configuration: Configuration
+)(implicit ec: ExecutionContext)
+    extends uk.gov.hmrc.play.bootstrap.backend.http.JsonErrorHandler(
+      auditConnector,
+      httpAuditEvent,
+      configuration
+    ) {
   import httpAuditEvent._
 
-  override def onClientError(request: RequestHeader, statusCode: Int, message: String): Future[Result] = {
+  override def onClientError(
+      request: RequestHeader,
+      statusCode: Int,
+      message: String
+  ): Future[Result] = {
     implicit val headerCarrier: HeaderCarrier = hc(request)
     val result = statusCode match {
       case NOT_FOUND =>
         auditConnector.sendEvent(
           dataEvent(
-            eventType       = "ResourceNotFound",
+            eventType = "ResourceNotFound",
             transactionName = "Resource Endpoint Not Found",
-            request         = request,
-            detail          = Map.empty
+            request = request,
+            detail = Map.empty
           )
         )
-        NotFound(toJson(ErrorResponse(NOT_FOUND, "URI not found", requested = Some(request.path))))
+        NotFound(
+          toJson(
+            ErrorResponse(
+              NOT_FOUND,
+              "URI not found",
+              requested = Some(request.path)
+            )
+          )
+        )
 
       case BAD_REQUEST =>
         auditConnector.sendEvent(
           dataEvent(
-            eventType       = "ServerValidationError",
+            eventType = "ServerValidationError",
             transactionName = "Request bad format exception",
-            request         = request,
-            detail          = Map.empty
+            request = request,
+            detail = Map.empty
           )
         )
         def constructErrorMessage(input: String): String = {
-          val unrecognisedTokenJsonError = "^Invalid Json: Unrecognized token '(.*)':.*".r
-          val invalidJson                = "^(?s)Invalid Json:.*".r
-          val jsonValidationError        = "^Json validation error.*".r
-          val booleanParsingError        = "^Cannot parse parameter .* as Boolean: should be true, false, 0 or 1$".r
-          val missingParameterError      = "^Missing parameter:.*".r
-          val characterParseError        = "^Cannot parse parameter .* with value '(.*)' as Char: .* must be exactly one digit in length.$".r
-          val parameterParseError        = "^Cannot parse parameter .* as .*: For input string: \"(.*)\"$".r
+          val unrecognisedTokenJsonError =
+            "^Invalid Json: Unrecognized token '(.*)':.*".r
+          val invalidJson = "^(?s)Invalid Json:.*".r
+          val jsonValidationError = "^Json validation error.*".r
+          val booleanParsingError =
+            "^Cannot parse parameter .* as Boolean: should be true, false, 0 or 1$".r
+          val missingParameterError = "^Missing parameter:.*".r
+          val characterParseError =
+            "^Cannot parse parameter .* with value '(.*)' as Char: .* must be exactly one digit in length.$".r
+          val parameterParseError =
+            "^Cannot parse parameter .* as .*: For input string: \"(.*)\"$".r
           input match {
-            case unrecognisedTokenJsonError(toBeRedacted) => input.replace(toBeRedacted, "REDACTED")
-            case invalidJson()
-                 | jsonValidationError()
-                 | booleanParsingError()
-                 | missingParameterError()                  => filterJsonExceptionMsg(input)
-            case characterParseError(toBeRedacted)        => input.replace(toBeRedacted, "REDACTED")
-            case parameterParseError(toBeRedacted)        => input.replace(toBeRedacted, "REDACTED")
-            case _                                        => "bad request, cause: REDACTED"
+            case unrecognisedTokenJsonError(toBeRedacted) =>
+              input.replace(toBeRedacted, "REDACTED")
+            case invalidJson() | jsonValidationError() | booleanParsingError() |
+                missingParameterError() =>
+              filterJsonExceptionMsg(input)
+            case characterParseError(toBeRedacted) =>
+              input.replace(toBeRedacted, "REDACTED")
+            case parameterParseError(toBeRedacted) =>
+              input.replace(toBeRedacted, "REDACTED")
+            case _ => "bad request, cause: REDACTED"
           }
         }
         val msg =
@@ -87,10 +111,10 @@ class InvalidJsonErrorHandler @Inject()(
       case _ =>
         auditConnector.sendEvent(
           dataEvent(
-            eventType       = "ClientError",
+            eventType = "ClientError",
             transactionName = s"A client error occurred, status: $statusCode",
-            request         = request,
-            detail          = Map.empty
+            request = request,
+            detail = Map.empty
           )
         )
 
@@ -106,7 +130,7 @@ class InvalidJsonErrorHandler @Inject()(
   private def filterJsonExceptionMsg(msg: String): String = {
     msg.indexOf("at [Source") match {
       case -1 => msg
-      case x => msg.substring(0, x)
+      case x  => msg.substring(0, x)
     }
   }
 }

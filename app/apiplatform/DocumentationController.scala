@@ -25,11 +25,19 @@ import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import javax.inject.Inject
 import scala.concurrent.Future
 
-class DocumentationController @Inject()(assets: Assets, cc: ControllerComponents, configHelper: AppConfig) extends BackendController(cc) {
-  private val apiStatus = configHelper.mustGetConfigString("api-platform.status")
+class DocumentationController @Inject() (
+    assets: Assets,
+    cc: ControllerComponents,
+    configHelper: AppConfig
+) extends BackendController(cc) {
+  private val apiStatus =
+    configHelper.mustGetConfigString("api-platform.status")
 
   def definition(): Action[AnyContent] = Action.async {
-    Future.successful(Ok(txt.definition(apiStatus)).as(ContentTypes.withCharset(MimeTypes.JSON)(Codec.utf_8)))
+    Future.successful(
+      Ok(txt.definition(apiStatus))
+        .as(ContentTypes.withCharset(MimeTypes.JSON)(Codec.utf_8))
+    )
   }
 
   def raml(version: String, file: String): Action[AnyContent] = {

@@ -25,11 +25,14 @@ object response {
   import scala.jdk.CollectionConverters._
   case class ErrorMessage(msg: List[String], args: List[String])
   object ErrorMessage {
-    val invalidJson: ErrorMessage = ErrorMessage(msg = List("error.payload.invalid"), args = List())
+    val invalidJson: ErrorMessage =
+      ErrorMessage(msg = List("error.payload.invalid"), args = List())
 
     object Implicits {
-      implicit val errorMessageReads: Reads[ErrorMessage] = Json.reads[ErrorMessage]
-      implicit val errorMessageWrites: Writes[ErrorMessage] = Json.writes[ErrorMessage]
+      implicit val errorMessageReads: Reads[ErrorMessage] =
+        Json.reads[ErrorMessage]
+      implicit val errorMessageWrites: Writes[ErrorMessage] =
+        Json.writes[ErrorMessage]
     }
   }
   case class ErrorResponse(obj: List[ErrorMessage])
@@ -38,8 +41,10 @@ object response {
 
     object Implicits {
       import ErrorMessage.Implicits._
-      implicit val errorResponseReads: Reads[ErrorResponse] = Json.reads[ErrorResponse]
-      implicit val errorResponseWrites: Writes[ErrorResponse] = Json.writes[ErrorResponse]
+      implicit val errorResponseReads: Reads[ErrorResponse] =
+        Json.reads[ErrorResponse]
+      implicit val errorResponseWrites: Writes[ErrorResponse] =
+        Json.writes[ErrorResponse]
     }
   }
 }

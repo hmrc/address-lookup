@@ -16,7 +16,14 @@
 
 package audit
 
-import model.{AddressSearchAuditEvent, AddressSearchAuditEventMatchedAddress, AddressSearchAuditEventRequestDetails, NonUKAddressSearchAuditEvent, NonUKAddressSearchAuditEventMatchedAddress, NonUKAddressSearchAuditEventRequestDetails}
+import model.{
+  AddressSearchAuditEvent,
+  AddressSearchAuditEventMatchedAddress,
+  AddressSearchAuditEventRequestDetails,
+  NonUKAddressSearchAuditEvent,
+  NonUKAddressSearchAuditEventMatchedAddress,
+  NonUKAddressSearchAuditEventRequestDetails
+}
 import model.address.{AddressRecord, NonUKAddress, Postcode}
 import model.request.UserAgent
 import uk.gov.hmrc.http.HeaderCarrier
@@ -25,12 +32,25 @@ import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import javax.inject.Inject
 import scala.concurrent.ExecutionContext
 
-class Auditor @Inject()(auditConnector: AuditConnector)(implicit ec: ExecutionContext) {
-  def auditAddressSearch[A](userAgent: Option[UserAgent], addressRecords: List[AddressRecord], postcode: Option[Postcode] = None,
-                                    posttown: Option[String] = None, uprn: Option[String] = None, filter: Option[String] = None)(implicit hc: HeaderCarrier): Unit = {
+class Auditor @Inject() (auditConnector: AuditConnector)(implicit
+    ec: ExecutionContext
+) {
+  def auditAddressSearch[A](
+      userAgent: Option[UserAgent],
+      addressRecords: List[AddressRecord],
+      postcode: Option[Postcode] = None,
+      posttown: Option[String] = None,
+      uprn: Option[String] = None,
+      filter: Option[String] = None
+  )(implicit hc: HeaderCarrier): Unit = {
 
     if (addressRecords.nonEmpty) {
-      val auditEventRequestDetails = AddressSearchAuditEventRequestDetails(postcode.map(_.toString), posttown, uprn, filter)
+      val auditEventRequestDetails = AddressSearchAuditEventRequestDetails(
+        postcode.map(_.toString),
+        posttown,
+        uprn,
+        filter
+      )
       val addressSearchAuditEventMatchedAddresses = addressRecords.map { ma =>
         AddressSearchAuditEventMatchedAddress(
           ma.uprn.map(_.toString).getOrElse(""),
@@ -45,23 +65,34 @@ class Auditor @Inject()(auditConnector: AuditConnector)(implicit ec: ExecutionCo
           ma.poBox,
           ma.address.postcode,
           ma.address.subdivision,
-          ma.address.country)
+          ma.address.country
+        )
       }
 
-      auditConnector.sendExplicitAudit("AddressSearch",
-        AddressSearchAuditEvent(userAgent.map(_.unwrap),
+      auditConnector.sendExplicitAudit(
+        "AddressSearch",
+        AddressSearchAuditEvent(
+          userAgent.map(_.unwrap),
           auditEventRequestDetails,
           addressRecords.length,
-          addressSearchAuditEventMatchedAddresses))
+          addressSearchAuditEventMatchedAddresses
+        )
+      )
     }
   }
 
-  def auditNonUKAddressSearch[A](userAgent: Option[UserAgent], nonUKAddresses: List[NonUKAddress], country: String,
-                                         filter: Option[String] = None)(implicit hc: HeaderCarrier): Unit = {
+  def auditNonUKAddressSearch[A](
+      userAgent: Option[UserAgent],
+      nonUKAddresses: List[NonUKAddress],
+      country: String,
+      filter: Option[String] = None
+  )(implicit hc: HeaderCarrier): Unit = {
 
     if (nonUKAddresses.nonEmpty) {
-      auditConnector.sendExplicitAudit("NonUKAddressSearch",
-        NonUKAddressSearchAuditEvent(userAgent.map(_.unwrap),
+      auditConnector.sendExplicitAudit(
+        "NonUKAddressSearch",
+        NonUKAddressSearchAuditEvent(
+          userAgent.map(_.unwrap),
           NonUKAddressSearchAuditEventRequestDetails(filter),
           nonUKAddresses.length,
           nonUKAddresses.map { ma =>
@@ -74,8 +105,11 @@ class Auditor @Inject()(auditConnector: AuditConnector)(implicit ec: ExecutionCo
               ma.district,
               ma.region,
               ma.postcode,
-              country)
-          }))
+              country
+            )
+          }
+        )
+      )
     }
   }
 }
