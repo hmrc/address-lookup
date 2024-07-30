@@ -25,7 +25,10 @@ import java.util.Base64
 import javax.inject.Singleton
 
 @Singleton
-class AppConfig @Inject()(val config: Configuration, servicesConfig: ServicesConfig) {
+class AppConfig @Inject() (
+    val config: Configuration,
+    servicesConfig: ServicesConfig
+) {
   val appName = config.get[String]("appName")
 
   val addressSearchApiBaseUrl = servicesConfig.baseUrl("address-search-api")
@@ -40,14 +43,19 @@ class AppConfig @Inject()(val config: Configuration, servicesConfig: ServicesCon
   private def createAuth =
     AppConfig.createAuth(
       config.get[String]("appName"),
-      servicesConfig.getConfString("addressSearchApiAuthToken", "invalid-token"))
+      servicesConfig.getConfString("addressSearchApiAuthToken", "invalid-token")
+    )
 
   def isCipPaasDbEnabled: Boolean =
-    config.getOptional[String]("cip-address-lookup-rds.enabled").getOrElse("false").toBoolean
+    config
+      .getOptional[String]("cip-address-lookup-rds.enabled")
+      .getOrElse("false")
+      .toBoolean
 }
 
 object AppConfig {
-  def createAuth(appName: String, authToken: String): String = Base64.getEncoder.encodeToString(
-    s"$appName:$authToken".getBytes(StandardCharsets.UTF_8)
-  )
+  def createAuth(appName: String, authToken: String): String =
+    Base64.getEncoder.encodeToString(
+      s"$appName:$authToken".getBytes(StandardCharsets.UTF_8)
+    )
 }

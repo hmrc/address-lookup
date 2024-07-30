@@ -21,7 +21,6 @@ case class Outcode(area: String, district: String) {
   override lazy val toString = area + district
 }
 
-
 object Outcode {
 
   private def doCleanupOutcode(p: String): Option[Outcode] = {

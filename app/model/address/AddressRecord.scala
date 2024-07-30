@@ -20,40 +20,39 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import play.api.libs.functional.syntax._
 import play.api.libs.json.{JsPath, Reads, Writes}
 
-
 case class LocalCustodian(code: Int, name: String)
 
 object LocalCustodian {
   object formats {
-    implicit val localCustodianReads: Reads[LocalCustodian] = (
-        (JsPath \ "code").read[Int] and
-            (JsPath \ "name").read[String]) (LocalCustodian.apply _)
+    implicit val localCustodianReads: Reads[LocalCustodian] =
+      ((JsPath \ "code").read[Int] and
+        (JsPath \ "name").read[String])(LocalCustodian.apply _)
 
-    implicit val localCustodianWrites: Writes[LocalCustodian] = (
-        (JsPath \ "code").write[Int] and
-            (JsPath \ "name").write[String]) (unlift(LocalCustodian.unapply))
+    implicit val localCustodianWrites: Writes[LocalCustodian] =
+      ((JsPath \ "code").write[Int] and
+        (JsPath \ "name").write[String])(unlift(LocalCustodian.unapply))
 
   }
 }
 
-
-/**
-  * Represents one address record. Arrays of these are returned from the address-lookup microservice.
+/** Represents one address record. Arrays of these are returned from the
+  * address-lookup microservice.
   */
 case class AddressRecord(
-                          id: String,
-                          uprn: Option[Long],
-                          parentUprn: Option[Long],
-                          usrn: Option[Long],
-                          organisation: Option[String],
-                          address: Address,
-                          // ISO639-1 code, e.g. 'en' for English
-                          // see https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
-                          language: String,
-                          localCustodian: Option[LocalCustodian],
-                          location: Option[Seq[BigDecimal]],
-                          administrativeArea: Option[String] = None,
-                          poBox: Option[String] = None) {
+    id: String,
+    uprn: Option[Long],
+    parentUprn: Option[Long],
+    usrn: Option[Long],
+    organisation: Option[String],
+    address: Address,
+    // ISO639-1 code, e.g. 'en' for English
+    // see https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
+    language: String,
+    localCustodian: Option[LocalCustodian],
+    location: Option[Seq[BigDecimal]],
+    administrativeArea: Option[String] = None,
+    poBox: Option[String] = None
+) {
 
   require(location.isEmpty || location.get.size == 2, location.get)
 
@@ -71,32 +70,32 @@ object AddressRecord {
     import LocalCustodian.formats._
 
     implicit val addressRecordReads: Reads[AddressRecord] = (
-        (JsPath \ "id").read[String] and
-            (JsPath \ "uprn").readNullable[Long] and
-            (JsPath \ "parentUprn").readNullable[Long] and
-            (JsPath \ "usrn").readNullable[Long] and
-            (JsPath \ "organisation").readNullable[String] and
-            (JsPath \ "address").read[Address] and
-            (JsPath \ "language").read[String] and
-            (JsPath \ "localCustodian").readNullable[LocalCustodian] and
-            (JsPath \ "location").readNullable[Seq[BigDecimal]] and
-            (JsPath \ "administrativeArea").readNullable[String] and
-            (JsPath \ "poBox").readNullable[String]
-        ) (AddressRecord.apply _)
+      (JsPath \ "id").read[String] and
+        (JsPath \ "uprn").readNullable[Long] and
+        (JsPath \ "parentUprn").readNullable[Long] and
+        (JsPath \ "usrn").readNullable[Long] and
+        (JsPath \ "organisation").readNullable[String] and
+        (JsPath \ "address").read[Address] and
+        (JsPath \ "language").read[String] and
+        (JsPath \ "localCustodian").readNullable[LocalCustodian] and
+        (JsPath \ "location").readNullable[Seq[BigDecimal]] and
+        (JsPath \ "administrativeArea").readNullable[String] and
+        (JsPath \ "poBox").readNullable[String]
+    )(AddressRecord.apply _)
 
     implicit val addressRecordWrites: Writes[AddressRecord] = (
-        (JsPath \ "id").write[String] and
-            (JsPath \ "uprn").writeNullable[Long] and
-            (JsPath \ "parentUprn").writeNullable[Long] and
-            (JsPath \ "usrn").writeNullable[Long] and
-            (JsPath \ "organisation").writeNullable[String] and
-            (JsPath \ "address").write[Address] and
-            (JsPath \ "language").write[String] and
-            (JsPath \ "localCustodian").writeNullable[LocalCustodian] and
-            (JsPath \ "location").writeNullable[Seq[BigDecimal]] and
-            (JsPath \ "administrativeArea").writeNullable[String] and
-            (JsPath \ "poBox").writeNullable[String]
-        ) (unlift(AddressRecord.unapply))
+      (JsPath \ "id").write[String] and
+        (JsPath \ "uprn").writeNullable[Long] and
+        (JsPath \ "parentUprn").writeNullable[Long] and
+        (JsPath \ "usrn").writeNullable[Long] and
+        (JsPath \ "organisation").writeNullable[String] and
+        (JsPath \ "address").write[Address] and
+        (JsPath \ "language").write[String] and
+        (JsPath \ "localCustodian").writeNullable[LocalCustodian] and
+        (JsPath \ "location").writeNullable[Seq[BigDecimal]] and
+        (JsPath \ "administrativeArea").writeNullable[String] and
+        (JsPath \ "poBox").writeNullable[String]
+    )(unlift(AddressRecord.unapply))
 
   }
 }

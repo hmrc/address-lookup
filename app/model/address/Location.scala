@@ -26,7 +26,8 @@ case class Location(latitude: BigDecimal, longitude: BigDecimal) {
 }
 
 object Location {
-  def apply(lat: String, long: String): Location = new Location(BigDecimal(lat), BigDecimal(long))
+  def apply(lat: String, long: String): Location =
+    new Location(BigDecimal(lat), BigDecimal(long))
 
   def apply(latlong: String): Location = {
     val seq = latlong.divide(',')

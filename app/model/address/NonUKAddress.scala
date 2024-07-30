@@ -18,7 +18,16 @@ package model.address
 
 import play.api.libs.json._
 
-case class NonUKAddress(id: Option[String], number: Option[String], street: Option[String], unit: Option[String], city: Option[String], district: Option[String], region: Option[String], postcode: Option[String])
+case class NonUKAddress(
+    id: Option[String],
+    number: Option[String],
+    street: Option[String],
+    unit: Option[String],
+    city: Option[String],
+    district: Option[String],
+    region: Option[String],
+    postcode: Option[String]
+)
 
 object NonUKAddress {
   implicit val format: Format[NonUKAddress] = Json.format[NonUKAddress]
