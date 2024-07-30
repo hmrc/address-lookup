@@ -17,10 +17,10 @@
 package controllers
 
 import access.AccessChecker
+import audit.Auditor
 import config.AppConfig
 import connectors.DownstreamConnector
-import model._
-import model.address.{AddressRecord, NonUKAddress, Postcode}
+import model.address.{AddressRecord, NonUKAddress}
 import model.request._
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.stream.Materializer
@@ -30,14 +30,13 @@ import play.api.libs.json._
 import play.api.mvc._
 import play.api.mvc.request.RequestTarget
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class AddressSearchController @Inject()(connector: DownstreamConnector, auditConnector: AuditConnector, cc: ControllerComponents, val configHelper: AppConfig)(implicit ec: ExecutionContext)
+class AddressSearchController @Inject()(connector: DownstreamConnector, auditor: Auditor, cc: ControllerComponents, val configHelper: AppConfig)(implicit ec: ExecutionContext)
   extends BackendController(cc) with Logging with AccessChecker {
   private val actorSystem = ActorSystem("AddressSearchController")
   private implicit val materializer: Materializer = Materializer.createMaterializer(actorSystem)
@@ -76,7 +75,7 @@ class AddressSearchController @Inject()(connector: DownstreamConnector, auditCon
     import model.address.AddressRecord.formats._
 
     forwardIfAllowed[LookupByUprnRequest, List[AddressRecord]](request,
-      addresses => auditAddressSearch(userAgent, addresses, uprn = Some(request.body.uprn))
+      addresses => auditor.auditAddressSearch(userAgent, addresses, uprn = Some(request.body.uprn))
     )
   }
 
@@ -86,7 +85,7 @@ class AddressSearchController @Inject()(connector: DownstreamConnector, auditCon
     val postcode: LookupByPostcodeRequest = request.body
 
     forwardIfAllowed[LookupByPostcodeRequest, List[AddressRecord]](request,
-      addresses => auditAddressSearch(userAgent, addresses, postcode = Some(postcode.postcode), filter = postcode.filter))
+      addresses => auditor.auditAddressSearch(userAgent, addresses, postcode = Some(postcode.postcode), filter = postcode.filter))
   }
 
   private[controllers] def searchByTown[A](request: Request[LookupByPostTownRequest])(implicit hc: HeaderCarrier, userAgent: Option[UserAgent]): Future[Result] = {
@@ -95,7 +94,7 @@ class AddressSearchController @Inject()(connector: DownstreamConnector, auditCon
     val posttown: LookupByPostTownRequest = request.body
 
     forwardIfAllowed[LookupByPostTownRequest, List[AddressRecord]](request,
-      addresses => auditAddressSearch(userAgent, addresses, posttown = Some(posttown.posttown.toUpperCase), filter = posttown.filter))
+      addresses => auditor.auditAddressSearch(userAgent, addresses, posttown = Some(posttown.posttown.toUpperCase), filter = posttown.filter))
   }
 
   private[controllers] def searchByCountry[A](request: Request[LookupByCountryRequest])(implicit hc: HeaderCarrier, userAgent: Option[UserAgent]): Future[Result] = {
@@ -104,7 +103,7 @@ class AddressSearchController @Inject()(connector: DownstreamConnector, auditCon
     val country: LookupByCountryRequest = request.body
 
     forwardIfAllowed[LookupByCountryRequest, List[NonUKAddress]](request,
-      addresses => auditNonUKAddressSearch(userAgent, country = country.country, filter = Option(country.filter), nonUKAddresses = addresses))
+      addresses => auditor.auditNonUKAddressSearch(userAgent, country = country.country, filter = Option(country.filter), nonUKAddresses = addresses))
   }
 
   private def addCountryTo(body: LookupByCountryFilterRequest, country: String): LookupByCountryRequest = {
@@ -139,58 +138,5 @@ class AddressSearchController @Inject()(connector: DownstreamConnector, auditCon
   connector.checkConnectivity(url("/ping/ping"), configHelper.addressSearchApiAuthToken).map {
     case true => logger.warn("Downstream connectivity to address-search-api service successfully established")
     case _    => logger.error("Downstream connectivity check to address-search-api service FAILED")
-  }
-
-  private def auditAddressSearch[A](userAgent: Option[UserAgent], addressRecords: List[AddressRecord], postcode: Option[Postcode] = None,
-                                    posttown: Option[String] = None, uprn: Option[String] = None, filter: Option[String] = None)(implicit hc: HeaderCarrier): Unit = {
-
-    if (addressRecords.nonEmpty) {
-      val auditEventRequestDetails = AddressSearchAuditEventRequestDetails(postcode.map(_.toString), posttown, uprn, filter)
-      val addressSearchAuditEventMatchedAddresses = addressRecords.map { ma =>
-        AddressSearchAuditEventMatchedAddress(
-          ma.uprn.map(_.toString).getOrElse(""),
-          ma.parentUprn,
-          ma.usrn,
-          ma.organisation,
-          ma.address.lines,
-          ma.address.town,
-          ma.localCustodian,
-          ma.location,
-          ma.administrativeArea,
-          ma.poBox,
-          ma.address.postcode,
-          ma.address.subdivision,
-          ma.address.country)
-      }
-
-      auditConnector.sendExplicitAudit("AddressSearch",
-        AddressSearchAuditEvent(userAgent.map(_.unwrap),
-          auditEventRequestDetails,
-          addressRecords.length,
-          addressSearchAuditEventMatchedAddresses))
-    }
-  }
-
-  private def auditNonUKAddressSearch[A](userAgent: Option[UserAgent], nonUKAddresses: List[NonUKAddress], country: String,
-                                         filter: Option[String] = None)(implicit hc: HeaderCarrier): Unit = {
-
-    if (nonUKAddresses.nonEmpty) {
-      auditConnector.sendExplicitAudit("NonUKAddressSearch",
-        NonUKAddressSearchAuditEvent(userAgent.map(_.unwrap),
-          NonUKAddressSearchAuditEventRequestDetails(filter),
-          nonUKAddresses.length,
-          nonUKAddresses.map { ma =>
-            NonUKAddressSearchAuditEventMatchedAddress(
-              ma.id,
-              ma.number,
-              ma.street,
-              ma.unit,
-              ma.city,
-              ma.district,
-              ma.region,
-              ma.postcode,
-              country)
-          }))
-    }
   }
 }

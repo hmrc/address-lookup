@@ -16,6 +16,7 @@
 
 package controllers
 
+import audit.Auditor
 import config.AppConfig
 import connectors.DownstreamConnector
 import model.address._
@@ -30,16 +31,16 @@ import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.{HeaderNames, MimeTypes, Status}
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.json.{JsNumber, JsObject, JsString, Json}
-import play.api.mvc.{ControllerComponents, Request}
+import play.api.libs.json.{JsNumber, JsObject, JsString}
+import play.api.mvc.ControllerComponents
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import play.api.{Application, inject}
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import util.Utils._
 
+import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, Future}
 import scala.language.postfixOps
 
 class AddressSearchControllerTest extends AnyWordSpec with Matchers with GuiceOneAppPerSuite with MockitoSugar {
@@ -151,7 +152,6 @@ class AddressSearchControllerTest extends AnyWordSpec with Matchers with GuiceOn
     """when search is called without valid 'user-agent' header
        it should give a forbidden response and not log any error
       """ in {
-      import LookupByPostcodeRequest._
 
       val payload = LookupByPostcodeRequest(Postcode("FX11 4HG"))
       val request = FakeRequest("POST", "/lookup")
@@ -254,7 +254,6 @@ class AddressSearchControllerTest extends AnyWordSpec with Matchers with GuiceOn
   "uprn lookup with POST request" should {
     "give forbidden" when {
       """search is called without a valid user agent""" in {
-        import LookupByUprnRequest._
         val payload = LookupByUprnRequest("0123456789")
         val request = FakeRequest("POST", "/lookup/by-uprn")
           .withBody(payload)
@@ -268,7 +267,6 @@ class AddressSearchControllerTest extends AnyWordSpec with Matchers with GuiceOn
 
     "give success" when {
       """search is called with a valid uprn""" in {
-        import LookupByUprnRequest._
 
         clearInvocations(mockAuditConnector)
 
@@ -298,7 +296,8 @@ class AddressSearchControllerTest extends AnyWordSpec with Matchers with GuiceOn
       """search is called with an invalid uprn""" in {
         val connector = app.injector.instanceOf[DownstreamConnector]
         val configHelper = app.injector.instanceOf[AppConfig]
-        val controller = new AddressSearchController(connector, mockAuditConnector, cc, configHelper)(ec)
+        val auditor = app.injector.instanceOf[Auditor]
+        val controller = new AddressSearchController(connector, auditor, cc, configHelper)(ec)
         val payload = LookupByUprnRequest("GB0123456789")
         val request = FakeRequest("POST", "/lookup/by-uprn")
           .withBody(payload)
