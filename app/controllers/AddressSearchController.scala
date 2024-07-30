@@ -64,7 +64,6 @@ class AddressSearchController @Inject()(connector: DownstreamConnector, auditCon
 
   def searchByCountry(countryCode: String): Action[LookupByCountryFilterRequest] = accessCheckedAction(parse.json[LookupByCountryFilterRequest]) {
     implicit request: Request[LookupByCountryFilterRequest] =>
-      implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequest(request)
       val newRequest: Request[LookupByCountryRequest] =
         request.withTarget(RequestTarget("/country/lookup", "/country/lookup", request.queryString))
           .withBody(addCountryTo(request.body, countryCode.toLowerCase))
@@ -73,50 +72,36 @@ class AddressSearchController @Inject()(connector: DownstreamConnector, auditCon
       searchByCountry(newRequest)
   }
 
-  private[controllers] def searchByUprn(request: Request[LookupByUprnRequest]): Future[Result] = {
-    implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequest(request)
-    val userAgent = request.headers.get(HeaderNames.USER_AGENT)
-
-    val uprn: LookupByUprnRequest = request.body
-
+  private[controllers] def searchByUprn(request: Request[LookupByUprnRequest])(implicit hc: HeaderCarrier, userAgent: Option[UserAgent]): Future[Result] = {
     import model.address.AddressRecord.formats._
 
     forwardIfAllowed[LookupByUprnRequest, List[AddressRecord]](request,
-      addresses => auditAddressSearch(userAgent, addresses, uprn = Some(uprn.uprn))
+      addresses => auditAddressSearch(userAgent, addresses, uprn = Some(request.body.uprn))
     )
   }
 
-  private[controllers] def searchByPostcode[A](request: Request[LookupByPostcodeRequest]): Future[Result] = {
-    implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequest(request)
-    val userAgent = request.headers.get(HeaderNames.USER_AGENT)
+  private[controllers] def searchByPostcode[A](request: Request[LookupByPostcodeRequest])(implicit hc: HeaderCarrier, userAgent: Option[UserAgent]): Future[Result] = {
+    import model.address.AddressRecord.formats._
 
     val postcode: LookupByPostcodeRequest = request.body
-
-    import model.address.AddressRecord.formats._
 
     forwardIfAllowed[LookupByPostcodeRequest, List[AddressRecord]](request,
       addresses => auditAddressSearch(userAgent, addresses, postcode = Some(postcode.postcode), filter = postcode.filter))
   }
 
-  private[controllers] def searchByTown[A](request: Request[LookupByPostTownRequest]): Future[Result] = {
-    implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequest(request)
-    val userAgent = request.headers.get(HeaderNames.USER_AGENT)
+  private[controllers] def searchByTown[A](request: Request[LookupByPostTownRequest])(implicit hc: HeaderCarrier, userAgent: Option[UserAgent]): Future[Result] = {
+    import model.address.AddressRecord.formats._
 
     val posttown: LookupByPostTownRequest = request.body
-
-    import model.address.AddressRecord.formats._
 
     forwardIfAllowed[LookupByPostTownRequest, List[AddressRecord]](request,
       addresses => auditAddressSearch(userAgent, addresses, posttown = Some(posttown.posttown.toUpperCase), filter = posttown.filter))
   }
 
-  private[controllers] def searchByCountry[A](request: Request[LookupByCountryRequest])(implicit hc: HeaderCarrier): Future[Result] = {
-    implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequest(request)
-    val userAgent = request.headers.get(HeaderNames.USER_AGENT)
+  private[controllers] def searchByCountry[A](request: Request[LookupByCountryRequest])(implicit hc: HeaderCarrier, userAgent: Option[UserAgent]): Future[Result] = {
+    import model.address.NonUKAddress._
 
     val country: LookupByCountryRequest = request.body
-
-    import model.address.NonUKAddress._
 
     forwardIfAllowed[LookupByCountryRequest, List[NonUKAddress]](request,
       addresses => auditNonUKAddressSearch(userAgent, country = country.country, filter = Option(country.filter), nonUKAddresses = addresses))
@@ -143,15 +128,20 @@ class AddressSearchController @Inject()(connector: DownstreamConnector, auditCon
         case (BAD_REQUEST, err) => BadRequest(err)
         case (FORBIDDEN, err) => Forbidden(err)
       }
-
   }
+
+  implicit def requestToHeaderCarrier[T](implicit request: Request[T]): HeaderCarrier =
+    HeaderCarrierConverter.fromRequest(request)
+
+  implicit def requestToUserAgent[T](implicit request: Request[T]): Option[UserAgent] =
+    UserAgent(request)
 
   connector.checkConnectivity(url("/ping/ping"), configHelper.addressSearchApiAuthToken).map {
     case true => logger.warn("Downstream connectivity to address-search-api service successfully established")
     case _    => logger.error("Downstream connectivity check to address-search-api service FAILED")
   }
 
-  private def auditAddressSearch[A](userAgent: Option[String], addressRecords: List[AddressRecord], postcode: Option[Postcode] = None,
+  private def auditAddressSearch[A](userAgent: Option[UserAgent], addressRecords: List[AddressRecord], postcode: Option[Postcode] = None,
                                     posttown: Option[String] = None, uprn: Option[String] = None, filter: Option[String] = None)(implicit hc: HeaderCarrier): Unit = {
 
     if (addressRecords.nonEmpty) {
@@ -174,19 +164,19 @@ class AddressSearchController @Inject()(connector: DownstreamConnector, auditCon
       }
 
       auditConnector.sendExplicitAudit("AddressSearch",
-        AddressSearchAuditEvent(userAgent,
+        AddressSearchAuditEvent(userAgent.map(_.unwrap),
           auditEventRequestDetails,
           addressRecords.length,
           addressSearchAuditEventMatchedAddresses))
     }
   }
 
-  private def auditNonUKAddressSearch[A](userAgent: Option[String], nonUKAddresses: List[NonUKAddress], country: String,
+  private def auditNonUKAddressSearch[A](userAgent: Option[UserAgent], nonUKAddresses: List[NonUKAddress], country: String,
                                          filter: Option[String] = None)(implicit hc: HeaderCarrier): Unit = {
 
     if (nonUKAddresses.nonEmpty) {
       auditConnector.sendExplicitAudit("NonUKAddressSearch",
-        NonUKAddressSearchAuditEvent(userAgent,
+        NonUKAddressSearchAuditEvent(userAgent.map(_.unwrap),
           NonUKAddressSearchAuditEventRequestDetails(filter),
           nonUKAddresses.length,
           nonUKAddresses.map { ma =>

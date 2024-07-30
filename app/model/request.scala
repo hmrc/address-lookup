@@ -17,9 +17,11 @@
 package model
 
 import model.address.Postcode
+import play.api.http.HeaderNames
 import play.api.libs.functional.syntax._
 import play.api.libs.json.Reads._
 import play.api.libs.json._
+import play.api.mvc.Request
 
 
 object request {
@@ -86,5 +88,12 @@ object request {
   object LookupByCountryRequest {
     implicit val reads: Reads[LookupByCountryRequest] = Json.reads[LookupByCountryRequest]
     implicit val writes: Writes[LookupByCountryRequest] = Json.writes[LookupByCountryRequest]
+  }
+
+  final case class UserAgent(unwrap: String)
+
+  object UserAgent {
+    def apply(request: Request[_]): Option[UserAgent] =
+      request.headers.get(HeaderNames.USER_AGENT).map(ua => UserAgent(ua))
   }
 }
