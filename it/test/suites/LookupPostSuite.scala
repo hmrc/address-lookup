@@ -22,8 +22,9 @@ import model.address.AddressRecord
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
+import play.api.http.MimeTypes
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.json.Json
+import play.api.libs.json.{JsValue, Json}
 import play.api.libs.ws.WSClient
 import play.api.test.Helpers._
 
@@ -54,6 +55,14 @@ class LookupPostSuite()
           """{"postcode": "fx1 9py"}""".stripMargin
 
         val response = post("/lookup", payload)
+        response.status shouldBe OK
+      }
+
+      "give a successful response for a known postcode with text content-type - uk route" in {
+        val payload =
+          """{"postcode": "fx1 9py"}""".stripMargin
+
+        val response = post("/lookup", payload, MimeTypes.TEXT)
         response.status shouldBe OK
       }
 
@@ -151,8 +160,9 @@ class LookupPostSuite()
       "give a bad request when the postcode parameter is absent" in {
         val response = post("/lookup", "{}")
         response.status shouldBe BAD_REQUEST
-        response.body shouldBe """{"obj.postcode":[{"msg":["error.path.missing"],"args":[]}]}"""
-      }
+        val jsonBody = response.body[JsValue]
+        (jsonBody \ "statusCode").as[Int] shouldBe BAD_REQUEST
+        (jsonBody \ "message").as[String] should startWith("Json validation error")      }
 
       "give a bad request when the postcode parameter is rubbish text" in {
         val payload =
@@ -162,8 +172,9 @@ class LookupPostSuite()
 
         val response = post("/lookup", payload)
         response.status shouldBe BAD_REQUEST
-        response.body shouldBe """{"obj.postcode":[{"msg":["error.invalid"],"args":[]}]}"""
-      }
+        val jsonBody = response.body[JsValue]
+        (jsonBody \ "statusCode").as[Int] shouldBe BAD_REQUEST
+        (jsonBody \ "message").as[String] should startWith("Json validation error")      }
 
       "give a bad request when the postcode parameter is of the wrong type" in {
         val payload =
@@ -173,8 +184,9 @@ class LookupPostSuite()
 
         val response = post("/lookup", payload)
         response.status shouldBe BAD_REQUEST
-        response.body shouldBe """{"obj.postcode":[{"msg":["error.expected.jsstring"],"args":[]}]}"""
-      }
+        val jsonBody = response.body[JsValue]
+        (jsonBody \ "statusCode").as[Int] shouldBe BAD_REQUEST
+        (jsonBody \ "message").as[String] should startWith("Json validation error")      }
 
       "give a bad request when an unexpected parameter is sent on its own" in {
         val payload =
@@ -184,8 +196,9 @@ class LookupPostSuite()
 
         val response = post("/lookup", payload)
         response.status shouldBe BAD_REQUEST
-        response.body shouldBe """{"obj.postcode":[{"msg":["error.path.missing"],"args":[]}]}"""
-      }
+        val jsonBody = response.body[JsValue]
+        (jsonBody \ "statusCode").as[Int] shouldBe BAD_REQUEST
+        (jsonBody \ "message").as[String] should startWith("Json validation error")      }
 
       "not give a bad request when an unexpected parameter is sent" in {
         val payload =

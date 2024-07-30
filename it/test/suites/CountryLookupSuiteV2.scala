@@ -20,15 +20,17 @@ import com.codahale.metrics.SharedMetricRegistries
 import it.helper.AppServerTestApi
 import model.address.NonUKAddress
 import model.{NonUKAddressSearchAuditEvent, NonUKAddressSearchAuditEventMatchedAddress, NonUKAddressSearchAuditEventRequestDetails}
+import org.apache.pekko.util.ByteString
 import org.mockito.ArgumentMatchers.{any, eq => meq}
 import org.mockito.Mockito
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
+import play.api.http.{HeaderNames, MimeTypes}
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.{JsValue, Json}
-import play.api.libs.ws.WSClient
+import play.api.libs.ws.{InMemoryBody, WSClient}
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import play.inject.Bindings
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
@@ -133,7 +135,13 @@ class CountryLookupSuiteV2()
 
       "return forbidden when the user-agent is absent" in {
         val path = "/country/GB/lookup"
-        val response = await(wsClient.url(appEndpoint + path).withMethod("POST").withBody("""{"filter":"FX1 4AB"}""").execute())
+        val response = await(
+          wsClient
+            .url(appEndpoint + path)
+            .withMethod("POST")
+            .withHttpHeaders(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
+            .withBody("""{"filter":"FX1 4AB"}""")
+            .execute())
         response.status shouldBe FORBIDDEN
       }
 
@@ -152,6 +160,22 @@ class CountryLookupSuiteV2()
       "give a bad method when using GET to the address URL" ignore {
         val response = request("GET", "/country/GB/lookup?postcode=FX1+9PY", headerOrigin -> "xxx")
         response.status shouldBe METHOD_NOT_ALLOWED
+      }
+
+      "give an unsupported media type response for bermuda with text content-type" in {
+        // Have to define this as the withHttpHeaders doesn't seem to be replacing existing headers.
+        def pst(path: String, body: String): play.api.libs.ws.WSResponse = {
+          val wsBody = InMemoryBody(ByteString(body.trim))
+          val req = newRequest("POST", path)
+            .withHttpHeaders("Content-Type" -> "plain/text")
+            .withBody(wsBody)
+
+          await(req.execute("POST"))
+        }
+
+        val response = pst(path = "/country/BM/lookup", body = """{"filter":"HM02"}""")
+
+        response.status shouldBe UNSUPPORTED_MEDIA_TYPE
       }
     }
   }

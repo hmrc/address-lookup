@@ -22,6 +22,7 @@ import model.address.{Address, AddressRecord, Country, LocalCustodian}
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
+import play.api.http.{HeaderNames, MimeTypes}
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.{JsArray, Json}
 import play.api.libs.ws.WSClient
@@ -65,6 +66,16 @@ class UprnLookupPostSuite()
         address1 shouldBe expectedAddressRecord
       }
 
+      "give a successful response for a known uprn with text content-type - uk route" in {
+        val expectedAddressRecord = AddressRecord(
+          "GB690091234501",Some(690091234501L),None,None,None,
+          Address(List("1 Test Street"),"Testtown","AA00 0AA",Some(Country("GB-ENG","England")),Country("GB","United Kingdom"))
+          ,"en",Some(LocalCustodian(121,"NORTH SOMERSET")),None,None,None)
+
+        val response = post("/lookup/by-uprn", """{"uprn": "690091234501"}""", MimeTypes.TEXT)
+        response.status shouldBe OK
+      }
+
       "set the content type to application/json" in {
         val response = post("/lookup/by-uprn", """{"uprn":"9999999999"}""")
         val contentType = response.header("Content-Type").get
@@ -96,7 +107,13 @@ class UprnLookupPostSuite()
 
       "return forbidden when the user-agent is absent" in {
         val path = "/lookup/by-uprn"
-        val response = await(wsClient.url(appEndpoint + path).withMethod("POST").withBody("""{"uprn":"9999999999"}""").execute())
+        val response = await(
+          wsClient
+            .url(appEndpoint + path)
+            .withMethod("POST")
+            .withHttpHeaders(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
+            .withBody("""{"uprn":"9999999999"}""")
+            .execute())
         response.status shouldBe FORBIDDEN
       }
 
