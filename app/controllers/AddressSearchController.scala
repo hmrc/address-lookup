@@ -200,7 +200,10 @@ class AddressSearchController @Inject() (
     connector
       .forward(
         jsonRequest.map((r: Req) => Json.toJson(r)),
-        url(jsonRequest.target.uri.toString),
+        url(
+          jsonRequest.target.uri.toString
+            .replaceAll("address-lookup", "address-search-api")
+        ),
         configHelper.addressSearchApiAuthToken
       )
       .flatMap(res => res.body.consumeData.map(d => res.header.status -> d))
