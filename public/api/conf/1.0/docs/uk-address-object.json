@@ -41,8 +41,8 @@
                             "minLength": 1,
                             "maxLength": 35
                         },
-                        "minLength": 1,
-                        "maxLength": 3
+                        "minItems": 1,
+                        "maxItems": 3
                     },
                     "town": {
                         "type": "string",
