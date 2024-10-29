@@ -1,11 +1,4 @@
 {
-  "scopes": [
-    {
-      "key": "lookup-address",
-      "name": "Lookup address",
-      "description": "Lookup of postal and BFPO (British Forces Post Office) address details within the UK"
-    }
-  ],
   "api": {
     "name": "Lookup address",
     "description": "Lookup of postal and BFPO (British Forces Post Office) address details within the UK",
