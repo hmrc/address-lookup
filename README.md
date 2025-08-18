@@ -8,11 +8,14 @@ Please read the [**address-lookup API definition**](public/api/conf/1.0/docs/add
 
 ## Dependencies
 * SBT
-* Java 8
+* Java 21
 * Play Framework
 * `address-search-api` 
 
 ## Running / testing locally
+
+(NOTE, for now, you must have `ADDRESS_SEARCH_API` running locally. A future change will be made to mock this out)
+
 Run `address-lookup` services using `sm2`:
 ```bash
 sm2 start ADDRESS_LOOKUP_SERVICES
@@ -26,7 +29,7 @@ sbt test
 
 The integration tests can be run as follows:
 ```bash
-sbt it:test
+sbt it/test
 ```
 
 ## Local Demo Mode
