@@ -1,6 +1,6 @@
 import uk.gov.hmrc.DefaultBuildSettings
 
-ThisBuild / scalaVersion := "2.13.12"
+ThisBuild / scalaVersion := "2.13.16"
 ThisBuild / majorVersion := 4
 
 lazy val microservice = Project("address-lookup", file("."))
@@ -20,7 +20,6 @@ lazy val microservice = Project("address-lookup", file("."))
     retrieveManaged := true
   )
   .settings(PlayKeys.playDefaultPort := 9022)
-  .settings(resolvers += Resolver.jcenterRepo)
 
 lazy val it = project.in(file("it"))
   .enablePlugins(play.sbt.PlayScala)
