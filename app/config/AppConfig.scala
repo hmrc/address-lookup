@@ -17,7 +17,7 @@
 package config
 
 import com.google.inject.Inject
-import play.api.{Configuration, Environment}
+import play.api.Configuration
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import java.nio.charset.StandardCharsets
