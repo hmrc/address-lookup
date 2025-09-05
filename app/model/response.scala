@@ -16,8 +16,6 @@
 
 package model
 
-import com.typesafe.config.Config
-import play.api.ConfigLoader
 import play.api.libs.json._
 
 object response {

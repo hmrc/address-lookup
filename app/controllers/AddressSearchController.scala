@@ -228,20 +228,4 @@ class AddressSearchController @Inject() (
       request: Request[T]
   ): Option[UserAgent] =
     UserAgent(request)
-
-  connector
-    .checkConnectivity(
-      url("/ping/ping"),
-      configHelper.addressSearchApiAuthToken
-    )
-    .map {
-      case true =>
-        logger.warn(
-          "Downstream connectivity to address-search-api service successfully established"
-        )
-      case _ =>
-        logger.error(
-          "Downstream connectivity check to address-search-api service FAILED"
-        )
-    }
 }
