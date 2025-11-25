@@ -27,6 +27,8 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.{JsArray, Json}
 import play.api.libs.ws.WSClient
 import play.api.test.Helpers._
+import play.api.libs.ws.DefaultBodyReadables._
+import play.api.libs.ws.DefaultBodyWritables._
 
 // Please keep UprnLookupSuiteV2 and UprnLookupSuiteV2 as similar as appropriate.
 
@@ -98,7 +100,7 @@ class UprnLookupPostSuite()
       "give a successful response with an empty array for an unknown uprn" in {
         val response = post("/lookup/by-uprn", """{"uprn":"0"}""")
         response.status shouldBe OK
-        response.body shouldBe "[]"
+        response.body[String] shouldBe "[]"
       }
     }
 

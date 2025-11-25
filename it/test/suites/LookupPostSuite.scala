@@ -25,8 +25,11 @@ import play.api.Application
 import play.api.http.MimeTypes
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.{JsValue, Json}
+import play.api.libs.ws.DefaultBodyReadables.*
+import play.api.libs.ws.DefaultBodyWritables.*
+import play.api.libs.ws.JsonBodyReadables.*
 import play.api.libs.ws.WSClient
-import play.api.test.Helpers._
+import play.api.test.Helpers.*
 
 class LookupPostSuite()
   extends AnyWordSpec with GuiceOneServerPerSuite with AppServerTestApi {
@@ -46,7 +49,7 @@ class LookupPostSuite()
   override val wsClient: WSClient = app.injector.instanceOf[WSClient]
 
   "lookup POST" when {
-    import AddressRecord.formats._
+    import AddressRecord.formats.*
 
     "successful" should {
 
@@ -136,7 +139,7 @@ class LookupPostSuite()
             |}""".stripMargin
 
         val response = post("/lookup", payload)
-        response.body shouldBe "[]"
+        response.body[String] shouldBe "[]"
       }
     }
 

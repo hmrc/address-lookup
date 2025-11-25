@@ -25,8 +25,10 @@ import play.api.Application
 import play.api.http.{HeaderNames, MimeTypes}
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.{JsArray, Json}
+import play.api.libs.ws.DefaultBodyReadables.*
+import play.api.libs.ws.DefaultBodyWritables.*
 import play.api.libs.ws.WSClient
-import play.api.test.Helpers._
+import play.api.test.Helpers.*
 
 // Please keep UprnLookupSuiteV2 and UprnLookupSuiteV2 as similar as appropriate.
 
@@ -46,7 +48,7 @@ class UprnLookupSuiteV2()
   override val wsClient: WSClient = app.injector.instanceOf[WSClient]
 
   "uprn lookup" when {
-    import AddressRecord.formats._
+    import AddressRecord.formats.*
 
     "successful" should {
 
@@ -98,7 +100,7 @@ class UprnLookupSuiteV2()
       "give a successful response with an empty array for an unknown uprn" in {
         val response = post("/lookup/by-uprn", """{"uprn":"0"}""")
         response.status shouldBe OK
-        response.body shouldBe "[]"
+        response.body[String] shouldBe "[]"
       }
     }
 
