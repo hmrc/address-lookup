@@ -81,7 +81,7 @@ trait AppServerTestApi extends Matchers with Status {
     val step = get(path)
     step.status shouldBe expectedStatus
     step.header("Content-Type") shouldBe Some(expectedContent)
-    step.body shouldBe expectedBody
+    step.body[String] shouldBe expectedBody
   }
 
   @tailrec

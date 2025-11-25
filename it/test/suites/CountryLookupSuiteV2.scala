@@ -21,7 +21,7 @@ import it.helper.AppServerTestApi
 import model.address.NonUKAddress
 import model.{NonUKAddressSearchAuditEvent, NonUKAddressSearchAuditEventMatchedAddress, NonUKAddressSearchAuditEventRequestDetails}
 import org.apache.pekko.util.ByteString
-import org.mockito.ArgumentMatchers.{any, eq => meq}
+import org.mockito.ArgumentMatchers.{any, eq as meq}
 import org.mockito.Mockito
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.mockito.MockitoSugar.mock
@@ -30,6 +30,9 @@ import play.api.Application
 import play.api.http.{HeaderNames, MimeTypes}
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.{JsValue, Json}
+import play.api.libs.ws.DefaultBodyReadables.*
+import play.api.libs.ws.DefaultBodyWritables.*
+import play.api.libs.ws.JsonBodyReadables.*
 import play.api.libs.ws.{InMemoryBody, WSClient}
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import play.inject.Bindings
@@ -95,7 +98,7 @@ class CountryLookupSuiteV2()
       "give a successful response for an unknown postcode" in {
         val response = post("/country/BM/lookup", """{"filter":"HM99"}""")
         response.status shouldBe OK
-        response.body shouldBe "[]"
+        response.body[String] shouldBe "[]"
       }
 
       "give sorted results when two addresses are returned" in {

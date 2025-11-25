@@ -25,6 +25,8 @@ import play.api.Application
 import play.api.http.{HeaderNames, MimeTypes}
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.{JsArray, Json}
+import play.api.libs.ws.DefaultBodyReadables.*
+import play.api.libs.ws.DefaultBodyWritables.*
 import play.api.libs.ws.WSClient
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.play.bootstrap.backend.http.ErrorResponse
@@ -47,7 +49,7 @@ class PostcodeLookupSuiteV2()
   override val wsClient: WSClient = app.injector.instanceOf[WSClient]
 
   "postcode lookup" when {
-    import AddressRecord.formats._
+    import AddressRecord.formats.*
 
     "successful" should {
 
@@ -114,7 +116,7 @@ class PostcodeLookupSuiteV2()
 
       "give an empty array for an unknown postcode" in {
         val response = post("/lookup", """{"postcode":"ZZ10 9ZZ"}""")
-        response.body shouldBe "[]"
+        response.body[String] shouldBe "[]"
       }
 
       "give sorted results when two addresses are returned" in {

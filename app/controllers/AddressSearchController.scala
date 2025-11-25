@@ -68,7 +68,7 @@ class AddressSearchController @Inject() (
   }
 
   def supportedCountries(): Action[AnyContent] = Action.async {
-    request: Request[AnyContent] =>
+    (request: Request[AnyContent]) =>
       forwardIfAllowed[JsValue, JsValue](
         request.map(r => JsObject.empty),
         _ => ()
@@ -216,6 +216,8 @@ class AddressSearchController @Inject() (
         case (NOT_FOUND, err)   => NotFound(err)
         case (BAD_REQUEST, err) => BadRequest(err)
         case (FORBIDDEN, err)   => Forbidden(err)
+        case (BAD_GATEWAY, err) => BadGateway(err)
+        case (status, err)      => Status(status)(err)
       }
   }
 
