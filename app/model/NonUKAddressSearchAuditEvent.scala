@@ -16,8 +16,7 @@
 
 package model
 
-import play.api.libs.json._
-import play.api.libs.json.Json
+import play.api.libs.json.*
 
 case class NonUKAddressSearchAuditEventMatchedAddress(
     id: Option[String],

@@ -17,8 +17,8 @@
 package model.address
 
 import com.fasterxml.jackson.annotation.JsonIgnore
-import play.api.libs.functional.syntax._
-import play.api.libs.json.{JsPath, Reads, Writes}
+import play.api.libs.functional.syntax.*
+import play.api.libs.json.*
 
 case class LocalCustodian(code: Int, name: String)
 
@@ -31,8 +31,10 @@ object LocalCustodian {
     implicit val localCustodianWrites: Writes[LocalCustodian] =
       ((JsPath \ "code").write[Int] and
         (JsPath \ "name").write[String])(unlift(LocalCustodian.unapply))
-
   }
+
+  def unapply(localCustodian: LocalCustodian): Option[(Int, String)] =
+    Some((localCustodian.code, localCustodian.name))
 }
 
 /** Represents one address record. Arrays of these are returned from the
@@ -65,9 +67,27 @@ case class AddressRecord(
 }
 
 object AddressRecord {
+
+  def unapply(addressRecord: AddressRecord): Option[
+    (String, Option[Long], Option[Long], Option[Long], Option[String], Address, String, Option[LocalCustodian], Option[Seq[BigDecimal]], Option[String], Option[String])
+  ] =
+    Some((
+      addressRecord.id,
+      addressRecord.uprn,
+      addressRecord.parentUprn,
+      addressRecord.usrn,
+      addressRecord.organisation,
+      addressRecord.address,
+      addressRecord.language,
+      addressRecord.localCustodian,
+      addressRecord.location,
+      addressRecord.administrativeArea,
+      addressRecord.poBox
+    ))
+
   object formats {
-    import Address.formats._
-    import LocalCustodian.formats._
+    import Address.formats.*
+    import LocalCustodian.formats.*
 
     implicit val addressRecordReads: Reads[AddressRecord] = (
       (JsPath \ "id").read[String] and

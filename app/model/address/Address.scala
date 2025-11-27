@@ -70,6 +70,12 @@ case class Address(
 }
 
 object Address {
+
+  def unapply(address: Address): Option[
+    (List[String], String, String, Option[Country], Country)
+  ] =
+    Some((address.lines, address.town, address.postcode, address.subdivision, address.country))
+    
   val maxLineLength = 35
   val danglingLetter: Pattern = Pattern.compile(".* [A-Z0-9]$")
 

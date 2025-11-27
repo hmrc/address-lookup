@@ -18,7 +18,7 @@ Please read the [**address-lookup API definition**](public/api/conf/1.0/docs/add
 
 Run `address-lookup` services using `sm2`:
 ```bash
-sm2 start ADDRESS_LOOKUP_SERVICES
+sm2 --start ADDRESS_LOOKUP_SERVICES
 ```
 
 ## Development

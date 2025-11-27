@@ -27,6 +27,9 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.{JsArray, JsValue, Json}
 import play.api.libs.ws.WSClient
 import play.api.test.Helpers._
+import play.api.libs.ws.DefaultBodyReadables._
+import play.api.libs.ws.DefaultBodyWritables._
+import play.api.libs.ws.JsonBodyReadables._
 
 class TownLookupPostSuite()
   extends AnyWordSpec with GuiceOneServerPerSuite with AppServerTestApi {
@@ -169,7 +172,7 @@ class TownLookupPostSuite()
             |}""".stripMargin
 
         val response = post("/lookup/by-post-town", payload)
-        response.body shouldBe "[]"
+        response.body[String] shouldBe "[]"
       }
     }
 
