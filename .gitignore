@@ -19,5 +19,5 @@ dist
 lib_managed
 logs
 project/project
-project/metals.sbt
+**/metals.sbt
 tmp
