@@ -17,8 +17,7 @@
 package model
 
 import model.address.{Country, LocalCustodian}
-import play.api.libs.json._
-import play.api.libs.json.Json
+import play.api.libs.json.*
 
 case class AddressSearchAuditEventMatchedAddress(
     uprn: String,
@@ -51,8 +50,8 @@ case class AddressSearchAuditEvent(
 )
 
 object AddressSearchAuditEvent {
-  import Country.formats._
-  import LocalCustodian.formats._
+  import Country.formats.*
+  import LocalCustodian.formats.*
 
   implicit def requestDetailsWrites
       : Writes[AddressSearchAuditEventRequestDetails] =

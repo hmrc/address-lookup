@@ -29,7 +29,7 @@ import play.api.libs.ws.DefaultBodyReadables.*
 import play.api.libs.ws.DefaultBodyWritables.*
 import play.api.libs.ws.WSClient
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
-import uk.gov.hmrc.play.bootstrap.backend.http.ErrorResponse
+import uk.gov.hmrc.play.bootstrap.http.ErrorResponse
 
 class PostcodeLookupSuiteV2()
   extends AnyWordSpec with GuiceOneServerPerSuite with AppServerTestApi {
@@ -225,7 +225,6 @@ class PostcodeLookupSuiteV2()
       }
 
       "give a bad request when the payload is invalid json" in {
-//        import ErrorResponse.Implicits._
         val response = post("/lookup", """{"foo":"FX1 4AC""")
         response.status shouldBe BAD_REQUEST
         val responseText = response.body

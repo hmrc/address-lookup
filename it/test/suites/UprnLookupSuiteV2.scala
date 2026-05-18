@@ -69,10 +69,6 @@ class UprnLookupSuiteV2()
       }
 
       "give a successful response for a known uprn with text content-type - uk route" in {
-        val expectedAddressRecord = AddressRecord(
-          "GB690091234501",Some(690091234501L),None,None,None,
-          Address(List("1 Test Street"),"Testtown","AA00 0AA",Some(Country("GB-ENG","England")),Country("GB","United Kingdom"))
-          ,"en",Some(LocalCustodian(121,"NORTH SOMERSET")),None,None,None)
 
         val response = post("/lookup/by-uprn", """{"uprn":"690091234501"}""", MimeTypes.TEXT)
         response.status shouldBe OK
