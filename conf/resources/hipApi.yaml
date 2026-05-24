@@ -1,0 +1,534 @@
+---
+openapi: 3.0.3
+info:
+  title: Address Search API
+  description: |-
+    Provide's endpoints for searching for postal and BFPO (British Forces Post Office) address details within the UK.
+
+      | Version | Date       | Author         | Description                                           |
+      |---------|------------|----------------|-------------------------------------------------------|
+      | 1.0.0   | 04-03-2026 | CIR Team       | Initial draft of the address search API specification |
+      | 1.1.0   | 05-05-2026 | CIR Team       | Changes for API Standards Checklist v1.5              |
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0
+  version: 1.1.0
+paths:
+  /address-lookup/lookup:
+    post:
+      tags:
+        - Address search
+      summary: Address search by postcode
+      description: Search for addresses by postcode and optional filter
+      parameters:
+        - $ref: '#/components/parameters/correlationId'
+        - $ref: '#/components/parameters/contentType'
+        - $ref: '#/components/parameters/userAgent'
+      requestBody:
+        description: Address search request containing the postcode and optional filter
+        content:
+          application/json;charset=UTF-8:
+            schema:
+              $ref: '#/components/schemas/AddressLookupByPostcodeRequest'
+            examples:
+              example 1:
+                $ref: '#/components/examples/AddressLookupByPostcodeRequestExample1'
+              example 2:
+                $ref: '#/components/examples/AddressLookupByPostcodeRequestExample2'
+        required: true
+      responses:
+        "200":
+          description: Successful response with address search results
+          headers:
+            correlationId:
+              $ref: '#/components/headers/correlationId'
+            contentType:
+              $ref: '#/components/headers/contentType'
+          content:
+            application/json;charset=UTF-8:
+              schema:
+                $ref: '#/components/schemas/AddressLookupByPostcodeResponse'
+              examples:
+                example 1:
+                  $ref: '#/components/examples/AddressLookupByPostcodeResponseExample1'
+                example 2:
+                  $ref: '#/components/examples/AddressLookupByPostcodeResponseExample2'
+        "400":
+          description: Bad request
+          headers:
+            correlationId:
+              $ref: '#/components/headers/correlationId'
+            contentType:
+              $ref: '#/components/headers/contentType'
+          content:
+            application/json;charset=UTF-8:
+              schema:
+                required:
+                  - origin
+                  - response
+                type: object
+                properties:
+                  origin:
+                    $ref: '#/components/schemas/HIP-originEnum'
+                  response:
+                    oneOf:
+                      - $ref: '#/components/schemas/HIP-failureResponse'
+                      - required:
+                          - response
+                        type: object
+                        properties:
+                          response:
+                            $ref: '#/components/schemas/failureResponse'
+                        additionalProperties: false
+                additionalProperties: false
+              examples:
+                example 1:
+                  $ref: '#/components/examples/failureResponse400Example'
+                HIP-originResponse:
+                  description: HIP-originResponse
+                  value:
+                    origin: HIP
+                    response:
+                      - type: Type of Failure
+                        reason: Reason for Failure
+        "500":
+          description: Server error
+          headers:
+            correlationId:
+              $ref: '#/components/headers/correlationId'
+            contentType:
+              $ref: '#/components/headers/contentType'
+          content:
+            application/json;charset=UTF-8:
+              schema:
+                required:
+                  - origin
+                  - response
+                type: object
+                properties:
+                  origin:
+                    $ref: '#/components/schemas/HIP-originEnum'
+                  response:
+                    oneOf:
+                      - $ref: '#/components/schemas/HIP-failureResponse'
+                      - required:
+                          - response
+                        type: object
+                        properties:
+                          response:
+                            $ref: '#/components/schemas/failureResponse'
+                        additionalProperties: false
+                additionalProperties: false
+              examples:
+                example 1:
+                  $ref: '#/components/examples/failureResponse500Example'
+                HIP-originResponse:
+                  description: HIP-originResponse
+                  value:
+                    origin: HIP
+                    response:
+                      - type: Type of Failure
+                        reason: Reason for Failure
+        "503":
+          description: Service Unavailable
+          headers:
+            correlationId:
+              $ref: '#/components/headers/correlationId'
+            contentType:
+              $ref: '#/components/headers/contentType'
+          content:
+            application/json;charset=UTF-8:
+              schema:
+                $ref: '#/components/schemas/HIP-originResponse'
+      security:
+        - oAuth2:
+            - write:address-lookup
+components:
+  schemas:
+    AddressLookupByPostcodeRequest:
+      title: AddressLookupByPostcodeRequest
+      required:
+        - postcode
+      properties:
+        postcode:
+          description: The postcode to search for addresses. Must be a valid UK postcode
+            format.
+          type: string
+          example: ZZ9Z 9TT
+        filter:
+          description: "An optional filter to narrow down the address search results,\
+            \ such as a building name or street name. This can help to refine the\
+            \ search results when there are multiple addresses associated with the\
+            \ same postcode."
+          type: string
+          example: 1 High Street
+    AddressLookupByPostcodeResponse:
+      title: AddressLookupByPostcodeResponse
+      type: array
+      items:
+        required:
+          - address
+          - id
+          - language
+          - uprn
+        type: object
+        properties:
+          id:
+            maxLength: 40
+            minLength: 1
+            type: string
+          uprn:
+            description: "Unique property reference number, up to 12 digits"
+            minimum: 0
+            type: number
+          parentUprn:
+            description: "Unique property reference number, up to 12 digits"
+            minimum: 0
+            type: number
+          usrn:
+            description: "Unique property reference number, up to 12 digits"
+            minimum: 0
+            type: number
+          organisation:
+            description: "Organisation associated with this address, if any"
+            maxLength: 60
+            minLength: 0
+            type: string
+          address:
+            description: Contains a UK-based address
+            required:
+              - country
+              - lines
+              - postcode
+              - town
+            type: object
+            properties:
+              lines:
+                maxLength: 3
+                minLength: 1
+                type: array
+                items:
+                  maxLength: 35
+                  minLength: 1
+                  type: string
+              town:
+                maxLength: 35
+                minLength: 1
+                type: string
+              postcode:
+                description: "the outcode, incode combination specified for the UK\
+                  \ by Royal Mail"
+                pattern: "^[A-Z]{1,2}[0-9][0-9A-Z]? [0-9][A-Z]{2}$"
+                type: string
+              subdivision:
+                required:
+                  - code
+                  - name
+                type: object
+                properties:
+                  code:
+                    description: "the ISO3166-2 subdivision - these are home nations,\
+                      \ regions, departments, states, lander etc as appropriate"
+                    maxLength: 6
+                    minLength: 2
+                    type: string
+                  name:
+                    description: printable name of the country
+                    maxLength: 35
+                    minLength: 1
+                    type: string
+                additionalProperties: false
+              country:
+                required:
+                  - code
+                  - name
+                type: object
+                properties:
+                  code:
+                    description: "UK Country Register 2-letter code (like ISO3166-1),\
+                      \ e.g. GB (note that GB is the official code for UK although\
+                      \ UK is an official synonym and may be used instead)"
+                    maxLength: 2
+                    minLength: 2
+                    type: string
+                  name:
+                    description: printable name of the country
+                    maxLength: 35
+                    minLength: 1
+                    type: string
+                additionalProperties: false
+            additionalProperties: false
+          language:
+            description: "ISO639-1 code, e.g. en for English"
+            maxLength: 2
+            minLength: 2
+            type: string
+          localCustodian:
+            description: The local custodian responsible for this address
+            required:
+              - code
+              - name
+            type: object
+            properties:
+              code:
+                description: UK Local Custodian Code
+                minimum: 0
+                type: number
+              name:
+                description: Name of the UK Local Custodian
+                minLength: 1
+                type: string
+          location:
+            type: array
+            items:
+              maximum: 180
+              minimum: -180
+              maxItems: 2
+              minItems: 2
+              type: number
+          administrativeArea:
+            description: Local council or authority
+            type: string
+          poBox:
+            description: Post Office Box number
+            maxLength: 255
+            minLength: 1
+            type: string
+        additionalProperties: false
+    failureResponse:
+      required:
+        - failures
+      type: object
+      properties:
+        failures:
+          minItems: 1
+          uniqueItems: true
+          type: array
+          items:
+            required:
+              - reason
+              - type
+            type: object
+            properties:
+              type:
+                type: string
+              reason:
+                type: string
+            additionalProperties: false
+    HIP-originEnum:
+      enum:
+        - HIP
+        - HoD
+      type: string
+    HIP-failureResponse:
+      required:
+        - failures
+      type: object
+      properties:
+        failures:
+          minItems: 1
+          uniqueItems: true
+          type: array
+          items:
+            required:
+              - type
+              - reason
+            type: object
+            properties:
+              type:
+                type: string
+              reason:
+                type: string
+            additionalProperties: false
+    HIP-originResponse:
+      required:
+        - origin
+        - response
+      type: object
+      properties:
+        origin:
+          $ref: '#/components/schemas/HIP-originEnum'
+        response:
+          $ref: '#/components/schemas/HIP-failureResponse'
+      additionalProperties: false
+  parameters:
+    correlationId:
+      name: correlationId
+      in: header
+      description: |
+        Used for end to end traceability purposes and should be considered mandatory. In the
+        event, however, it cannot be provided, the HIP framework will generate it, to allow
+        for downstream auditing
+      required: true
+      schema:
+        pattern: "^[0-9a-fA-F]{8}[-][0-9a-fA-F]{4}[-][0-9a-fA-F]{4}[-][0-9a-fA-F]{4}[-][0-9a-fA-F]{12}$"
+        type: string
+      style: simple
+      explode: false
+    contentType:
+        name: content-type
+        in: header
+        description: The content type of the request body, which must be application/json;charset=UTF-8
+        required: true
+        schema:
+            enum:
+            - application/json;charset=UTF-8
+            type: string
+        style: simple
+        explode: false
+    userAgent:
+      name: user-agent
+      in: header
+      description: |
+        The name of the calling service, used for monitoring and analytics purposes. Must be in the
+        format 'calling-service-name' and contain only lowercase letters and hyphens.
+      required: true
+      schema:
+        maxLength: 100
+        minLength: 9
+        pattern: "^[a-z-]+$"
+        type: string
+      style: simple
+      explode: false
+      example: calling-service-name
+  examples:
+    AddressLookupByPostcodeRequestExample1:
+      value:
+        postcode: ZZ9Z 9TT
+    AddressLookupByPostcodeRequestExample2:
+      value:
+        postcode: ZZ9Z 9TT
+        filter: 1 Testing Lane
+    AddressLookupByPostcodeResponseExample1:
+      value:
+        - id: GB990091234558
+          uprn: 990091234558
+          parentUprn: 990091234558
+          usrn: 300000706253
+          organisation: Some Company
+          address:
+            lines:
+              - 1 Testing Lane
+            town: Royal Madeuptown
+            postcode: ZZ9Z 9TT
+            subdivision:
+              code: GB-ENG
+              name: England
+            country:
+              code: GB
+              name: United Kingdom
+          language: en
+          localCustodian:
+            code: 425
+            name: WYCOMBE
+          location:
+            - 50.9986451
+            - -1.4690977
+          administrativeArea: TEST COUNTY
+          poBox: "123"
+        - id: GB990091234557
+          uprn: 990091234557
+          parentUprn: 990091234557
+          usrn: 300000706253
+          organisation: Some Other Company
+          address:
+            lines:
+              - 2 Testing Lane
+            town: Royal Madeuptown
+            postcode: ZZ9Z 9TT
+            subdivision:
+              code: GB-ENG
+              name: England
+            country:
+              code: GB
+              name: United Kingdom
+          language: en
+          localCustodian:
+            code: 425
+            name: WYCOMBE
+          location:
+            - 50.9986451
+            - -1.4690977
+          administrativeArea: TEST COUNTY
+          poBox: "123"
+    AddressLookupByPostcodeResponseExample2:
+      value:
+        - id: GB990091234558
+          uprn: 990091234558
+          parentUprn: 990091234557
+          usrn: 300000706253
+          organisation: Some Company
+          address:
+            lines:
+              - 1 Testing Lane
+            town: Royal Madeuptown
+            postcode: ZZ9Z 9TT
+            subdivision:
+              code: GB-ENG
+              name: England
+            country:
+              code: GB
+              name: United Kingdom
+          language: en
+          localCustodian:
+            code: 425
+            name: WYCOMBE
+          location:
+            - 50.9986451
+            - -1.4690977
+          administrativeArea: TEST COUNTY
+          poBox: "123"
+    failureResponse400Example:
+      value:
+        response:
+          failures:
+            - type: INVALID_REQUEST
+              reason: Json payload is invalid - postcode is missing or not in valid
+                format
+    failureResponse500Example:
+      value:
+        response:
+          failures:
+            - type: SERVER_ERROR
+              reason: The backend service is currently experiencing issues.
+  headers:
+    correlationId:
+      description: |
+        used for end to end traceability purposes and should be considered mandatory. In the
+        event, however, it cannot be provided, the HIP framework will generate it, to allow
+        for downstream auditing
+      style: simple
+      explode: false
+      schema:
+        pattern: "^[0-9a-fA-F]{8}[-][0-9a-fA-F]{4}[-][0-9a-fA-F]{4}[-][0-9a-fA-F]{4}[-][0-9a-fA-F]{12}$"
+        type: string
+    userAgent:
+      description: |
+        The name of the calling service, used for monitoring and analytics purposes. Must be in the
+        format 'calling-service-name' and contain only lowercase letters and hyphens.
+      required: true
+      style: simple
+      explode: false
+      schema:
+        maxLength: 100
+        minLength: 9
+        pattern: "^[a-z-]+$"
+        type: string
+    contentType:
+      description: The content type of the request body, which must be application/json;charset=UTF-8
+      required: true
+      style: simple
+      explode: false
+      schema:
+        enum:
+          - application/json;charset=UTF-8
+        type: string
+  securitySchemes:
+    oAuth2:
+      type: oauth2
+      description: OAuth2 Client Credentials Flow
+      flows:
+        clientCredentials:
+          tokenUrl: /tokenUrl/not-required
+          scopes:
+            write:address-lookup: Address Lookup
