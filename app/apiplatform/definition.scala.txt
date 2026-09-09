@@ -9,7 +9,7 @@
         "version": "1.0",
         "status": "@status",
         "access": {
-          "type": "PRIVATE"
+          "type": "CONTROL"
         },
         "endpointsEnabled": @{status != "ALPHA"}
       }
