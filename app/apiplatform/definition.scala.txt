@@ -8,9 +8,7 @@
       {
         "version": "1.0",
         "status": "@status",
-        "access": {
-          "type": "CONTROLLED"
-        },
+        "access": "CONTROLLED",
         "endpointsEnabled": @{status != "ALPHA"}
       }
     ]
